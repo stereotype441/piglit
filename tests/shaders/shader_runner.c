@@ -631,8 +631,17 @@ get_floats(const char *line, float *f, unsigned count)
 {
 	unsigned i;
 
-	for (i = 0; i < count; i++)
-		f[i] = strtod(line, (char **) &line);
+	for (i = 0; i < count; i++) {
+		char *endptr;
+		f[i] = strtod(line, &endptr);
+		if (line == endptr) {
+			char bad_input[255];
+			strcpy_to_space(bad_input, eat_whitespace(line));
+			printf("expected float, found \"%s\"\n", bad_input);
+			piglit_report_result(PIGLIT_FAIL);
+		}
+		line = (const char *) endptr;
+	}
 }
 
 
@@ -641,8 +650,17 @@ get_ints(const char *line, int *ints, unsigned count)
 {
 	unsigned i;
 
-	for (i = 0; i < count; i++)
-		ints[i] = strtol(line, (char **) &line, 0);
+	for (i = 0; i < count; i++) {
+		char *endptr;
+		ints[i] = strtol(line, &endptr, 0);
+		if (line == endptr) {
+			char bad_input[255];
+			strcpy_to_space(bad_input, eat_whitespace(line));
+			printf("expected int, found \"%s\"\n", bad_input);
+			piglit_report_result(PIGLIT_FAIL);
+		}
+		line = (const char *) endptr;
+	}
 }
 
 
