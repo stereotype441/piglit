@@ -1,12 +1,11 @@
 import itertools
 import numpy as np
 
-# Two-level dictionary mapping test suite name to a list of type
-# names, to a list of test cases, where each test case has the form
-# (function_name, arguments, expected_result).  Each element of
-# arguments, and the whole of expected_result, may be either a
-# floating point type or a numpy.ndarray representing a vector or
-# matrix.
+# Two-level dictionary mapping function name to a list of type names,
+# to a list of test cases, where each test case has the form
+# (arguments, expected_result).  Each element of arguments, and the
+# whole of expected_result, may be either a floating point type or a
+# numpy.ndarray representing a vector or matrix.
 #
 # The second level of the dictionary, the list of type names, contains
 # the type name of the return type of the function, followed by the
@@ -358,58 +357,47 @@ def _vectorize_test_cases(scalar_test_cases, signature, vector_length):
 	    vectorized_test_cases.append((name_0, tuple(args), result))
     return vectorized_test_cases
 
-# Temporary holding area: like test_suites, but lacks the second level
-# of the dictionary.
-_temp_test_suites = {}
+# Temporary holding area: list of tuples (function_name, arguments,
+# expected_result).
+_temp_test_suites = []
 
 for name, arity, python_equivalent, signatures, test_inputs in \
 	_componentwise_functions:
-    if name in _temp_test_suites:
-	test_suite_name = '{0}{1}'.format(name, arity)
-    else:
-	test_suite_name = name
-    assert test_suite_name not in _temp_test_suites
     assert 's'*arity not in signatures
     scalar_test_cases = _make_simple_test_cases(
 	name, arity, python_equivalent, test_inputs)
-    _temp_test_suites[test_suite_name] = list(scalar_test_cases)
+    _temp_test_suites.extend(scalar_test_cases)
     for signature in signatures:
 	for vector_length in (2, 3, 4):
-	    _temp_test_suites[test_suite_name].extend(
+	    _temp_test_suites.extend(
 		_vectorize_test_cases(
 		    scalar_test_cases, signature, vector_length))
 
 for name, arity, python_equivalent, arg_types in _vector_relational_functions:
-    test_suite_name = name
-    assert test_suite_name not in _temp_test_suites
-    _temp_test_suites[test_suite_name] = []
     for arg_type in arg_types:
 	test_inputs = [_default_inputs[arg_type]]*arity
 	scalar_test_cases = _make_simple_test_cases(
 	    name, arity, python_equivalent, test_inputs)
 	signature = 'v'*arity
 	for vector_length in (2, 3, 4):
-	    _temp_test_suites[test_suite_name].extend(
+	    _temp_test_suites.extend(
 		_vectorize_test_cases(
 		    scalar_test_cases, signature, vector_length))
 
 for name, arity, python_equivalent, signature, test_inputs in _vector_and_matrix_functions:
-    test_suite_name = name
-    assert test_suite_name not in _temp_test_suites
     vector_arguments = [i for i in xrange(arity) if signature[i] != 's']
-    _temp_test_suites[test_suite_name] = _make_simple_test_cases(
-	name, arity, python_equivalent, test_inputs, vector_arguments)
+    _temp_test_suites.extend(_make_simple_test_cases(
+	    name, arity, python_equivalent, test_inputs, vector_arguments))
 
-for name, test_cases in _temp_test_suites.items():
+for name, args, expected in _temp_test_suites:
     if name not in test_suites:
 	test_suites[name] = {}
     suite = test_suites[name]
-    for test_case in test_cases:
-	fname, args, expected = test_case
-	types = (glsl_type(expected),) + tuple(glsl_type(arg) for arg in args)
-	if types not in suite:
-	    suite[types] = []
-	suite[types].append(test_case)
+    types = (glsl_type(expected),) + tuple(glsl_type(arg) for arg in args)
+    if types not in suite:
+	suite[types] = []
+    suite[types].append((args, expected))
+_temp_test_suites = None
 
 for name, ts in test_suites.items():
     for types, ts2 in ts.items():

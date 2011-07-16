@@ -4,8 +4,8 @@ import os.path
 
 this_file = os.path.basename(__file__)
 
-def format_test_cases(test_cases):
-    for function_name, arguments, expected_result in test_cases:
+def format_test_cases(function_name, test_cases):
+    for arguments, expected_result in test_cases:
 	arg_str = ', '.join(glsl_constant(arg) for arg in arguments)
 	value_str = '{0}({1})'.format(function_name, arg_str)
 	yield value_str, expected_result
@@ -60,7 +60,7 @@ def make_array_lengths(test_cases):
 	else:
 	    yield '{0} ? -1 : 1'.format(value_str)
 
-for test_suite_name, test_suite in test_suites.items():
+for function_name, test_suite in test_suites.items():
     for types, test_cases in test_suite.items():
 	for shader_type in ('vert', 'frag'):
 	    if shader_type == 'vert':
@@ -68,7 +68,7 @@ for test_suite_name, test_suite in test_suites.items():
 	    else:
 		output_var = 'gl_FragColor'
 	    filename = 'glsl-1.20/compiler/built-in-functions/const-{0}-{1}.{2}'.format(
-		test_suite_name, '-'.join(types), shader_type)
+		function_name, '-'.join(types), shader_type)
 	    with open(filename, 'w') as f:
 		f.write('/* [config]\n')
 		f.write(' * expect_result: pass\n')
@@ -78,10 +78,10 @@ for test_suite_name, test_suite in test_suites.items():
 		f.write(' */\n')
 		f.write('#version 120\n')
 		f.write('\n')
-		formatted_test_cases = list(format_test_cases(test_cases))
+		formatted_test_cases = list(format_test_cases(function_name, test_cases))
 		vector_test_cases = list(split_matrices(formatted_test_cases))
-		use_length = test_suite_name.find('length') == -1
-		use_all_and_equal = test_suite_name.find('all') == -1 and test_suite_name.find('equal') == -1
+		use_length = function_name != 'length'
+		use_all_and_equal = function_name not in ('all', 'equal')
 		bool_test_cases = list(make_booleans(vector_test_cases, use_all_and_equal, use_length))
 		array_lengths = list(make_array_lengths(bool_test_cases))
 		for i, array_length in enumerate(array_lengths):
