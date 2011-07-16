@@ -1,0 +1,83 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform mat4 arg0;
+uniform mat4 arg1;
+uniform int column;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  mat4 result = matrixCompMult(arg0, arg1);
+  result -= -7.1834;
+  result *= 0.0680272108844;
+  color = vec4(result[column]);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform mat4 arg0 -1.0 1.77 0.09 -0.91 -0.55 0.62 -0.71 -1.82 -1.08 0.48 -1.39 -1.43 1.79 -1.35 -1.21 0.72
+uniform mat4 arg1 -1.0 1.77 0.09 -0.91 -0.55 0.62 -0.71 -1.82 -1.08 0.48 -1.39 -1.43 1.79 -1.35 -1.21 0.72
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.556693877551 0.701789115646 0.489217687075 0.545
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.509244897959 0.514816326531 0.522959183673 0.714
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.568013605442 0.504340136054 0.620102040816 0.627775510204
+uniform int column 3
+draw rect -1 -1 2 2
+probe rgba 0 0 0.706632653061 0.612646258503 0.588265306122 0.523931972789
+uniform mat4 arg0 -1.0 1.77 0.09 -0.91 -0.55 0.62 -0.71 -1.82 -1.08 0.48 -1.39 -1.43 1.79 -1.35 -1.21 0.72
+uniform mat4 arg1 0.06 1.6 1.25 -0.16 1.31 -0.32 0.45 0.45 1.52 0.51 1.9 -0.88 -1.96 -1.84 -0.72 0.39
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.484585034014 0.681319727891 0.496319727891 0.498571428571
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.439653061224 0.475170068027 0.466931972789 0.432952380952
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.376993197279 0.505319727891 0.309006802721 0.574272108844
+uniform int column 3
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.657646258503 0.547931972789 0.507768707483
+uniform mat4 arg0 0.06 1.6 1.25 -0.16 1.31 -0.32 0.45 0.45 1.52 0.51 1.9 -0.88 -1.96 -1.84 -0.72 0.39
+uniform mat4 arg1 -1.0 1.77 0.09 -0.91 -0.55 0.62 -0.71 -1.82 -1.08 0.48 -1.39 -1.43 1.79 -1.35 -1.21 0.72
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.484585034014 0.681319727891 0.496319727891 0.498571428571
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.439653061224 0.475170068027 0.466931972789 0.432952380952
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.376993197279 0.505319727891 0.309006802721 0.574272108844
+uniform int column 3
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.657646258503 0.547931972789 0.507768707483
+uniform mat4 arg0 0.06 1.6 1.25 -0.16 1.31 -0.32 0.45 0.45 1.52 0.51 1.9 -0.88 -1.96 -1.84 -0.72 0.39
+uniform mat4 arg1 0.06 1.6 1.25 -0.16 1.31 -0.32 0.45 0.45 1.52 0.51 1.9 -0.88 -1.96 -1.84 -0.72 0.39
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.488911564626 0.662816326531 0.594959183673 0.490408163265
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.605408163265 0.495632653061 0.502442176871 0.502442176871
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.645836734694 0.506360544218 0.734244897959 0.541346938776
+uniform int column 3
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.718979591837 0.523931972789 0.499013605442

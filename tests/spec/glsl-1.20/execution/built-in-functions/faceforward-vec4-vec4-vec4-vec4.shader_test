@@ -1,0 +1,67 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform vec4 arg0;
+uniform vec4 arg1;
+uniform vec4 arg2;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  vec4 result = faceforward(arg0, arg1, arg2);
+  result -= -3.86;
+  result *= 0.129533678756;
+  color = vec4(result);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform vec4 arg0 -1.65 1.33 1.93 0.76
+uniform vec4 arg1 -1.65 1.33 1.93 0.76
+uniform vec4 arg2 -1.65 1.33 1.93 0.76
+draw rect -1 -1 2 2
+probe rgba 0 0 0.713730569948 0.327720207254 0.25 0.401554404145
+uniform vec4 arg0 -1.65 1.33 1.93 0.76
+uniform vec4 arg1 -1.65 1.33 1.93 0.76
+uniform vec4 arg2 0.8 -0.15 -0.51 0.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.286269430052 0.672279792746 0.75 0.598445595855
+uniform vec4 arg0 -1.65 1.33 1.93 0.76
+uniform vec4 arg1 0.8 -0.15 -0.51 0.0
+uniform vec4 arg2 -1.65 1.33 1.93 0.76
+draw rect -1 -1 2 2
+probe rgba 0 0 0.286269430052 0.672279792746 0.75 0.598445595855
+uniform vec4 arg0 -1.65 1.33 1.93 0.76
+uniform vec4 arg1 0.8 -0.15 -0.51 0.0
+uniform vec4 arg2 0.8 -0.15 -0.51 0.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.713730569948 0.327720207254 0.25 0.401554404145
+uniform vec4 arg0 0.8 -0.15 -0.51 0.0
+uniform vec4 arg1 -1.65 1.33 1.93 0.76
+uniform vec4 arg2 -1.65 1.33 1.93 0.76
+draw rect -1 -1 2 2
+probe rgba 0 0 0.396373056995 0.519430051813 0.566062176166 0.5
+uniform vec4 arg0 0.8 -0.15 -0.51 0.0
+uniform vec4 arg1 -1.65 1.33 1.93 0.76
+uniform vec4 arg2 0.8 -0.15 -0.51 0.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.603626943005 0.480569948187 0.433937823834 0.5
+uniform vec4 arg0 0.8 -0.15 -0.51 0.0
+uniform vec4 arg1 0.8 -0.15 -0.51 0.0
+uniform vec4 arg2 -1.65 1.33 1.93 0.76
+draw rect -1 -1 2 2
+probe rgba 0 0 0.603626943005 0.480569948187 0.433937823834 0.5
+uniform vec4 arg0 0.8 -0.15 -0.51 0.0
+uniform vec4 arg1 0.8 -0.15 -0.51 0.0
+uniform vec4 arg2 0.8 -0.15 -0.51 0.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.396373056995 0.519430051813 0.566062176166 0.5

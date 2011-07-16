@@ -1,0 +1,50 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform vec3 arg0;
+uniform vec3 arg1;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  vec3 result = step(arg0, arg1);
+  result -= -0.5;
+  result *= 0.5;
+  color = vec4(result, 0.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform vec3 arg0 -2.0 -2.0 -2.0
+uniform vec3 arg1 -2.0 -0.666666666667 0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.75 0.75 0.0
+uniform vec3 arg0 -2.0 -0.666666666667 -0.666666666667
+uniform vec3 arg1 2.0 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.25 0.75 0.0
+uniform vec3 arg0 -0.666666666667 -0.666666666667 0.666666666667
+uniform vec3 arg1 0.666666666667 2.0 -2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.75 0.25 0.0
+uniform vec3 arg0 0.666666666667 0.666666666667 0.666666666667
+uniform vec3 arg1 -0.666666666667 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.75 0.75 0.0
+uniform vec3 arg0 2.0 2.0 2.0
+uniform vec3 arg1 -2.0 -0.666666666667 0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.25 0.25 0.0
+uniform vec3 arg0 2.0 -2.0 -2.0
+uniform vec3 arg1 2.0 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.75 0.75 0.0

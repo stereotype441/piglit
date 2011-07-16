@@ -1,0 +1,52 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform mat4 arg0;
+uniform int column;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  mat4 result = transpose(arg0);
+  result -= -3.89;
+  result *= 0.129533678756;
+  color = vec4(result[column]);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform mat4 arg0 -1.0 1.77 0.09 -0.91 -0.55 0.62 -0.71 -1.82 -1.08 0.48 -1.39 -1.43 1.79 -1.35 -1.21 0.72
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.374352331606 0.432642487047 0.363989637306 0.735751295337
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.733160621762 0.584196891192 0.566062176166 0.329015544041
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.515544041451 0.411917098446 0.323834196891 0.347150259067
+uniform int column 3
+draw rect -1 -1 2 2
+probe rgba 0 0 0.386010362694 0.268134715026 0.318652849741 0.597150259067
+uniform mat4 arg0 0.06 1.6 1.25 -0.16 1.31 -0.32 0.45 0.45 1.52 0.51 1.9 -0.88 -1.96 -1.84 -0.72 0.39
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.511658031088 0.673575129534 0.700777202073 0.25
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.711139896373 0.462435233161 0.569948186528 0.265544041451
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.665803108808 0.562176165803 0.75 0.410621761658
+uniform int column 3
+draw rect -1 -1 2 2
+probe rgba 0 0 0.483160621762 0.562176165803 0.389896373057 0.554404145078

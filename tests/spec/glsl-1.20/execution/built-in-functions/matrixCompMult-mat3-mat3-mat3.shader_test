@@ -1,0 +1,71 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform mat3 arg0;
+uniform mat3 arg1;
+uniform int column;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  mat3 result = matrixCompMult(arg0, arg1);
+  result -= -3.2852;
+  result *= 0.10294844342;
+  color = vec4(result[column], 0.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform mat3 arg0 -1.11 0.13 0.56 1.67 1.09 0.95 -0.41 -0.02 0.24
+uniform mat3 arg1 -1.11 0.13 0.56 1.67 1.09 0.95 -0.41 -0.02 0.24
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.465049003459 0.339946055016 0.370490858178 0.0
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.625319140175 0.460519271949 0.431117196508 0.0
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.355511859661 0.338247405699 0.344136056663 0.0
+uniform mat3 arg0 -1.11 0.13 0.56 1.67 1.09 0.95 -0.41 -0.02 0.24
+uniform mat3 arg1 -1.69 -1.09 -1.53 -0.46 1.75 -0.7 -0.18 2.0 -1.47
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.531327211333 0.323618431889 0.25 0.0
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.259121232087 0.534580382145 0.269745511448 0.0
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.345803821446 0.334088288585 0.301886015483 0.0
+uniform mat3 arg0 -1.69 -1.09 -1.53 -0.46 1.75 -0.7 -0.18 2.0 -1.47
+uniform mat3 arg1 -1.11 0.13 0.56 1.67 1.09 0.95 -0.41 -0.02 0.24
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.531327211333 0.323618431889 0.25 0.0
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.259121232087 0.534580382145 0.269745511448 0.0
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.345803821446 0.334088288585 0.301886015483 0.0
+uniform mat3 arg0 -1.69 -1.09 -1.53 -0.46 1.75 -0.7 -0.18 2.0 -1.47
+uniform mat3 arg1 -1.69 -1.09 -1.53 -0.46 1.75 -0.7 -0.18 2.0 -1.47
+uniform int column 0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.632237275572 0.460519271949 0.579198237523 0.0
+uniform int column 1
+draw rect -1 -1 2 2
+probe rgba 0 0 0.359990116949 0.653485834294 0.388650963597 0.0
+uniform int column 2
+draw rect -1 -1 2 2
+probe rgba 0 0 0.341541755889 0.75 0.560667517707 0.0

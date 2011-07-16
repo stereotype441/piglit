@@ -1,0 +1,87 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform float arg0;
+uniform float arg1;
+uniform vec2 arg2;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  vec2 result = smoothstep(arg0, arg1, arg2);
+  result -= -0.5;
+  result *= 0.5;
+  color = vec4(result, 0.0, 0.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform float arg0 -0.633333333333
+uniform float arg1 0.633333333333
+uniform vec2 arg2 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.25 0.0 0.0
+uniform float arg0 -0.633333333333
+uniform float arg1 0.633333333333
+uniform vec2 arg2 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.75 0.0 0.0
+uniform float arg0 -1.9
+uniform float arg1 -0.633333333333
+uniform vec2 arg2 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.748979443068 0.0 0.0
+uniform float arg0 -1.9
+uniform float arg1 -0.633333333333
+uniform vec2 arg2 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.75 0.0 0.0
+uniform float arg0 -0.633333333333
+uniform float arg1 1.9
+uniform vec2 arg2 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.25 0.0 0.0
+uniform float arg0 -0.633333333333
+uniform float arg1 1.9
+uniform vec2 arg2 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.509866143024 0.75 0.0 0.0
+uniform float arg0 -1.9
+uniform float arg1 1.9
+uniform vec2 arg2 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.373820824761 0.0 0.0
+uniform float arg0 -1.9
+uniform float arg1 1.9
+uniform vec2 arg2 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.626179175239 0.75 0.0 0.0
+uniform float arg0 0.633333333333
+uniform float arg1 1.9
+uniform vec2 arg2 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.25 0.0 0.0
+uniform float arg0 0.633333333333
+uniform float arg1 1.9
+uniform vec2 arg2 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.251020556932 0.75 0.0 0.0
+uniform float arg0 -1.9
+uniform float arg1 0.633333333333
+uniform vec2 arg2 -2.0 -0.666666666667
+draw rect -1 -1 2 2
+probe rgba 0 0 0.25 0.490133856976 0.0 0.0
+uniform float arg0 -1.9
+uniform float arg1 0.633333333333
+uniform vec2 arg2 0.666666666667 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.75 0.0 0.0

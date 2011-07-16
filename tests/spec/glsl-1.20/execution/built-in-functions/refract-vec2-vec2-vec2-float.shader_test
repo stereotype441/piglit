@@ -1,0 +1,67 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform vec2 arg0;
+uniform vec2 arg1;
+uniform float arg2;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  vec2 result = refract(arg0, arg1, arg2);
+  result -= -1.90669117207;
+  result *= 0.25833234352;
+  color = vec4(result, 0.0, 0.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform vec2 arg0 -0.0830454798537 -0.996545758245
+uniform vec2 arg1 -0.0830454798537 -0.996545758245
+uniform float arg2 0.5
+draw rect -1 -1 2 2
+probe rgba 0 0 0.514013332277 0.75 0.0 0.0
+uniform vec2 arg0 -0.0830454798537 -0.996545758245
+uniform vec2 arg1 -0.0830454798537 -0.996545758245
+uniform float arg2 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.514013332277 0.75 0.0 0.0
+uniform vec2 arg0 -0.0830454798537 -0.996545758245
+uniform vec2 arg1 -0.658504607869 0.752576694707
+uniform float arg2 0.5
+draw rect -1 -1 2 2
+probe rgba 0 0 0.581443330622 0.25 0.0 0.0
+uniform vec2 arg0 -0.0830454798537 -0.996545758245
+uniform vec2 arg1 -0.658504607869 0.752576694707
+uniform float arg2 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.492559998848 0.492559998848 0.0 0.0
+uniform vec2 arg0 -0.658504607869 0.752576694707
+uniform vec2 arg1 -0.0830454798537 -0.996545758245
+uniform float arg2 0.5
+draw rect -1 -1 2 2
+probe rgba 0 0 0.420065517891 0.740511909385 0.0 0.0
+uniform vec2 arg0 -0.658504607869 0.752576694707
+uniform vec2 arg1 -0.0830454798537 -0.996545758245
+uniform float arg2 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.492559998848 0.492559998848 0.0 0.0
+uniform vec2 arg0 -0.658504607869 0.752576694707
+uniform vec2 arg1 -0.658504607869 0.752576694707
+uniform float arg2 0.5
+draw rect -1 -1 2 2
+probe rgba 0 0 0.662673037417 0.298145097626 0.0 0.0
+uniform vec2 arg0 -0.658504607869 0.752576694707
+uniform vec2 arg1 -0.658504607869 0.752576694707
+uniform float arg2 2.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.662673037417 0.298145097626 0.0 0.0

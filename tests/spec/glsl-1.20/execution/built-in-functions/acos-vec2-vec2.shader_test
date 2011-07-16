@@ -1,0 +1,31 @@
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+varying vec4 color;
+uniform vec2 arg0;
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  vec2 result = acos(arg0);
+  result -= -1.57079632679;
+  result *= 0.159154943092;
+  color = vec4(result, 0.0, 0.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform vec2 arg0 -1.0 -0.333333333333
+draw rect -1 -1 2 2
+probe rgba 0 0 0.75 0.554086723985 0.0 0.0
+uniform vec2 arg0 0.333333333333 1.0
+draw rect -1 -1 2 2
+probe rgba 0 0 0.445913276015 0.25 0.0 0.0

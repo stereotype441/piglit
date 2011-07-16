@@ -49,6 +49,43 @@ def glsl_type(value):
 	    else:
 		return 'mat{0}x{1}'.format(matrix_columns, matrix_rows)
 
+_glsl_type_interpretations = {
+    'bool': ('bool', 1, 1),
+    'int': ('int', 1, 1),
+    'float': ('float', 1, 1),
+    'vec2': ('float', 2, 1),
+    'vec3': ('float', 3, 1),
+    'vec4': ('float', 4, 1),
+    'bvec2': ('bool', 2, 1),
+    'bvec3': ('bool', 3, 1),
+    'bvec4': ('bool', 4, 1),
+    'ivec2': ('int', 2, 1),
+    'ivec3': ('int', 3, 1),
+    'ivec4': ('int', 4, 1),
+    'mat2': ('float', 2, 2),
+    'mat3': ('float', 3, 3),
+    'mat4': ('float', 4, 4),
+    'mat2x2': ('float', 2, 2),
+    'mat3x2': ('float', 3, 2),
+    'mat4x2': ('float', 4, 2),
+    'mat2x3': ('float', 2, 3),
+    'mat3x3': ('float', 3, 3),
+    'mat4x3': ('float', 4, 3),
+    'mat2x4': ('float', 2, 4),
+    'mat3x4': ('float', 3, 4),
+    'mat4x4': ('float', 4, 4),
+    }
+
+def glsl_type_info(glsl_type):
+    """Interpret the given glsl type string.  Return a triple
+    (base_type, num_cols, num_rows)."""
+    return _glsl_type_interpretations[glsl_type]
+
+def column_major_values(value):
+    """Return a list of the scalar values comprising value, in
+    column-major order."""
+    return np.reshape(np.array(value), -1, 'F').tolist()
+
 def glsl_constant(value):
     """Return GLSL code that constructs the given constant value."""
     column_major = np.reshape(np.array(value), -1, 'F')
