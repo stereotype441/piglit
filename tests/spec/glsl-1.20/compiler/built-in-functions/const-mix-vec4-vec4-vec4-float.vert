@@ -14,7 +14,7 @@ float[length(vec4(-3.0, 3.0, -3.0, 3.0) - mix(vec4(-2.0, -2.0, 2.0, 2.0), vec4(-
 main()
 {
   gl_Position  = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length());
 }

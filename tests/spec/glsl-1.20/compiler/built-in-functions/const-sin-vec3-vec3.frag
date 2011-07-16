@@ -12,5 +12,5 @@ float[length(vec3(1.22464679915e-16, -1.22464679915e-16, -0.866025403784) - sin(
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length());
+                      + array1.length());
 }

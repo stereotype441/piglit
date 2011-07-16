@@ -18,11 +18,11 @@ float[length(vec2(0.7569, 1.96) - matrixCompMult(mat2(-0.13, -1.4, -0.87, 1.4), 
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length()
-			+ array6.length()
-			+ array7.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length()
+                      + array6.length()
+                      + array7.length());
 }

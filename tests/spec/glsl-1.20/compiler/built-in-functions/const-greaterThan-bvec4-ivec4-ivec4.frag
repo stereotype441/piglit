@@ -14,7 +14,7 @@ float[all(equal(bvec4(true, true, true, false), greaterThan(ivec4(4, 4, 4, 4), i
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length());
 }

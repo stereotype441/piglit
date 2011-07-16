@@ -18,11 +18,11 @@ float[length(vec4(0.5476, 0.0169, 0.2209, 1.2769) - matrixCompMult(mat2x4(-1.02,
 main()
 {
   gl_Position  = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length()
-			+ array6.length()
-			+ array7.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length()
+                      + array6.length()
+                      + array7.length());
 }

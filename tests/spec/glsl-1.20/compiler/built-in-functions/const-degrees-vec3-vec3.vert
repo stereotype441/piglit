@@ -12,5 +12,5 @@ float[length(vec3(180.0, -180.0, -60.0) - degrees(vec3(3.14159265359, -3.1415926
 main()
 {
   gl_Position  = vec4(array0.length()
-			+ array1.length());
+                      + array1.length());
 }

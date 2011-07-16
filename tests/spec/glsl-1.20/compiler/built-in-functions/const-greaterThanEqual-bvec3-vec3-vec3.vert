@@ -16,9 +16,9 @@ float[all(equal(bvec3(true, true, false), greaterThanEqual(vec3(1.5, -1.5, -1.5)
 main()
 {
   gl_Position  = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length());
 }

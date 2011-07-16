@@ -22,15 +22,15 @@ float[length(vec2(0.00204111386499, 1.0) - smoothstep(vec2(0.633333333333, 0.633
 main()
 {
   gl_Position  = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length()
-			+ array6.length()
-			+ array7.length()
-			+ array8.length()
-			+ array9.length()
-			+ array10.length()
-			+ array11.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length()
+                      + array6.length()
+                      + array7.length()
+                      + array8.length()
+                      + array9.length()
+                      + array10.length()
+                      + array11.length());
 }

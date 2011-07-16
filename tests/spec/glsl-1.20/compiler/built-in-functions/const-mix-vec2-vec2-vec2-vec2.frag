@@ -18,11 +18,11 @@ float[length(vec2(2.66666666667, 3.0) - mix(vec2(2.0, 2.0), vec2(3.0, 3.0), vec2
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length()
-			+ array6.length()
-			+ array7.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length()
+                      + array6.length()
+                      + array7.length());
 }

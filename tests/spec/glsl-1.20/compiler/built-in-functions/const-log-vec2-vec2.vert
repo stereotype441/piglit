@@ -12,5 +12,5 @@ float[length(vec2(0.29017895265, 0.69314718056) - log(vec2(1.33666666667, 2.0)))
 main()
 {
   gl_Position  = vec4(array0.length()
-			+ array1.length());
+                      + array1.length());
 }

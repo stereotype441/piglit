@@ -22,15 +22,15 @@ float[length(vec2(1.5, 1.5) - clamp(vec2(0.666666666667, 2.0), 1.5, 1.5)) < 0.00
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length()
-			+ array6.length()
-			+ array7.length()
-			+ array8.length()
-			+ array9.length()
-			+ array10.length()
-			+ array11.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length()
+                      + array6.length()
+                      + array7.length()
+                      + array8.length()
+                      + array9.length()
+                      + array10.length()
+                      + array11.length());
 }

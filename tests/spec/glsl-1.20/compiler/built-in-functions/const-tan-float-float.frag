@@ -14,7 +14,7 @@ float[length(-1.22464679915e-16 - tan(3.14159265359)) < 0.001 ? 1 : -1] array3;
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length());
 }

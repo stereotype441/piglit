@@ -22,15 +22,15 @@ float[length(vec2(1.0, 1.0) - smoothstep(-1.9, 0.633333333333, vec2(0.6666666666
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length()
-			+ array3.length()
-			+ array4.length()
-			+ array5.length()
-			+ array6.length()
-			+ array7.length()
-			+ array8.length()
-			+ array9.length()
-			+ array10.length()
-			+ array11.length());
+                      + array1.length()
+                      + array2.length()
+                      + array3.length()
+                      + array4.length()
+                      + array5.length()
+                      + array6.length()
+                      + array7.length()
+                      + array8.length()
+                      + array9.length()
+                      + array10.length()
+                      + array11.length());
 }

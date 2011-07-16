@@ -13,6 +13,6 @@ float[length(vec3(1.57079632679, 0.785398163397, -2.35619449019) - atan(vec3(2.0
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length()
-			+ array2.length());
+                      + array1.length()
+                      + array2.length());
 }

@@ -12,5 +12,5 @@ float[length(vec3(0.75, 1.5, 1.5) - abs(vec3(0.75, 1.5, -1.5))) < 0.001 ? 1 : -1
 main()
 {
   gl_FragColor = vec4(array0.length()
-			+ array1.length());
+                      + array1.length());
 }

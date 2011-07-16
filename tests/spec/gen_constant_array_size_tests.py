@@ -91,7 +91,7 @@ for key, test_cases in test_suites.items():
 	    f.write('{\n')
 	    array_length_getters = [
 		'array{0}.length()'.format(i) for i in xrange(len(array_lengths))]
-	    array_length_sum = '\n			+ '.join(array_length_getters)
+	    array_length_sum = '\n                      + '.join(array_length_getters)
 	    f.write('  {0} = vec4({1});\n'.format(
 		    output_var, array_length_sum))
 	    f.write('}\n')
