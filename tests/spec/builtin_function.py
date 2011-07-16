@@ -1,11 +1,14 @@
 import itertools
 import numpy as np
 
-# Dictionary mapping (function_name, rettype_name, argtype_names) to a
-# list of test cases, where each test case has the form (arguments,
-# expected_result).  Each element of arguments, and the whole of
-# expected_result, may be either a floating point type or a
-# numpy.ndarray representing a vector or matrix.
+# Dictionary mapping (function_name, glsl_version, rettype_name,
+# argtype_names) to a list of test cases, where each test case has the
+# form (arguments, expected_result).  Each element of arguments, and
+# the whole of expected_result, may be either a floating point type or
+# a numpy.ndarray representing a vector or matrix.
+#
+# glsl_version indicates the earliest version of GLSL that the test
+# can be performed on.  It is a string, e.g. '1.10'.
 test_suites = {}
 
 def glsl_type(value):
@@ -137,7 +140,7 @@ def _refract(I, N, eta):
 	return eta*I-(eta*np.dot(N,I)+np.sqrt(k))*N
 
 # GLSL built-in functions that operate on vectors in componentwise
-# fashion.  Each entry in the table is (name, arity,
+# fashion.  Each entry in the table is (name, arity, glsl_version,
 # python_equivalent, signatures, test_inputs).
 #
 # python_equivalent is a Python function which operates on scalars,
@@ -154,34 +157,34 @@ def _refract(I, N, eta):
 # test_inputs is a list, the ith element of which is a list of values
 # that are suitable for use as the ith argument of the function.
 _componentwise_functions = [
-    ('radians', 1, np.radians, ['v'], [np.linspace(-180.0, 180.0, 4)]),
-    ('degrees', 1, np.degrees, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
-    ('sin', 1, np.sin, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
-    ('cos', 1, np.cos, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
-    ('tan', 1, np.tan, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
-    ('asin', 1, np.arcsin, ['v'], [np.linspace(-1.0, 1.0, 4)]),
-    ('acos', 1, np.arccos, ['v'], [np.linspace(-1.0, 1.0, 4)]),
-    ('atan', 1, np.arctan, ['v'], [np.linspace(-2.0, 2.0, 4)]),
-    ('atan', 2, _arctan2, ['vv'], [np.linspace(-2.0, 2.0, 3), np.linspace(-2.0, 2.0, 3)]),
-    ('pow', 2, _pow, ['vv'], [np.linspace(0.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
-    ('exp', 1, np.exp, ['v'], [np.linspace(-2.0, 2.0, 4)]),
-    ('log', 1, np.log, ['v'], [np.linspace(0.01, 2.0, 4)]),
-    ('exp2', 1, np.exp2, ['v'], [np.linspace(-2.0, 2.0, 4)]),
-    ('log2', 1, np.log2, ['v'], [np.linspace(0.01, 2.0, 4)]),
-    ('sqrt', 1, np.sqrt, ['v'], [np.linspace(0.0, 2.0, 4)]),
-    ('inversesqrt', 1, lambda x: 1.0/np.sqrt(x), ['v'], [np.linspace(0.1, 2.0, 4)]),
-    ('abs', 1, np.abs, ['v'], [np.linspace(-1.5, 1.5, 5)]),
-    ('sign', 1, np.sign, ['v'], [np.linspace(-1.5, 1.5, 5)]),
-    ('floor', 1, np.floor, ['v'], [np.linspace(-2.0, 2.0, 4)]),
-    ('ceil', 1, np.ceil, ['v'], [np.linspace(-2.0, 2.0, 4)]),
-    ('fract', 1, lambda x: x-np.floor(x), ['v'], [np.linspace(-2.0, 2.0, 4)]),
-    ('mod', 2, lambda x, y: x-y*np.floor(x/y), ['vs', 'vv'], [np.linspace(-1.9, 1.9, 4), np.linspace(-2.0, 2.0, 4)]),
-    ('min', 2, min, ['vv', 'vs'], [np.linspace(-2.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
-    ('max', 2, max, ['vv', 'vs'], [np.linspace(-2.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
-    ('clamp', 3, _clamp, ['vvv', 'vss'], [np.linspace(-2.0, 2.0, 4), np.linspace(-1.5, 1.5, 3), np.linspace(-1.5, 1.5, 3)]),
-    ('mix', 3, lambda x, y, a: x*(1-a)+y*a, ['vvv', 'vvs'], [np.linspace(-2.0, 2.0, 2), np.linspace(-3.0, 3.0, 2), np.linspace(0.0, 1.0, 4)]),
-    ('step', 2, lambda edge, x: 0.0 if x < edge else 1.0, ['vv', 'sv'], [np.linspace(-2.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
-    ('smoothstep', 3, _smoothstep, ['vvv', 'ssv'], [np.linspace(-1.9, 1.9, 4), np.linspace(-1.9, 1.9, 4), np.linspace(-2.0, 2.0, 4)]),
+    ('radians', 1, '1.10', np.radians, ['v'], [np.linspace(-180.0, 180.0, 4)]),
+    ('degrees', 1, '1.10', np.degrees, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
+    ('sin', 1, '1.10', np.sin, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
+    ('cos', 1, '1.10', np.cos, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
+    ('tan', 1, '1.10', np.tan, ['v'], [np.linspace(-np.pi, np.pi, 4)]),
+    ('asin', 1, '1.10', np.arcsin, ['v'], [np.linspace(-1.0, 1.0, 4)]),
+    ('acos', 1, '1.10', np.arccos, ['v'], [np.linspace(-1.0, 1.0, 4)]),
+    ('atan', 1, '1.10', np.arctan, ['v'], [np.linspace(-2.0, 2.0, 4)]),
+    ('atan', 2, '1.10', _arctan2, ['vv'], [np.linspace(-2.0, 2.0, 3), np.linspace(-2.0, 2.0, 3)]),
+    ('pow', 2, '1.10', _pow, ['vv'], [np.linspace(0.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
+    ('exp', 1, '1.10', np.exp, ['v'], [np.linspace(-2.0, 2.0, 4)]),
+    ('log', 1, '1.10', np.log, ['v'], [np.linspace(0.01, 2.0, 4)]),
+    ('exp2', 1, '1.10', np.exp2, ['v'], [np.linspace(-2.0, 2.0, 4)]),
+    ('log2', 1, '1.10', np.log2, ['v'], [np.linspace(0.01, 2.0, 4)]),
+    ('sqrt', 1, '1.10', np.sqrt, ['v'], [np.linspace(0.0, 2.0, 4)]),
+    ('inversesqrt', 1, '1.10', lambda x: 1.0/np.sqrt(x), ['v'], [np.linspace(0.1, 2.0, 4)]),
+    ('abs', 1, '1.10', np.abs, ['v'], [np.linspace(-1.5, 1.5, 5)]),
+    ('sign', 1, '1.10', np.sign, ['v'], [np.linspace(-1.5, 1.5, 5)]),
+    ('floor', 1, '1.10', np.floor, ['v'], [np.linspace(-2.0, 2.0, 4)]),
+    ('ceil', 1, '1.10', np.ceil, ['v'], [np.linspace(-2.0, 2.0, 4)]),
+    ('fract', 1, '1.10', lambda x: x-np.floor(x), ['v'], [np.linspace(-2.0, 2.0, 4)]),
+    ('mod', 2, '1.10', lambda x, y: x-y*np.floor(x/y), ['vs', 'vv'], [np.linspace(-1.9, 1.9, 4), np.linspace(-2.0, 2.0, 4)]),
+    ('min', 2, '1.10', min, ['vv', 'vs'], [np.linspace(-2.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
+    ('max', 2, '1.10', max, ['vv', 'vs'], [np.linspace(-2.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
+    ('clamp', 3, '1.10', _clamp, ['vvv', 'vss'], [np.linspace(-2.0, 2.0, 4), np.linspace(-1.5, 1.5, 3), np.linspace(-1.5, 1.5, 3)]),
+    ('mix', 3, '1.10', lambda x, y, a: x*(1-a)+y*a, ['vvv', 'vvs'], [np.linspace(-2.0, 2.0, 2), np.linspace(-3.0, 3.0, 2), np.linspace(0.0, 1.0, 4)]),
+    ('step', 2, '1.10', lambda edge, x: 0.0 if x < edge else 1.0, ['vv', 'sv'], [np.linspace(-2.0, 2.0, 4), np.linspace(-2.0, 2.0, 4)]),
+    ('smoothstep', 3, '1.10', _smoothstep, ['vvv', 'ssv'], [np.linspace(-1.9, 1.9, 4), np.linspace(-1.9, 1.9, 4), np.linspace(-2.0, 2.0, 4)]),
 ]
 
 _std_vectors = [
@@ -263,8 +266,8 @@ _bvecs = [np.array(bs) for bs in itertools.product(_ft, _ft)] + \
     [np.array(bs) for bs in itertools.product(_ft, _ft, _ft, _ft)]
 
 # GLSL built-in functions that operate on vectors/matrices as a whole.
-# Each entry in the table is (name, arity, python_equivalent,
-# signature, test_inputs).
+# Each entry in the table is (name, arity, glsl_version,
+# python_equivalent, signature, test_inputs).
 #
 # python_equivalent is a Python function which simulates the GLSL
 # function.  This function should return None in any case where the
@@ -280,19 +283,19 @@ _bvecs = [np.array(bs) for bs in itertools.product(_ft, _ft)] + \
 # and/or scalars that are suitable for use as the ith argument of the
 # function.
 _vector_and_matrix_functions = [
-    ('length', 1, np.linalg.norm, 'v', [_std_vectors]),
-    ('distance', 2, lambda x, y: np.linalg.norm(x-y), 'vv', [_std_vectors, _std_vectors]),
-    ('dot', 2, np.dot, 'vv', [_std_vectors, _std_vectors]),
-    ('cross', 2, np.cross, 'vv', [_std_vectors3, _std_vectors3]),
-    ('normalize', 1, _normalize, 'v', [_std_vectors]),
-    ('faceforward', 3, _faceforward, 'vvv', [_std_vectors, _std_vectors, _std_vectors]),
-    ('reflect', 2, _reflect, 'vv', [_std_vectors, _normalized_vectors]),
-    ('refract', 3, _refract, 'vvs', [_normalized_vectors, _normalized_vectors, [0.5, 2.0]]),
-    ('matrixCompMult', 2, lambda x, y: x*y, 'mm', [_std_matrices, _std_matrices]),
-    ('outerProduct', 2, np.outer, 'ss', [_nontrivial_vectors, _nontrivial_vectors]), # Note (1)
-    ('transpose', 1, np.transpose, 'm', [_std_matrices]),
-    ('any', 1, any, 'v', [_bvecs]),
-    ('all', 1, all, 'v', [_bvecs]),
+    ('length', 1, '1.10', np.linalg.norm, 'v', [_std_vectors]),
+    ('distance', 2, '1.10', lambda x, y: np.linalg.norm(x-y), 'vv', [_std_vectors, _std_vectors]),
+    ('dot', 2, '1.10', np.dot, 'vv', [_std_vectors, _std_vectors]),
+    ('cross', 2, '1.10', np.cross, 'vv', [_std_vectors3, _std_vectors3]),
+    ('normalize', 1, '1.10', _normalize, 'v', [_std_vectors]),
+    ('faceforward', 3, '1.10', _faceforward, 'vvv', [_std_vectors, _std_vectors, _std_vectors]),
+    ('reflect', 2, '1.10', _reflect, 'vv', [_std_vectors, _normalized_vectors]),
+    ('refract', 3, '1.10', _refract, 'vvs', [_normalized_vectors, _normalized_vectors, [0.5, 2.0]]),
+    ('matrixCompMult', 2, '1.10', lambda x, y: x*y, 'mm', [_std_matrices, _std_matrices]),
+    ('outerProduct', 2, '1.20', np.outer, 'ss', [_nontrivial_vectors, _nontrivial_vectors]), # Note (1)
+    ('transpose', 1, '1.20', np.transpose, 'm', [_std_matrices]),
+    ('any', 1, '1.10', any, 'v', [_bvecs]),
+    ('all', 1, '1.10', all, 'v', [_bvecs]),
 ]
 # Note (1): we declare outerProduct with signature 'ss' so that we
 # will generate test cases where the sizes of the two matrices are not
@@ -306,7 +309,7 @@ _default_inputs = {
 
 # GLSL built-in functions that operate on vectors of floats, ints, or
 # bools, but not on single floats, ints, or bools.  Each entry in the
-# table is (name, arity, python_equivalent, arg_types).
+# table is (name, arity, glsl_version, python_equivalent, arg_types).
 #
 # python_equivalent is a Python function which operates on scalars,
 # and simulates the GLSL function.
@@ -316,15 +319,15 @@ _default_inputs = {
 # it supports "bvec" inputs.  The output type of the function is
 # assumed to be the same as its input type.
 _vector_relational_functions = [
-    ('lessThan', 2, lambda x, y: x < y, 'vi'),
-    ('lessThanEqual', 2, lambda x, y: x <= y, 'vi'),
-    ('greaterThan', 2, lambda x, y: x > y, 'vi'),
-    ('greaterThanEqual', 2, lambda x, y: x >= y, 'vi'),
-    ('equal', 2, lambda x, y: x == y, 'vib'),
-    ('not', 1, lambda x: not x, 'b'),
+    ('lessThan', 2, '1.10', lambda x, y: x < y, 'vi'),
+    ('lessThanEqual', 2, '1.10', lambda x, y: x <= y, 'vi'),
+    ('greaterThan', 2, '1.10', lambda x, y: x > y, 'vi'),
+    ('greaterThanEqual', 2, '1.10', lambda x, y: x >= y, 'vi'),
+    ('equal', 2, '1.10', lambda x, y: x == y, 'vib'),
+    ('not', 1, '1.10', lambda x: not x, 'b'),
     ]
 
-def _make_simple_test_cases(name, arity, python_equivalent, test_inputs, match_sizes = ()):
+def _make_simple_test_cases(name, arity, glsl_version, python_equivalent, test_inputs, match_sizes = ()):
     """Construct test cases for the given function where each input is
     drawn from the cartesian product of test_inputs.  Disregard cases
     where python_equivalent returns None.  If match_sizes is given,
@@ -343,7 +346,7 @@ def _make_simple_test_cases(name, arity, python_equivalent, test_inputs, match_s
 	    continue
 	expected_output = python_equivalent(*inputs)
 	if expected_output is not None:
-	    test_cases.append((name, inputs, expected_output))
+	    test_cases.append((name, glsl_version, inputs, expected_output))
     return test_cases
 
 def _vectorize_test_cases(scalar_test_cases, signature, vector_length):
@@ -356,7 +359,7 @@ def _vectorize_test_cases(scalar_test_cases, signature, vector_length):
     scalar_arguments = [i for i in xrange(arity) if signature[i] != 'v']
     grouped_test_cases = {}
     for test_case in scalar_test_cases:
-	name, arguments, expected_result = test_case
+	name, glsl_version, arguments, expected_result = test_case
 	key = (name, tuple(arguments[i] for i in scalar_arguments))
 	if key not in grouped_test_cases:
 	    grouped_test_cases[key] = []
@@ -367,7 +370,7 @@ def _vectorize_test_cases(scalar_test_cases, signature, vector_length):
     # test case is included.
     vectorized_test_cases = []
     for key, test_cases in grouped_test_cases.items():
-	name_0, arguments_0, expected_result_0 = test_cases[0]
+	name_0, glsl_version_0, arguments_0, expected_result_0 = test_cases[0]
 	for i in xrange(0, len(test_cases), vector_length):
 	    test_cases_to_vectorize = []
 	    for j in xrange(vector_length):
@@ -379,26 +382,26 @@ def _vectorize_test_cases(scalar_test_cases, signature, vector_length):
 		    args.append(
 			np.array(
 			    [arguments[j]
-			     for name, arguments, expected_result
+			     for name, glsl_version, arguments, expected_result
 			     in test_cases_to_vectorize]))
 		else:
 		    args.append(arguments_0[j])
 	    result = np.array(
 		[expected_result
-		 for name, arguments, expected_result
+		 for name, glsl_version, arguments, expected_result
 		 in test_cases_to_vectorize])
-	    vectorized_test_cases.append((name_0, tuple(args), result))
+	    vectorized_test_cases.append((name_0, glsl_version_0, tuple(args), result))
     return vectorized_test_cases
 
-# Temporary holding area: list of tuples (function_name, arguments,
-# expected_result).
+# Temporary holding area: list of tuples (function_name, glsl_version,
+# arguments, expected_result).
 _temp_test_suites = []
 
-for name, arity, python_equivalent, signatures, test_inputs in \
+for name, arity, glsl_version, python_equivalent, signatures, test_inputs in \
 	_componentwise_functions:
     assert 's'*arity not in signatures
     scalar_test_cases = _make_simple_test_cases(
-	name, arity, python_equivalent, test_inputs)
+	name, arity, glsl_version, python_equivalent, test_inputs)
     _temp_test_suites.extend(scalar_test_cases)
     for signature in signatures:
 	for vector_length in (2, 3, 4):
@@ -406,28 +409,28 @@ for name, arity, python_equivalent, signatures, test_inputs in \
 		_vectorize_test_cases(
 		    scalar_test_cases, signature, vector_length))
 
-for name, arity, python_equivalent, arg_types in _vector_relational_functions:
+for name, arity, glsl_version, python_equivalent, arg_types in _vector_relational_functions:
     for arg_type in arg_types:
 	test_inputs = [_default_inputs[arg_type]]*arity
 	scalar_test_cases = _make_simple_test_cases(
-	    name, arity, python_equivalent, test_inputs)
+	    name, arity, glsl_version, python_equivalent, test_inputs)
 	signature = 'v'*arity
 	for vector_length in (2, 3, 4):
 	    _temp_test_suites.extend(
 		_vectorize_test_cases(
 		    scalar_test_cases, signature, vector_length))
 
-for name, arity, python_equivalent, signature, test_inputs in _vector_and_matrix_functions:
+for name, arity, glsl_version, python_equivalent, signature, test_inputs in _vector_and_matrix_functions:
     vector_arguments = [i for i in xrange(arity) if signature[i] != 's']
     _temp_test_suites.extend(_make_simple_test_cases(
-	    name, arity, python_equivalent, test_inputs, vector_arguments))
+	    name, arity, glsl_version, python_equivalent, test_inputs, vector_arguments))
 
-for name, args, expected in _temp_test_suites:
-    key = (name, glsl_type(expected), tuple(glsl_type(arg) for arg in args))
+for name, glsl_version, args, expected in _temp_test_suites:
+    key = (name, glsl_version, glsl_type(expected), tuple(glsl_type(arg) for arg in args))
     if key not in test_suites:
 	test_suites[key] = []
     test_suites[key].append((args, expected))
 _temp_test_suites = None
 
-for name, rettype, argtypes in test_suites.keys():
-    print '{0} {1}({2})'.format(rettype, name, ', '.join(argtypes))
+for name, glsl_version, rettype, argtypes in test_suites.keys():
+    print '({0}) {1} {2}({3})'.format(glsl_version, rettype, name, ', '.join(argtypes))

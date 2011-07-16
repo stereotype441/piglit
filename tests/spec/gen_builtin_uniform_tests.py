@@ -100,12 +100,12 @@ def make_test(rettype, argtypes, offset, scale, test_cases):
     return test
 
 for key, test_cases in test_suites.items():
-    function_name, rettype, argtypes = key
+    function_name, glsl_version, rettype, argtypes = key
     offset, scale = compute_offset_and_scale(test_cases)
     filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}.shader_test'.format(function_name, '-'.join(argtypes))
     test = [
 	'[require]',
-	'GLSL >= 1.10',
+	'GLSL >= {0}'.format(glsl_version),
 	'',
 	'[vertex shader]',
 	]
