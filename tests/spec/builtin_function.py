@@ -380,13 +380,13 @@ for name, arity, python_equivalent, signatures, test_inputs in \
 		    scalar_test_cases, signature, vector_length))
 
 for name, arity, python_equivalent, arg_types in _vector_relational_functions:
+    test_suite_name = name
+    assert test_suite_name not in _temp_test_suites
+    _temp_test_suites[test_suite_name] = []
     for arg_type in arg_types:
-	test_suite_name = '{0}-{1}'.format(name, arg_type)
-	assert test_suite_name not in _temp_test_suites
 	test_inputs = [_default_inputs[arg_type]]*arity
 	scalar_test_cases = _make_simple_test_cases(
 	    name, arity, python_equivalent, test_inputs)
-	_temp_test_suites[test_suite_name] = []
 	signature = 'v'*arity
 	for vector_length in (2, 3, 4):
 	    _temp_test_suites[test_suite_name].extend(
