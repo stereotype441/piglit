@@ -2,6 +2,7 @@
 GLSL >= 1.20
 
 [vertex shader]
+#version 120
 varying vec4 color;
 uniform vec4 arg0;
 uniform vec4 arg1;
@@ -17,6 +18,7 @@ void main()
 }
 
 [fragment shader]
+#version 120
 varying vec4 color;
 
 void main()

@@ -4,9 +4,16 @@ import os.path
 
 this_file = os.path.basename(__file__)
 
-def make_shader(function_name, rettype, argtypes, offset, scale):
-    base_type, num_cols, num_rows, glsl_version = glsl_type_info(rettype)
-    shader = ['varying vec4 color;']
+def start_shader(glsl_version):
+    if glsl_version == '1.10':
+	return []
+    else:
+	return ['#version {0}'.format(glsl_version.replace('.', ''))]
+
+def make_shader(glsl_version, function_name, rettype, argtypes, offset, scale):
+    shader = start_shader(glsl_version)
+    base_type, num_cols, num_rows, glsl_version_for_rettype = glsl_type_info(rettype)
+    shader.append('varying vec4 color;')
     for i in xrange(len(argtypes)):
 	shader.append('uniform {0} arg{1};'.format(argtypes[i], i))
     if num_rows != 1:
@@ -29,15 +36,17 @@ def make_shader(function_name, rettype, argtypes, offset, scale):
     shader.append('}')
     return shader
 
-def reference_shader():
-    return [
-	'varying vec4 color;',
-	'',
-	'void main()',
-	'{',
-	'  gl_FragColor = color;',
-	'}',
-	]
+def reference_shader(glsl_version):
+    shader = start_shader(glsl_version)
+    shader.extend([
+	    'varying vec4 color;',
+	    '',
+	    'void main()',
+	    '{',
+	    '  gl_FragColor = color;',
+	    '}',
+	    ])
+    return shader
 
 def compute_offset_and_scale(test_cases):
     low = min(numpy.min(expected_result) for args, expected_result in test_cases)
@@ -71,7 +80,7 @@ def shader_runner_type(glsl_type):
 	return glsl_type
 
 def make_test(rettype, argtypes, offset, scale, test_cases):
-    base_type, num_cols, num_rows, glsl_version = glsl_type_info(rettype)
+    base_type, num_cols, num_rows, glsl_version_for_rettype = glsl_type_info(rettype)
     def rescale_and_pad(value):
 	if base_type == 'bool':
 	    value = value*1.0
@@ -109,10 +118,10 @@ for key, test_cases in test_suites.items():
 	'',
 	'[vertex shader]',
 	]
-    test.extend(make_shader(function_name, rettype, argtypes, offset, scale))
+    test.extend(make_shader(glsl_version, function_name, rettype, argtypes, offset, scale))
     test.append('')
     test.append('[fragment shader]')
-    test.extend(reference_shader())
+    test.extend(reference_shader(glsl_version))
     test.append('')
     test.append('[test]')
     test.extend(make_test(rettype, argtypes, offset, scale, test_cases))
