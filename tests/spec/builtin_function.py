@@ -1,26 +1,66 @@
 import itertools
 import numpy as np
 
-# dictionary mapping test suite name to a list of test cases, where
-# each test case has the form (function_name, arguments,
-# expected_result).  Each element of arguments, and the whole of
-# expected_result, may be either a floating point type or a
-# numpy.ndarray representing a vector or matrix.
+# Two-level dictionary mapping test suite name to a list of type
+# names, to a list of test cases, where each test case has the form
+# (function_name, arguments, expected_result).  Each element of
+# arguments, and the whole of expected_result, may be either a
+# floating point type or a numpy.ndarray representing a vector or
+# matrix.
+#
+# The second level of the dictionary, the list of type names, contains
+# the type name of the return type of the function, followed by the
+# type name of each of its arguments.
 test_suites = {}
 
-def make_constant(value):
-    """Return GLSL code that constructs the given constant value.
-    Value may be a floating point type or a numpy.ndarray representing
-    a vector."""
+def glsl_type(value):
+    """Return the GLSL type name corresponding to the given constant
+    value."""
     if isinstance(value, float):
-	return str(value)
+	return 'float'
+    elif isinstance(value, (bool, np.bool_)):
+	return 'bool'
+    elif isinstance(value, (int, long)):
+	return 'int'
     else:
 	assert isinstance(value, np.ndarray)
-	assert len(value.shape) == 1
-	vector_length = value.shape[0]
-	assert 2 <= vector_length <= 4
-	return 'vec{0}({1})'.format(
-	    vector_length, ', '.join(str(x) for x in value))
+	if len(value.shape) == 1:
+	    # Vector
+	    if value.dtype == float:
+		vec_type = 'vec'
+	    elif value.dtype == bool:
+		vec_type = 'bvec'
+	    elif value.dtype == int:
+		vec_type = 'ivec'
+	    else:
+		raise Exception(str(value.dtype))
+	    vector_length = value.shape[0]
+	    assert 2 <= vector_length <= 4
+	    return '{0}{1}'.format(vec_type, vector_length)
+	else:
+	    assert value.dtype == float
+	    assert len(value.shape) == 2
+	    # Matrix
+	    matrix_rows = value.shape[0]
+	    assert 2 <= matrix_rows <= 4
+	    matrix_columns = value.shape[1]
+	    assert 2 <= matrix_columns <= 4
+	    if matrix_rows == matrix_columns:
+		return 'mat{0}'.format(matrix_rows)
+	    else:
+		return 'mat{0}x{1}'.format(matrix_columns, matrix_rows)
+
+def glsl_constant(value):
+    """Return GLSL code that constructs the given constant value."""
+    column_major = np.reshape(np.array(value), -1, 'F')
+    if column_major.dtype == bool:
+	values = ['true' if x else 'false' for x in column_major]
+    else:
+	values = [str(x) for x in column_major]
+    if len(column_major) == 1:
+	return values[0]
+    else:
+	return '{0}({1})'.format(glsl_type(value), ', '.join(values))
 
 def _arctan2(y, x):
     if x == y == 0.0:
@@ -127,6 +167,7 @@ _std_vectors3 = [
      np.array([1.67, 0.66, 1.87]),
      ]
 _normalized_vectors = [_normalize(x) for x in _std_vectors]
+_nontrivial_vectors = [x for x in _std_vectors if not isinstance(x, float)]
 _std_matrices = [
     np.array([[ 1.60,  0.76],
 	      [ 1.53, -1.00]]), # mat2
@@ -184,15 +225,19 @@ _std_matrices = [
 	      [ 0.40, -0.77,  1.76]]), # mat3x4
     ]
 
+_ft = [False, True]
+_bvecs = [np.array(bs) for bs in itertools.product(_ft, _ft)] + \
+    [np.array(bs) for bs in itertools.product(_ft, _ft, _ft)] + \
+    [np.array(bs) for bs in itertools.product(_ft, _ft, _ft, _ft)]
+
 # GLSL built-in functions that operate on vectors/matrices as a whole.
 # Each entry in the table is (name, arity, python_equivalent,
 # signature, test_inputs).
 #
-# python_equivalent is a Python function which operates on scalars,
-# and simulates GLSL function.  This function should return None in
-# any case where the output of the GLSL function is undefined.
-# However, it need not check that the lengths of the input vectors are
-# all the same.
+# python_equivalent is a Python function which simulates the GLSL
+# function.  This function should return None in any case where the
+# output of the GLSL function is undefined.  However, it need not
+# check that the lengths of the input vectors are all the same.
 #
 # signature is a string containing s's, v's, and m's to represent
 # which arguments are vectors, matrices, and scalars.  For example, if
@@ -212,7 +257,40 @@ _vector_and_matrix_functions = [
     ('reflect', 2, _reflect, 'vv', [_std_vectors, _normalized_vectors]),
     ('refract', 3, _refract, 'vvs', [_normalized_vectors, _normalized_vectors, [0.5, 2.0]]),
     ('matrixCompMult', 2, lambda x, y: x*y, 'mm', [_std_matrices, _std_matrices]),
+    ('outerProduct', 2, np.outer, 'ss', [_nontrivial_vectors, _nontrivial_vectors]), # Note (1)
+    ('transpose', 1, np.transpose, 'm', [_std_matrices]),
+    ('any', 1, any, 'v', [_bvecs]),
+    ('all', 1, all, 'v', [_bvecs]),
 ]
+# Note (1): we declare outerProduct with signature 'ss' so that we
+# will generate test cases where the sizes of the two matrices are not
+# the same.
+
+_default_inputs = {
+    'v': np.linspace(-1.5, 1.5, 4),
+    'i': np.array([1, 2, 3, 4]),
+    'b': np.array([False, True])
+    }
+
+# GLSL built-in functions that operate on vectors of floats, ints, or
+# bools, but not on single floats, ints, or bools.  Each entry in the
+# table is (name, arity, python_equivalent, arg_types).
+#
+# python_equivalent is a Python function which operates on scalars,
+# and simulates the GLSL function.
+#
+# arg_types is a string containing 'v' if the function supports
+# standard "vec" inputs, 'i' if it supports "ivec" inputs, and 'b' if
+# it supports "bvec" inputs.  The output type of the function is
+# assumed to be the same as its input type.
+_vector_relational_functions = [
+    ('lessThan', 2, lambda x, y: x < y, 'vi'),
+    ('lessThanEqual', 2, lambda x, y: x <= y, 'vi'),
+    ('greaterThan', 2, lambda x, y: x > y, 'vi'),
+    ('greaterThanEqual', 2, lambda x, y: x >= y, 'vi'),
+    ('equal', 2, lambda x, y: x == y, 'vib'),
+    ('not', 1, lambda x: not x, 'b'),
+    ]
 
 def _make_simple_test_cases(name, arity, python_equivalent, test_inputs, match_sizes = ()):
     """Construct test cases for the given function where each input is
@@ -280,31 +358,59 @@ def _vectorize_test_cases(scalar_test_cases, signature, vector_length):
 	    vectorized_test_cases.append((name_0, tuple(args), result))
     return vectorized_test_cases
 
+# Temporary holding area: like test_suites, but lacks the second level
+# of the dictionary.
+_temp_test_suites = {}
+
 for name, arity, python_equivalent, signatures, test_inputs in \
 	_componentwise_functions:
-    if name in test_suites:
+    if name in _temp_test_suites:
 	test_suite_name = '{0}{1}'.format(name, arity)
     else:
 	test_suite_name = name
-    assert test_suite_name not in test_suites
+    assert test_suite_name not in _temp_test_suites
     assert 's'*arity not in signatures
     scalar_test_cases = _make_simple_test_cases(
 	name, arity, python_equivalent, test_inputs)
-    test_suites[test_suite_name] = list(scalar_test_cases)
+    _temp_test_suites[test_suite_name] = list(scalar_test_cases)
     for signature in signatures:
 	for vector_length in (2, 3, 4):
-	    test_suites[test_suite_name].extend(
+	    _temp_test_suites[test_suite_name].extend(
+		_vectorize_test_cases(
+		    scalar_test_cases, signature, vector_length))
+
+for name, arity, python_equivalent, arg_types in _vector_relational_functions:
+    for arg_type in arg_types:
+	test_suite_name = '{0}-{1}'.format(name, arg_type)
+	assert test_suite_name not in _temp_test_suites
+	test_inputs = [_default_inputs[arg_type]]*arity
+	scalar_test_cases = _make_simple_test_cases(
+	    name, arity, python_equivalent, test_inputs)
+	_temp_test_suites[test_suite_name] = []
+	signature = 'v'*arity
+	for vector_length in (2, 3, 4):
+	    _temp_test_suites[test_suite_name].extend(
 		_vectorize_test_cases(
 		    scalar_test_cases, signature, vector_length))
 
 for name, arity, python_equivalent, signature, test_inputs in _vector_and_matrix_functions:
     test_suite_name = name
-    assert test_suite_name not in test_suites
+    assert test_suite_name not in _temp_test_suites
     vector_arguments = [i for i in xrange(arity) if signature[i] != 's']
-    test_suites[test_suite_name] = _make_simple_test_cases(
+    _temp_test_suites[test_suite_name] = _make_simple_test_cases(
 	name, arity, python_equivalent, test_inputs, vector_arguments)
 
+for name, test_cases in _temp_test_suites.items():
+    if name not in test_suites:
+	test_suites[name] = {}
+    suite = test_suites[name]
+    for test_case in test_cases:
+	fname, args, expected = test_case
+	types = (glsl_type(expected),) + tuple(glsl_type(arg) for arg in args)
+	if types not in suite:
+	    suite[types] = []
+	suite[types].append(test_case)
+
 for name, ts in test_suites.items():
-    print '{0}:'.format(name)
-    for fname, args, expected in ts:
-	print '  {0}({1}) == {2}'.format(fname, ', '.join(str(x) for x in args), expected)
+    for types, ts2 in ts.items():
+	print '{0}-{1}'.format(name, '-'.join(types))

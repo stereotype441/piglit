@@ -1,7 +1,69 @@
 from builtin_function import *
+import numpy
 import os.path
 
 this_file = os.path.basename(__file__)
+
+def combine_test_cases(test_cases):
+    for types, values in test_cases.items():
+	for value in values:
+	    yield value
+
+def format_test_cases(test_cases):
+    for function_name, arguments, expected_result in test_cases:
+	arg_str = ', '.join(glsl_constant(arg) for arg in arguments)
+	value_str = '{0}({1})'.format(function_name, arg_str)
+	yield value_str, expected_result
+
+def split_test(test_case):
+    value_str, expected_result = test_case
+    if isinstance(expected_result, numpy.ndarray):
+	for elem in xrange(expected_result.shape[-1]):
+	    e = expected_result[...,elem]
+	    if e.shape == ():
+		e = e.tolist()
+	    yield '{0}[{1}]'.format(value_str, elem), e
+    else:
+	yield value_str, expected_result
+
+def split_matrices(test_cases):
+    for value_str, expected_result in test_cases:
+	if isinstance(expected_result, numpy.ndarray) and \
+		len(expected_result.shape) > 1:
+	    for subtest in split_test((value_str, expected_result)):
+		yield subtest
+	else:
+	    yield value_str, expected_result
+
+def make_booleans(test_cases, use_all_and_equal, use_length):
+    for value_str, expected_result in test_cases:
+	if isinstance(expected_result, (bool, numpy.bool_)):
+	    yield value_str, expected_result
+	elif isinstance(expected_result, numpy.ndarray) and \
+		expected_result.dtype == bool:
+	    if use_all_and_equal:
+		yield 'all(equal({0}, {1}))'.format(
+		    glsl_constant(expected_result), value_str), True
+	    else:
+		for subtest in split_test((value_str, expected_result)):
+		    yield subtest
+	else:
+	    if use_length:
+		yield 'length({0} - {1}) < 0.001'.format(
+		    glsl_constant(expected_result), value_str), True
+	    else:
+		for sub_value_str, sub_expected_result in \
+			split_test((value_str, expected_result)):
+		    yield '{0} < {1}'.format(value_str, glsl_constant(expected_result + 0.001)), True
+		    yield '{0} < {1}'.format(glsl_constant(expected_result - 0.001), value_str), True
+
+def make_array_lengths(test_cases):
+    for value_str, expected_result in test_cases:
+	assert isinstance(expected_result, (bool, numpy.bool_))
+	if expected_result:
+	    yield '{0} ? 1 : -1'.format(value_str)
+	else:
+	    yield '{0} ? -1 : 1'.format(value_str)
 
 for test_suite_name, test_cases in test_suites.items():
     for shader_type in ('vert', 'frag'):
@@ -20,20 +82,21 @@ for test_suite_name, test_cases in test_suites.items():
 	    f.write(' */\n')
 	    f.write('#version 120\n')
 	    f.write('\n')
-	    for i, test_case in enumerate(test_cases):
-		function_name, arguments, expected_result = test_case
-		expected_str = make_constant(expected_result)
-		arg_str = ', '.join(make_constant(arg) for arg in arguments)
-		residual = 'length({0} - {1}({2}))'.format(
-		    expected_str, function_name, arg_str)
-		f.write('float[{0} < 0.001 ? 1 : -1] array{1};\n'.format(
-			residual, i))
+	    combined_test_cases = list(combine_test_cases(test_cases))
+	    formatted_test_cases = list(format_test_cases(combined_test_cases))
+	    vector_test_cases = list(split_matrices(formatted_test_cases))
+	    use_length = test_suite_name.find('length') == -1
+	    use_all_and_equal = test_suite_name.find('all') == -1 and test_suite_name.find('equal') == -1
+	    bool_test_cases = list(make_booleans(vector_test_cases, use_all_and_equal, use_length))
+	    array_lengths = list(make_array_lengths(bool_test_cases))
+	    for i, array_length in enumerate(array_lengths):
+		f.write('float[{0}] array{1};\n'.format(array_length, i))
 	    f.write('\n')
 	    f.write('main()\n')
 	    f.write('{\n')
-	    array_lengths = [
-		'array{0}.length()'.format(i) for i in xrange(len(test_cases))]
-	    array_length_sum = '\n                      + '.join(array_lengths)
+	    array_length_getters = [
+		'array{0}.length()'.format(i) for i in xrange(len(array_lengths))]
+	    array_length_sum = '\n                      + '.join(array_length_getters)
 	    f.write('  {0} = vec4({1});\n'.format(
 		    output_var, array_length_sum))
 	    f.write('}\n')
