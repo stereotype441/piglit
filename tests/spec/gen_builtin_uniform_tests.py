@@ -102,7 +102,7 @@ def make_test(rettype, argtypes, offset, scale, test_cases):
 for key, test_cases in test_suites.items():
     function_name, rettype, argtypes = key
     offset, scale = compute_offset_and_scale(test_cases)
-    filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}-{2}.shader_test'.format(function_name, rettype, '-'.join(argtypes))
+    filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}.shader_test'.format(function_name, '-'.join(argtypes))
     test = [
 	'[require]',
 	'GLSL >= 1.10',

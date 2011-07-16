@@ -67,8 +67,8 @@ for key, test_cases in test_suites.items():
 	    output_var = 'gl_Position '
 	else:
 	    output_var = 'gl_FragColor'
-	filename = 'glsl-1.20/compiler/built-in-functions/const-{0}-{1}-{2}.{3}'.format(
-	    function_name, rettype, '-'.join(argtypes), shader_type)
+	filename = 'glsl-1.20/compiler/built-in-functions/const-{0}-{1}.{2}'.format(
+	    function_name, '-'.join(argtypes), shader_type)
 	with open(filename, 'w') as f:
 	    f.write('/* [config]\n')
 	    f.write(' * expect_result: pass\n')

@@ -4,13 +4,14 @@ GLSL >= 1.10
 [vertex shader]
 varying vec4 color;
 uniform vec2 arg0;
+uniform vec2 arg1;
 
 void main()
 {
   gl_Position = gl_Vertex;
-  vec2 result = atan(arg0);
-  result -= -2.21429743559;
-  result *= 0.225805256315;
+  vec2 result = atan(arg0, arg1);
+  result -= -5.10508806208;
+  result *= 0.0909456817668;
   color = vec4(result, 0.0, 0.0);
 }
 
@@ -23,9 +24,19 @@ void main()
 }
 
 [test]
-uniform vec2 arg0 -2.0 -0.666666666667
+uniform vec2 arg0 -2.0 -2.0
+uniform vec2 arg1 -2.0 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.367225921392 0.0 0.0
-uniform vec2 arg0 0.666666666667 2.0
+probe rgba 0 0 0.25 0.321428571429 0.0 0.0
+uniform vec2 arg0 -2.0 0.0
+uniform vec2 arg1 2.0 -2.0
 draw rect -1 -1 2 2
-probe rgba 1 0 0.632774078608 0.75 0.0 0.0
+probe rgba 1 0 0.392857142857 0.75 0.0 0.0
+uniform vec2 arg0 0.0 2.0
+uniform vec2 arg1 2.0 -2.0
+draw rect -1 -1 2 2
+probe rgba 2 0 0.464285714286 0.678571428571 0.0 0.0
+uniform vec2 arg0 2.0 2.0
+uniform vec2 arg1 0.0 2.0
+draw rect -1 -1 2 2
+probe rgba 3 0 0.607142857143 0.535714285714 0.0 0.0
