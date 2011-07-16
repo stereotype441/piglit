@@ -34,34 +34,34 @@ uniform vec2 arg0 -0.1 -1.2
 uniform vec2 arg1 -0.1 -1.2
 uniform vec2 arg2 -0.42 0.48
 draw rect -1 -1 2 2
-probe rgba 0 0 0.479166666667 0.25 0.0 0.0
+probe rgba 1 0 0.479166666667 0.25 0.0 0.0
 uniform vec2 arg0 -0.1 -1.2
 uniform vec2 arg1 -0.42 0.48
 uniform vec2 arg2 -0.1 -1.2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.479166666667 0.25 0.0 0.0
+probe rgba 2 0 0.479166666667 0.25 0.0 0.0
 uniform vec2 arg0 -0.1 -1.2
 uniform vec2 arg1 -0.42 0.48
 uniform vec2 arg2 -0.42 0.48
 draw rect -1 -1 2 2
-probe rgba 0 0 0.520833333333 0.75 0.0 0.0
+probe rgba 3 0 0.520833333333 0.75 0.0 0.0
 uniform vec2 arg0 -0.42 0.48
 uniform vec2 arg1 -0.1 -1.2
 uniform vec2 arg2 -0.1 -1.2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5875 0.4 0.0 0.0
+probe rgba 4 0 0.5875 0.4 0.0 0.0
 uniform vec2 arg0 -0.42 0.48
 uniform vec2 arg1 -0.1 -1.2
 uniform vec2 arg2 -0.42 0.48
 draw rect -1 -1 2 2
-probe rgba 0 0 0.4125 0.6 0.0 0.0
+probe rgba 5 0 0.4125 0.6 0.0 0.0
 uniform vec2 arg0 -0.42 0.48
 uniform vec2 arg1 -0.42 0.48
 uniform vec2 arg2 -0.1 -1.2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.4125 0.6 0.0 0.0
+probe rgba 6 0 0.4125 0.6 0.0 0.0
 uniform vec2 arg0 -0.42 0.48
 uniform vec2 arg1 -0.42 0.48
 uniform vec2 arg2 -0.42 0.48
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5875 0.4 0.0 0.0
+probe rgba 7 0 0.5875 0.4 0.0 0.0

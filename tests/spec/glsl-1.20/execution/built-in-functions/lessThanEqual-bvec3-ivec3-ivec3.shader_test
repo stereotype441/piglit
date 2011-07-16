@@ -29,20 +29,20 @@ probe rgba 0 0 1 1 1 0
 uniform ivec3 arg0 1 2 2
 uniform ivec3 arg1 4 1 2
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 1 0
+probe rgba 1 0 1 0 1 0
 uniform ivec3 arg0 2 2 3
 uniform ivec3 arg1 3 4 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 1 0 0
+probe rgba 2 0 1 1 0 0
 uniform ivec3 arg0 3 3 3
 uniform ivec3 arg1 2 3 4
 draw rect -1 -1 2 2
-probe rgba 0 0 0 1 1 0
+probe rgba 3 0 0 1 1 0
 uniform ivec3 arg0 4 4 4
 uniform ivec3 arg1 1 2 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0 0 0 0
+probe rgba 4 0 0 0 0 0
 uniform ivec3 arg0 4 1 1
 uniform ivec3 arg1 4 1 2
 draw rect -1 -1 2 2
-probe rgba 0 0 1 1 1 0
+probe rgba 5 0 1 1 1 0

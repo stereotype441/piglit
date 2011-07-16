@@ -31,28 +31,28 @@ probe rgba 0 0 0.75 0.75 0.75 0.0
 uniform float arg0 -2.0
 uniform vec3 arg1 2.0 -2.0 -0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.75 0.75 0.0
+probe rgba 1 0 0.75 0.75 0.75 0.0
 uniform float arg0 -0.666666666667
 uniform vec3 arg1 -2.0 -0.666666666667 0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.75 0.75 0.0
+probe rgba 2 0 0.25 0.75 0.75 0.0
 uniform float arg0 -0.666666666667
 uniform vec3 arg1 2.0 -2.0 -0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.25 0.75 0.0
+probe rgba 3 0 0.75 0.25 0.75 0.0
 uniform float arg0 2.0
 uniform vec3 arg1 -2.0 -0.666666666667 0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.25 0.25 0.0
+probe rgba 4 0 0.25 0.25 0.25 0.0
 uniform float arg0 2.0
 uniform vec3 arg1 2.0 -2.0 -0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.25 0.25 0.0
+probe rgba 5 0 0.75 0.25 0.25 0.0
 uniform float arg0 0.666666666667
 uniform vec3 arg1 -2.0 -0.666666666667 0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.25 0.75 0.0
+probe rgba 6 0 0.25 0.25 0.75 0.0
 uniform float arg0 0.666666666667
 uniform vec3 arg1 2.0 -2.0 -0.666666666667
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.25 0.25 0.0
+probe rgba 7 0 0.75 0.25 0.25 0.0

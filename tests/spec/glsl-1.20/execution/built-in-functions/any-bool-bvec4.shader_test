@@ -26,46 +26,46 @@ draw rect -1 -1 2 2
 probe rgba 0 0 0 0 0 0
 uniform ivec4 arg0 0 0 0 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 1 0 1 0 0 0
 uniform ivec4 arg0 0 0 1 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 2 0 1 0 0 0
 uniform ivec4 arg0 0 0 1 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 3 0 1 0 0 0
 uniform ivec4 arg0 0 1 0 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 4 0 1 0 0 0
 uniform ivec4 arg0 0 1 0 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 5 0 1 0 0 0
 uniform ivec4 arg0 0 1 1 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 6 0 1 0 0 0
 uniform ivec4 arg0 0 1 1 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 7 0 1 0 0 0
 uniform ivec4 arg0 1 0 0 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 8 0 1 0 0 0
 uniform ivec4 arg0 1 0 0 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 9 0 1 0 0 0
 uniform ivec4 arg0 1 0 1 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 10 0 1 0 0 0
 uniform ivec4 arg0 1 0 1 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 11 0 1 0 0 0
 uniform ivec4 arg0 1 1 0 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 12 0 1 0 0 0
 uniform ivec4 arg0 1 1 0 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 13 0 1 0 0 0
 uniform ivec4 arg0 1 1 1 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 14 0 1 0 0 0
 uniform ivec4 arg0 1 1 1 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 15 0 1 0 0 0

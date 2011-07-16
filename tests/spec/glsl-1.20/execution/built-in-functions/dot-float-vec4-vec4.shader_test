@@ -31,12 +31,12 @@ probe rgba 0 0 0.75 0.0 0.0 0.0
 uniform vec4 arg0 -1.65 1.33 1.93 0.76
 uniform vec4 arg1 0.8 -0.15 -0.51 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 1 0 0.25 0.0 0.0 0.0
 uniform vec4 arg0 0.8 -0.15 -0.51 0.0
 uniform vec4 arg1 -1.65 1.33 1.93 0.76
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 2 0 0.25 0.0 0.0 0.0
 uniform vec4 arg0 0.8 -0.15 -0.51 0.0
 uniform vec4 arg1 0.8 -0.15 -0.51 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.40164148455 0.0 0.0 0.0
+probe rgba 3 0 0.40164148455 0.0 0.0 0.0

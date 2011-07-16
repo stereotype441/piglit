@@ -26,10 +26,10 @@ draw rect -1 -1 2 2
 probe rgba 0 0 0 0 0 0
 uniform ivec2 arg0 0 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 1 0 1 0 0 0
 uniform ivec2 arg0 1 0
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 2 0 1 0 0 0
 uniform ivec2 arg0 1 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
+probe rgba 3 0 1 0 0 0

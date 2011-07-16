@@ -34,114 +34,114 @@ uniform float arg0 -2.0
 uniform float arg1 -1.5
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 1 0 0.25 0.0 0.0 0.0
 uniform float arg0 -2.0
 uniform float arg1 -1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 2 0 0.25 0.0 0.0 0.0
 uniform float arg0 -2.0
 uniform float arg1 0.0
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 3 0 0.5 0.0 0.0 0.0
 uniform float arg0 -2.0
 uniform float arg1 0.0
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 4 0 0.5 0.0 0.0 0.0
 uniform float arg0 -2.0
 uniform float arg1 1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.0 0.0 0.0
+probe rgba 5 0 0.75 0.0 0.0 0.0
 uniform float arg0 -0.666666666667
 uniform float arg1 -1.5
 uniform float arg2 -1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 6 0 0.25 0.0 0.0 0.0
 uniform float arg0 -0.666666666667
 uniform float arg1 -1.5
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.388888888889 0.0 0.0 0.0
+probe rgba 7 0 0.388888888889 0.0 0.0 0.0
 uniform float arg0 -0.666666666667
 uniform float arg1 -1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.388888888889 0.0 0.0 0.0
+probe rgba 8 0 0.388888888889 0.0 0.0 0.0
 uniform float arg0 -0.666666666667
 uniform float arg1 0.0
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 9 0 0.5 0.0 0.0 0.0
 uniform float arg0 -0.666666666667
 uniform float arg1 0.0
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 10 0 0.5 0.0 0.0 0.0
 uniform float arg0 -0.666666666667
 uniform float arg1 1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.0 0.0 0.0
+probe rgba 11 0 0.75 0.0 0.0 0.0
 uniform float arg0 0.666666666667
 uniform float arg1 -1.5
 uniform float arg2 -1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 12 0 0.25 0.0 0.0 0.0
 uniform float arg0 0.666666666667
 uniform float arg1 -1.5
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 13 0 0.5 0.0 0.0 0.0
 uniform float arg0 0.666666666667
 uniform float arg1 -1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.611111111111 0.0 0.0 0.0
+probe rgba 14 0 0.611111111111 0.0 0.0 0.0
 uniform float arg0 0.666666666667
 uniform float arg1 0.0
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 15 0 0.5 0.0 0.0 0.0
 uniform float arg0 0.666666666667
 uniform float arg1 0.0
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.611111111111 0.0 0.0 0.0
+probe rgba 16 0 0.611111111111 0.0 0.0 0.0
 uniform float arg0 0.666666666667
 uniform float arg1 1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.0 0.0 0.0
+probe rgba 17 0 0.75 0.0 0.0 0.0
 uniform float arg0 2.0
 uniform float arg1 -1.5
 uniform float arg2 -1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.0 0.0 0.0
+probe rgba 18 0 0.25 0.0 0.0 0.0
 uniform float arg0 2.0
 uniform float arg1 -1.5
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 19 0 0.5 0.0 0.0 0.0
 uniform float arg0 2.0
 uniform float arg1 -1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.0 0.0 0.0
+probe rgba 20 0 0.75 0.0 0.0 0.0
 uniform float arg0 2.0
 uniform float arg1 0.0
 uniform float arg2 0.0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.5 0.0 0.0 0.0
+probe rgba 21 0 0.5 0.0 0.0 0.0
 uniform float arg0 2.0
 uniform float arg1 0.0
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.0 0.0 0.0
+probe rgba 22 0 0.75 0.0 0.0 0.0
 uniform float arg0 2.0
 uniform float arg1 1.5
 uniform float arg2 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 0.75 0.0 0.0 0.0
+probe rgba 23 0 0.75 0.0 0.0 0.0

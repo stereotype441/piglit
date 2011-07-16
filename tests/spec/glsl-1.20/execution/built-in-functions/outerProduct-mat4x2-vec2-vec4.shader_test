@@ -32,52 +32,52 @@ draw rect -1 -1 2 2
 probe rgba 0 0 0.53875698324 0.75 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
-probe rgba 0 0 0.504073556797 0.333798882682 0.0 0.0
+probe rgba 0 1 0.504073556797 0.333798882682 0.0 0.0
 uniform int column 2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.497090316574 0.25 0.0 0.0
+probe rgba 0 2 0.497090316574 0.25 0.0 0.0
 uniform int column 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0.510707635009 0.413407821229 0.0 0.0
+probe rgba 0 3 0.510707635009 0.413407821229 0.0 0.0
 uniform vec2 arg0 -0.1 -1.2
 uniform vec4 arg1 0.8 -0.15 -0.51 0.0
 uniform int column 0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.510242085661 0.40782122905 0.0 0.0
+probe rgba 1 0 0.510242085661 0.40782122905 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
-probe rgba 0 0 0.521298882682 0.540502793296 0.0 0.0
+probe rgba 1 1 0.521298882682 0.540502793296 0.0 0.0
 uniform int column 2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.525488826816 0.590782122905 0.0 0.0
+probe rgba 1 2 0.525488826816 0.590782122905 0.0 0.0
 uniform int column 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0.519553072626 0.519553072626 0.0 0.0
+probe rgba 1 3 0.519553072626 0.519553072626 0.0 0.0
 uniform vec2 arg0 -0.42 0.48
 uniform vec4 arg1 -1.65 1.33 1.93 0.76
 uniform int column 0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.600209497207 0.427374301676 0.0 0.0
+probe rgba 2 0 0.600209497207 0.427374301676 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
-probe rgba 0 0 0.454539106145 0.593854748603 0.0 0.0
+probe rgba 2 1 0.454539106145 0.593854748603 0.0 0.0
 uniform int column 2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.425209497207 0.627374301676 0.0 0.0
+probe rgba 2 2 0.425209497207 0.627374301676 0.0 0.0
 uniform int column 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0.482402234637 0.562011173184 0.0 0.0
+probe rgba 2 3 0.482402234637 0.562011173184 0.0 0.0
 uniform vec2 arg0 -0.42 0.48
 uniform vec4 arg1 0.8 -0.15 -0.51 0.0
 uniform int column 0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.480446927374 0.564245810056 0.0 0.0
+probe rgba 3 0 0.480446927374 0.564245810056 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
-probe rgba 0 0 0.52688547486 0.511173184358 0.0 0.0
+probe rgba 3 1 0.52688547486 0.511173184358 0.0 0.0
 uniform int column 2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.544483240223 0.491061452514 0.0 0.0
+probe rgba 3 2 0.544483240223 0.491061452514 0.0 0.0
 uniform int column 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0.519553072626 0.519553072626 0.0 0.0
+probe rgba 3 3 0.519553072626 0.519553072626 0.0 0.0

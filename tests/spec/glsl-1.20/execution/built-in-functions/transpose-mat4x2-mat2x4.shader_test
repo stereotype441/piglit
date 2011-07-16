@@ -30,23 +30,23 @@ draw rect -1 -1 2 2
 probe rgba 0 0 0.581010452962 0.258710801394 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
-probe rgba 0 0 0.413763066202 0.655923344948 0.0 0.0
+probe rgba 0 1 0.413763066202 0.655923344948 0.0 0.0
 uniform int column 2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.25 0.304006968641 0.0 0.0
+probe rgba 0 2 0.25 0.304006968641 0.0 0.0
 uniform int column 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0.549651567944 0.342334494774 0.0 0.0
+probe rgba 0 3 0.549651567944 0.342334494774 0.0 0.0
 uniform mat2x4 arg0 -1.02 -1.64 -1.59 0.3 0.74 -0.13 0.47 1.13
 uniform int column 0
 draw rect -1 -1 2 2
-probe rgba 0 0 0.37543554007 0.682055749129 0.0 0.0
+probe rgba 1 0 0.37543554007 0.682055749129 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
-probe rgba 0 0 0.267421602787 0.530487804878 0.0 0.0
+probe rgba 1 1 0.267421602787 0.530487804878 0.0 0.0
 uniform int column 2
 draw rect -1 -1 2 2
-probe rgba 0 0 0.276132404181 0.635017421603 0.0 0.0
+probe rgba 1 2 0.276132404181 0.635017421603 0.0 0.0
 uniform int column 3
 draw rect -1 -1 2 2
-probe rgba 0 0 0.605400696864 0.75 0.0 0.0
+probe rgba 1 3 0.605400696864 0.75 0.0 0.0

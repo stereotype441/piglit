@@ -76,7 +76,8 @@ def make_test(types, offset, scale, test_cases):
 	    value.append(0.0)
 	return value
     test = []
-    for args, expected in test_cases:
+    for test_num, test_case in enumerate(test_cases):
+	args, expected = test_case
 	for i in xrange(len(args)):
 	    test.append('uniform {0} arg{1} {2}'.format(
 		    bool_to_int(types[i+1]), i, piglit_format(base_type, column_major_values(args[i]))))
@@ -84,10 +85,12 @@ def make_test(types, offset, scale, test_cases):
 	    for column in xrange(num_cols):
 		test.append('uniform int column {0}'.format(column))
 		test.append('draw rect -1 -1 2 2')
-		test.append('probe rgba 0 0 {0}'.format(piglit_format(base_type, rescale_and_pad(expected[:,column]))))
+		test.append('probe rgba {0} {1} {2}'.format(
+			test_num, column, piglit_format(base_type, rescale_and_pad(expected[:,column]))))
 	else:
 	    test.append('draw rect -1 -1 2 2')
-	    test.append('probe rgba 0 0 {0}'.format(piglit_format(base_type, rescale_and_pad(expected))))
+	    test.append('probe rgba {0} 0 {1}'.format(
+		    test_num, piglit_format(base_type, rescale_and_pad(expected))))
     return test
 
 for function_name, test_suite in test_suites.items():
