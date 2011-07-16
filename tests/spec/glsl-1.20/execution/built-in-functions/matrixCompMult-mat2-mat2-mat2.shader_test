@@ -25,32 +25,32 @@ void main()
 }
 
 [test]
-uniform mat2 arg0 1.6 1.53 0.76 -1.0
-uniform mat2 arg1 1.6 1.53 0.76 -1.0
+uniform mat2x2 arg0 1.6 1.53 0.76 -1.0
+uniform mat2x2 arg1 1.6 1.53 0.76 -1.0
 uniform int column 0
 draw rect -1 -1 2 2
 probe rgba 0 0 0.75 0.726701403658 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
 probe rgba 0 1 0.539196086772 0.584113143343 0.0 0.0
-uniform mat2 arg0 1.6 1.53 0.76 -1.0
-uniform mat2 arg1 -0.13 -1.4 -0.87 1.4
+uniform mat2x2 arg0 1.6 1.53 0.76 -1.0
+uniform mat2x2 arg1 -0.13 -1.4 -0.87 1.4
 uniform int column 0
 draw rect -1 -1 2 2
 probe rgba 1 0 0.455657167163 0.25 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
 probe rgba 1 1 0.40746490855 0.328902594641 0.0 0.0
-uniform mat2 arg0 -0.13 -1.4 -0.87 1.4
-uniform mat2 arg1 1.6 1.53 0.76 -1.0
+uniform mat2x2 arg0 -0.13 -1.4 -0.87 1.4
+uniform mat2x2 arg1 1.6 1.53 0.76 -1.0
 uniform int column 0
 draw rect -1 -1 2 2
 probe rgba 2 0 0.455657167163 0.25 0.0 0.0
 uniform int column 1
 draw rect -1 -1 2 2
 probe rgba 2 1 0.40746490855 0.328902594641 0.0 0.0
-uniform mat2 arg0 -0.13 -1.4 -0.87 1.4
-uniform mat2 arg1 -0.13 -1.4 -0.87 1.4
+uniform mat2x2 arg0 -0.13 -1.4 -0.87 1.4
+uniform mat2x2 arg1 -0.13 -1.4 -0.87 1.4
 uniform int column 0
 draw rect -1 -1 2 2
 probe rgba 3 0 0.479572522331 0.686197362824 0.0 0.0
