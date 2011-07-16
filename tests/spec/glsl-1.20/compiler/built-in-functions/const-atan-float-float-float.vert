@@ -18,11 +18,11 @@ float[length(0.785398163397 - atan(2.0, 2.0)) < 0.001 ? 1 : -1] array7;
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length()
-			    + array5.length()
-			    + array6.length()
-			    + array7.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length()
+			+ array5.length()
+			+ array6.length()
+			+ array7.length());
 }

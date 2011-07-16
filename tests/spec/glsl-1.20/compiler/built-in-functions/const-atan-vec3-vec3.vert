@@ -12,5 +12,5 @@ float[length(vec3(1.10714871779, -1.10714871779, -0.588002603548) - atan(vec3(2.
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }

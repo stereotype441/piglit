@@ -18,11 +18,11 @@ float[length(vec3(-0.644149390691, -0.254574010692, -0.721293030295) - refract(v
 main()
 {
   gl_FragColor = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length()
-			    + array5.length()
-			    + array6.length()
-			    + array7.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length()
+			+ array5.length()
+			+ array6.length()
+			+ array7.length());
 }

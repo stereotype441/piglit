@@ -16,9 +16,9 @@ float[equal(bvec3(true, false, false), bvec3(true, false, true))[2] ? -1 : 1] ar
 main()
 {
   gl_FragColor = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length()
-			    + array5.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length()
+			+ array5.length());
 }

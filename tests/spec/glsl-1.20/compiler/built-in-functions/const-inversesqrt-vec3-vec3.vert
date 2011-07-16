@@ -12,5 +12,5 @@ float[length(vec3(0.707106781187, 3.16227766017, 1.16774841624) - inversesqrt(ve
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }

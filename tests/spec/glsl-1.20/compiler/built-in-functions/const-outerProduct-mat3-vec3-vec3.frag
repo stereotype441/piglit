@@ -22,15 +22,15 @@ float[length(vec3(3.1229, 1.2342, 3.4969) - outerProduct(vec3(1.67, 0.66, 1.87),
 main()
 {
   gl_FragColor = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length()
-			    + array5.length()
-			    + array6.length()
-			    + array7.length()
-			    + array8.length()
-			    + array9.length()
-			    + array10.length()
-			    + array11.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length()
+			+ array5.length()
+			+ array6.length()
+			+ array7.length()
+			+ array8.length()
+			+ array9.length()
+			+ array10.length()
+			+ array11.length());
 }

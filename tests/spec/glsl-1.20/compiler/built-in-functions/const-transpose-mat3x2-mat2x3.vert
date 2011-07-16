@@ -16,9 +16,9 @@ float[length(vec2(1.0, -0.74) - transpose(mat2x3(1.38, -1.27, 1.0, -1.08, 1.83, 
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length()
-			    + array5.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length()
+			+ array5.length());
 }

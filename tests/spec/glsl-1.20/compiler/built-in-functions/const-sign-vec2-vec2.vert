@@ -13,6 +13,6 @@ float[length(vec2(1.0, -1.0) - sign(vec2(1.5, -1.5))) < 0.001 ? 1 : -1] array2;
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length()
-			    + array2.length());
+			+ array1.length()
+			+ array2.length());
 }

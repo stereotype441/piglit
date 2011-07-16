@@ -12,5 +12,5 @@ float[length(vec2(1.0471975512, 3.14159265359) - radians(vec2(60.0, 180.0))) < 0
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }

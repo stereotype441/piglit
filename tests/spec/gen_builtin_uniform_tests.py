@@ -99,22 +99,22 @@ def make_test(types, offset, scale, test_cases):
 		    test_num, piglit_format(rescale_and_pad(expected))))
     return test
 
-for function_name, test_suite in test_suites.items():
-    for types, test_cases in test_suite.items():
-	offset, scale = compute_offset_and_scale(test_cases)
-	filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}.shader_test'.format(function_name, '-'.join(types))
-	test = [
-	    '[require]',
-	    'GLSL >= 1.10',
-	    '',
-	    '[vertex shader]',
-	    ]
-	test.extend(make_shader(function_name, types, offset, scale))
-	test.append('')
-	test.append('[fragment shader]')
-	test.extend(reference_shader())
-	test.append('')
-	test.append('[test]')
-	test.extend(make_test(types, offset, scale, test_cases))
-	with open(filename, 'w') as f:
-	    f.write(''.join(line + '\n' for line in test))
+for key, test_cases in test_suites.items():
+    function_name, types = key
+    offset, scale = compute_offset_and_scale(test_cases)
+    filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}.shader_test'.format(function_name, '-'.join(types))
+    test = [
+	'[require]',
+	'GLSL >= 1.10',
+	'',
+	'[vertex shader]',
+	]
+    test.extend(make_shader(function_name, types, offset, scale))
+    test.append('')
+    test.append('[fragment shader]')
+    test.extend(reference_shader())
+    test.append('')
+    test.append('[test]')
+    test.extend(make_test(types, offset, scale, test_cases))
+    with open(filename, 'w') as f:
+	f.write(''.join(line + '\n' for line in test))

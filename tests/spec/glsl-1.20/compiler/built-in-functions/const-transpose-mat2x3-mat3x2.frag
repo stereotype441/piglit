@@ -14,7 +14,7 @@ float[length(vec3(-0.53, 0.88, -1.79) - transpose(mat3x2(-0.36, -0.53, -1.08, 0.
 main()
 {
   gl_FragColor = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length());
 }

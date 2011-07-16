@@ -12,5 +12,5 @@ float[length(vec3(0.0, 3.14159265359, 1.91063323625) - acos(vec3(1.0, -1.0, -0.3
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }

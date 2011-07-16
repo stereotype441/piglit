@@ -15,8 +15,8 @@ float[length(1.5 - abs(1.5)) < 0.001 ? 1 : -1] array4;
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length());
 }

@@ -12,5 +12,5 @@ float[length(vec2(1.0, 2.0) - ceil(vec2(0.666666666667, 2.0))) < 0.001 ? 1 : -1]
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }

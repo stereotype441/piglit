@@ -1,15 +1,15 @@
 import itertools
 import numpy as np
 
-# Two-level dictionary mapping function name to a list of type names,
-# to a list of test cases, where each test case has the form
-# (arguments, expected_result).  Each element of arguments, and the
-# whole of expected_result, may be either a floating point type or a
+# Dictionary mapping (function_name, type_names) to a list of test
+# cases, where each test case has the form (arguments,
+# expected_result).  Each element of arguments, and the whole of
+# expected_result, may be either a floating point type or a
 # numpy.ndarray representing a vector or matrix.
 #
-# The second level of the dictionary, the list of type names, contains
-# the type name of the return type of the function, followed by the
-# type name of each of its arguments.
+# In the key to the dictionary, type_names contains the type name of
+# the return type of the function, followed by the type name of each
+# of its arguments.
 test_suites = {}
 
 def glsl_type(value):
@@ -427,15 +427,12 @@ for name, arity, python_equivalent, signature, test_inputs in _vector_and_matrix
 	    name, arity, python_equivalent, test_inputs, vector_arguments))
 
 for name, args, expected in _temp_test_suites:
-    if name not in test_suites:
-	test_suites[name] = {}
-    suite = test_suites[name]
     types = (glsl_type(expected),) + tuple(glsl_type(arg) for arg in args)
-    if types not in suite:
-	suite[types] = []
-    suite[types].append((args, expected))
+    key = (name, types)
+    if key not in test_suites:
+	test_suites[key] = []
+    test_suites[key].append((args, expected))
 _temp_test_suites = None
 
-for name, ts in test_suites.items():
-    for types, ts2 in ts.items():
-	print '{0}-{1}'.format(name, '-'.join(types))
+for name, types in test_suites.keys():
+    print '{0}-{1}'.format(name, '-'.join(types))

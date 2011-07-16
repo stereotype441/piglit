@@ -12,5 +12,5 @@ float[length(vec3(0.0, 0.0, 0.333333333333) - fract(vec3(2.0, -2.0, -0.666666666
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }

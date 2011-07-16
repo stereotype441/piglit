@@ -14,7 +14,7 @@ float[length(vec4(2.0, 2.0, 2.0, 2.0) - max(vec4(2.0, 2.0, 2.0, 2.0), vec4(-2.0,
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length());
 }

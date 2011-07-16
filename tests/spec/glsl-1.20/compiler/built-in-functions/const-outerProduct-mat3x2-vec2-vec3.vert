@@ -22,15 +22,15 @@ float[length(vec2(-0.7854, 0.8976) - outerProduct(vec2(-0.42, 0.48), vec3(1.67, 
 main()
 {
   gl_Position  = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length()
-			    + array4.length()
-			    + array5.length()
-			    + array6.length()
-			    + array7.length()
-			    + array8.length()
-			    + array9.length()
-			    + array10.length()
-			    + array11.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length()
+			+ array4.length()
+			+ array5.length()
+			+ array6.length()
+			+ array7.length()
+			+ array8.length()
+			+ array9.length()
+			+ array10.length()
+			+ array11.length());
 }

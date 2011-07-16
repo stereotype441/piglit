@@ -14,7 +14,7 @@ float[length(vec4(0.1, 1.36666666667, 0.633333333333, 1.9) - mod(vec4(-1.9, -0.6
 main()
 {
   gl_FragColor = vec4(array0.length()
-			    + array1.length()
-			    + array2.length()
-			    + array3.length());
+			+ array1.length()
+			+ array2.length()
+			+ array3.length());
 }

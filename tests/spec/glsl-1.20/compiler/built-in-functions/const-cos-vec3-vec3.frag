@@ -12,5 +12,5 @@ float[length(vec3(-1.0, -1.0, 0.5) - cos(vec3(3.14159265359, -3.14159265359, -1.
 main()
 {
   gl_FragColor = vec4(array0.length()
-			    + array1.length());
+			+ array1.length());
 }
