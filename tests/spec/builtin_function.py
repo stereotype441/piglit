@@ -49,36 +49,42 @@ def glsl_type(value):
 		return 'mat{0}x{1}'.format(matrix_columns, matrix_rows)
 
 _glsl_type_interpretations = {
-    'bool': ('bool', 1, 1),
-    'int': ('int', 1, 1),
-    'float': ('float', 1, 1),
-    'vec2': ('float', 2, 1),
-    'vec3': ('float', 3, 1),
-    'vec4': ('float', 4, 1),
-    'bvec2': ('bool', 2, 1),
-    'bvec3': ('bool', 3, 1),
-    'bvec4': ('bool', 4, 1),
-    'ivec2': ('int', 2, 1),
-    'ivec3': ('int', 3, 1),
-    'ivec4': ('int', 4, 1),
-    'mat2': ('float', 2, 2),
-    'mat3': ('float', 3, 3),
-    'mat4': ('float', 4, 4),
-    'mat2x2': ('float', 2, 2),
-    'mat3x2': ('float', 3, 2),
-    'mat4x2': ('float', 4, 2),
-    'mat2x3': ('float', 2, 3),
-    'mat3x3': ('float', 3, 3),
-    'mat4x3': ('float', 4, 3),
-    'mat2x4': ('float', 2, 4),
-    'mat3x4': ('float', 3, 4),
-    'mat4x4': ('float', 4, 4),
+    'bool': ('bool', 1, 1, '1.10'),
+    'int': ('int', 1, 1, '1.10'),
+    'float': ('float', 1, 1, '1.10'),
+    'vec2': ('float', 2, 1, '1.10'),
+    'vec3': ('float', 3, 1, '1.10'),
+    'vec4': ('float', 4, 1, '1.10'),
+    'bvec2': ('bool', 2, 1, '1.10'),
+    'bvec3': ('bool', 3, 1, '1.10'),
+    'bvec4': ('bool', 4, 1, '1.10'),
+    'ivec2': ('int', 2, 1, '1.10'),
+    'ivec3': ('int', 3, 1, '1.10'),
+    'ivec4': ('int', 4, 1, '1.10'),
+    'mat2': ('float', 2, 2, '1.10'),
+    'mat3': ('float', 3, 3, '1.10'),
+    'mat4': ('float', 4, 4, '1.10'),
+    'mat2x2': ('float', 2, 2, '1.20'),
+    'mat3x2': ('float', 3, 2, '1.20'),
+    'mat4x2': ('float', 4, 2, '1.20'),
+    'mat2x3': ('float', 2, 3, '1.20'),
+    'mat3x3': ('float', 3, 3, '1.20'),
+    'mat4x3': ('float', 4, 3, '1.20'),
+    'mat2x4': ('float', 2, 4, '1.20'),
+    'mat3x4': ('float', 3, 4, '1.20'),
+    'mat4x4': ('float', 4, 4, '1.20'),
     }
 
 def glsl_type_info(glsl_type):
-    """Interpret the given glsl type string.  Return a triple
-    (base_type, num_cols, num_rows)."""
+    """Interpret the given glsl type string.  Return a tuple
+    (base_type, num_cols, num_rows, glsl_version)."""
     return _glsl_type_interpretations[glsl_type]
+
+def glsl_type_version(glsl_type):
+    """Interpret the given glsl type string.  Return the GLSL version
+    in which it was introduced."""
+    base_type, num_cols, num_rows, glsl_version = glsl_type_info(glsl_type)
+    return glsl_version
 
 def column_major_values(value):
     """Return a list of the scalar values comprising value, in
@@ -426,7 +432,10 @@ for name, arity, glsl_version, python_equivalent, signature, test_inputs in _vec
 	    name, arity, glsl_version, python_equivalent, test_inputs, vector_arguments))
 
 for name, glsl_version, args, expected in _temp_test_suites:
-    key = (name, glsl_version, glsl_type(expected), tuple(glsl_type(arg) for arg in args))
+    rettype = glsl_type(expected)
+    argtypes = tuple(glsl_type(arg) for arg in args)
+    adjusted_glsl_version = max(glsl_version, glsl_type_version(rettype), *[glsl_type_version(t) for t in argtypes])
+    key = (name, adjusted_glsl_version, rettype, argtypes)
     if key not in test_suites:
 	test_suites[key] = []
     test_suites[key].append((args, expected))
