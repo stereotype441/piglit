@@ -4,11 +4,11 @@ import os.path
 
 this_file = os.path.basename(__file__)
 
-def make_shader(function_name, types, offset, scale):
-    base_type, num_cols, num_rows = glsl_type_info(types[0])
+def make_shader(function_name, rettype, argtypes, offset, scale):
+    base_type, num_cols, num_rows = glsl_type_info(rettype)
     shader = ['varying vec4 color;']
-    for i in xrange(1, len(types)):
-	shader.append('uniform {0} arg{1};'.format(types[i], i-1))
+    for i in xrange(len(argtypes)):
+	shader.append('uniform {0} arg{1};'.format(argtypes[i], i))
     if num_rows != 1:
 	shader.append('uniform int column;')
 	indexer = '[column]'
@@ -21,7 +21,7 @@ def make_shader(function_name, types, offset, scale):
     shader.append('{')
     shader.append('  gl_Position = gl_Vertex;')
     shader.append('  {0} result = {1}({2});'.format(
-	    types[0], function_name, ', '.join('arg{0}'.format(i-1) for i in xrange(1, len(types)))))
+	    rettype, function_name, ', '.join('arg{0}'.format(i) for i in xrange(len(argtypes)))))
     if base_type != 'bool':
 	shader.append('  result -= {0};'.format(offset))
 	shader.append('  result *= {0};'.format(scale))
@@ -70,8 +70,8 @@ def shader_runner_type(glsl_type):
     else:
 	return glsl_type
 
-def make_test(types, offset, scale, test_cases):
-    base_type, num_cols, num_rows = glsl_type_info(types[0])
+def make_test(rettype, argtypes, offset, scale, test_cases):
+    base_type, num_cols, num_rows = glsl_type_info(rettype)
     def rescale_and_pad(value):
 	if base_type == 'bool':
 	    value = value*1.0
@@ -86,7 +86,7 @@ def make_test(types, offset, scale, test_cases):
 	args, expected = test_case
 	for i in xrange(len(args)):
 	    test.append('uniform {0} arg{1} {2}'.format(
-		    shader_runner_type(types[i+1]), i, piglit_format(column_major_values(args[i]))))
+		    shader_runner_type(argtypes[i]), i, piglit_format(column_major_values(args[i]))))
 	if num_rows != 1:
 	    for column in xrange(num_cols):
 		test.append('uniform int column {0}'.format(column))
@@ -100,21 +100,21 @@ def make_test(types, offset, scale, test_cases):
     return test
 
 for key, test_cases in test_suites.items():
-    function_name, types = key
+    function_name, rettype, argtypes = key
     offset, scale = compute_offset_and_scale(test_cases)
-    filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}.shader_test'.format(function_name, '-'.join(types))
+    filename = 'glsl-1.20/execution/built-in-functions/{0}-{1}-{2}.shader_test'.format(function_name, rettype, '-'.join(argtypes))
     test = [
 	'[require]',
 	'GLSL >= 1.10',
 	'',
 	'[vertex shader]',
 	]
-    test.extend(make_shader(function_name, types, offset, scale))
+    test.extend(make_shader(function_name, rettype, argtypes, offset, scale))
     test.append('')
     test.append('[fragment shader]')
     test.extend(reference_shader())
     test.append('')
     test.append('[test]')
-    test.extend(make_test(types, offset, scale, test_cases))
+    test.extend(make_test(rettype, argtypes, offset, scale, test_cases))
     with open(filename, 'w') as f:
 	f.write(''.join(line + '\n' for line in test))
