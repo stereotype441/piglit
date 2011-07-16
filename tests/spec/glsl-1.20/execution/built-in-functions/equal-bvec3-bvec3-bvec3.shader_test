@@ -22,11 +22,11 @@ void main()
 }
 
 [test]
-uniform bvec3 arg0 0 0 1
-uniform bvec3 arg1 0 1 0
+uniform ivec3 arg0 0 0 1
+uniform ivec3 arg1 0 1 0
 draw rect -1 -1 2 2
 probe rgba 0 0 1 0 0 0
-uniform bvec3 arg0 1 0 0
-uniform bvec3 arg1 1 0 1
+uniform ivec3 arg0 1 0 0
+uniform ivec3 arg1 1 0 1
 draw rect -1 -1 2 2
 probe rgba 0 0 1 1 0 0

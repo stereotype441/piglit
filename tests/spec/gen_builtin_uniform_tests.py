@@ -56,6 +56,14 @@ def piglit_format(base_type, values):
 	values = [int(x) for x in values]
     return ' '.join(str(x) for x in values)
 
+def bool_to_int(glsl_type):
+    if glsl_type == 'bool':
+	return 'int'
+    elif glsl_type.startswith('bvec'):
+	return 'i' + glsl_type[1:]
+    else:
+	return glsl_type
+
 def make_test(types, offset, scale, test_cases):
     base_type, num_cols, num_rows = glsl_type_info(types[0])
     def rescale_and_pad(value):
@@ -71,7 +79,7 @@ def make_test(types, offset, scale, test_cases):
     for args, expected in test_cases:
 	for i in xrange(len(args)):
 	    test.append('uniform {0} arg{1} {2}'.format(
-		    types[i+1], i, piglit_format(base_type, column_major_values(args[i]))))
+		    bool_to_int(types[i+1]), i, piglit_format(base_type, column_major_values(args[i]))))
 	if num_rows != 1:
 	    for column in xrange(num_cols):
 		test.append('uniform int column {0}'.format(column))
