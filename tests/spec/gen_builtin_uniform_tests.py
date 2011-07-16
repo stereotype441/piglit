@@ -51,10 +51,14 @@ def compute_offset_and_scale(test_cases):
     scale = 1.0/span
     return offset, scale
 
-def piglit_format(base_type, values):
-    if base_type == 'bool':
-	values = [int(x) for x in values]
-    return ' '.join(str(x) for x in values)
+def piglit_format(values):
+    transformed_values = []
+    for value in values:
+	if isinstance(value, bool):
+	    transformed_values.append(int(value))
+	else:
+	    transformed_values.append(value)
+    return ' '.join(str(x) for x in transformed_values)
 
 def bool_to_int(glsl_type):
     if glsl_type == 'bool':
@@ -80,17 +84,17 @@ def make_test(types, offset, scale, test_cases):
 	args, expected = test_case
 	for i in xrange(len(args)):
 	    test.append('uniform {0} arg{1} {2}'.format(
-		    bool_to_int(types[i+1]), i, piglit_format(base_type, column_major_values(args[i]))))
+		    bool_to_int(types[i+1]), i, piglit_format(column_major_values(args[i]))))
 	if num_rows != 1:
 	    for column in xrange(num_cols):
 		test.append('uniform int column {0}'.format(column))
 		test.append('draw rect -1 -1 2 2')
 		test.append('probe rgba {0} {1} {2}'.format(
-			test_num, column, piglit_format(base_type, rescale_and_pad(expected[:,column]))))
+			test_num, column, piglit_format(rescale_and_pad(expected[:,column]))))
 	else:
 	    test.append('draw rect -1 -1 2 2')
 	    test.append('probe rgba {0} 0 {1}'.format(
-		    test_num, piglit_format(base_type, rescale_and_pad(expected))))
+		    test_num, piglit_format(rescale_and_pad(expected))))
     return test
 
 for function_name, test_suite in test_suites.items():

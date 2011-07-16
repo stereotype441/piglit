@@ -22,19 +22,19 @@ void main()
 }
 
 [test]
-uniform vec4 arg0 -1 -1 -1 -1
-uniform vec4 arg1 -1 0 0 1
+uniform vec4 arg0 -1.5 -1.5 -1.5 -1.5
+uniform vec4 arg1 -1.5 -0.5 0.5 1.5
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 0
-uniform vec4 arg0 0 0 0 0
-uniform vec4 arg1 -1 0 0 1
+probe rgba 0 0 1.0 0.0 0.0 0.0
+uniform vec4 arg0 -0.5 -0.5 -0.5 -0.5
+uniform vec4 arg1 -1.5 -0.5 0.5 1.5
 draw rect -1 -1 2 2
-probe rgba 1 0 0 1 0 0
-uniform vec4 arg0 0 0 0 0
-uniform vec4 arg1 -1 0 0 1
+probe rgba 1 0 0.0 1.0 0.0 0.0
+uniform vec4 arg0 0.5 0.5 0.5 0.5
+uniform vec4 arg1 -1.5 -0.5 0.5 1.5
 draw rect -1 -1 2 2
-probe rgba 2 0 0 0 1 0
-uniform vec4 arg0 1 1 1 1
-uniform vec4 arg1 -1 0 0 1
+probe rgba 2 0 0.0 0.0 1.0 0.0
+uniform vec4 arg0 1.5 1.5 1.5 1.5
+uniform vec4 arg1 -1.5 -0.5 0.5 1.5
 draw rect -1 -1 2 2
-probe rgba 3 0 0 0 0 1
+probe rgba 3 0 0.0 0.0 0.0 1.0

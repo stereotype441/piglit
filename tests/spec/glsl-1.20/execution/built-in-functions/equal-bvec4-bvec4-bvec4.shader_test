@@ -25,4 +25,4 @@ void main()
 uniform ivec4 arg0 0 0 1 1
 uniform ivec4 arg1 0 1 0 1
 draw rect -1 -1 2 2
-probe rgba 0 0 1 0 0 1
+probe rgba 0 0 1.0 0.0 0.0 1.0
