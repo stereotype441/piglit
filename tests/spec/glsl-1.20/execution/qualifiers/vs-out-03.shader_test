@@ -1,0 +1,32 @@
+[require]
+GLSL >= 1.20
+
+[vertex shader]
+#version 120
+float f(out int x, out int y, out float z)
+{
+  x = 4;
+  y = 5;
+  z = 0.75;
+  return 0.5;
+}
+
+void main()
+{
+  gl_Position = gl_Vertex;
+  float value1;
+  float value2;
+  float value3;
+  float value4 = f(value1, value2, value3);
+  gl_FrontColor = vec4(1.0/value1, 1.0/value2, value3, value4);
+}
+
+[fragment shader]
+void main()
+{
+  gl_FragColor = gl_Color;
+}
+
+[test]
+draw rect -1 -1 2 2
+probe all rgba 0.25 0.2 0.75 0.5
