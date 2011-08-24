@@ -1,0 +1,74 @@
+# Test that colors are interpolated in a perspective-correct way.
+#
+# This test renders a plane that is defined by the following
+# parametric equations (in eye coordinates):
+#
+# x_e = -1+2*p
+# y_e = -1+2*q
+# z_e = -1-p-q
+# w_e = 1.0
+# red = p
+# green = q
+# blue = 1-p
+# alpha = 1-q
+#
+#   where p and q run from [0,1].
+#
+# (Note that unlike most shader_runner tests, this test needs z to be
+# non-constant)
+#
+# This is projected using a standard frustum, so the resulting
+# normalized device coordinates should be:
+#
+# x_d = x_e/(-z_e) = (-1+2*p)/(1+p+q)
+# y_d = y_e/(-z_e) = (-1+2*q)/(1+p+q)
+#
+# For "relative probe" we need a coordinate system that runs from
+# (0,0) in the lower left corner to (1,1) in the upper right, so the
+# coordinates are:
+#
+# x_r = (x_d+1)/2 = (1.5*p+0.5*q)/(1+p+q)
+# y_r = (y_d+1)/2 = (0.5*p+1.5*q)/(1+p+q)
+
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+void main()
+{
+  /* Let p and q values be determined by gl_Vertex. */
+  float p = gl_Vertex.x;
+  float q = gl_Vertex.y;
+
+  /* Compute eye coordinates and color from p and q */
+  vec4 eye_coords = vec4(-1.0+2.0*p, -1.0+2.0*q, -1.0-p-q, 1.0);
+  gl_FrontColor = vec4(p, q, 1.0-p, 1.0-q);
+
+  /* Use gl_ProjectionMatrix to do the perspective projection */
+  gl_Position = gl_ProjectionMatrix * eye_coords;
+}
+
+[fragment shader]
+void main()
+{
+  gl_FragColor = gl_Color;
+}
+
+[test]
+frustum
+draw rect 0 0 1 1
+
+# These probes are based on the formulas at the top of the file.  For
+# p and q values of 0.1, 0.5, and 0.9, we do the following probe:
+#
+#   relative probe rgba (x_r, y_r) (red, green, blue, alpha)
+#
+relative probe rgba (0.166666666667, 0.166666666667) (0.1, 0.1, 0.9, 0.9)
+relative probe rgba (0.25,           0.5)            (0.1, 0.5, 0.9, 0.5)
+relative probe rgba (0.3,            0.7)            (0.1, 0.9, 0.9, 0.1)
+relative probe rgba (0.5,            0.25)           (0.5, 0.1, 0.5, 0.9)
+relative probe rgba (0.5,            0.5)            (0.5, 0.5, 0.5, 0.5)
+relative probe rgba (0.5,            0.666666666667) (0.5, 0.9, 0.5, 0.1)
+relative probe rgba (0.7,            0.3)            (0.9, 0.1, 0.1, 0.9)
+relative probe rgba (0.666666666667, 0.5)            (0.9, 0.5, 0.1, 0.5)
+relative probe rgba (0.642857142857, 0.642857142857) (0.9, 0.9, 0.1, 0.1)

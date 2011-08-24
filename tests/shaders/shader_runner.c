@@ -931,6 +931,8 @@ piglit_display(void)
 			do_enable_disable(line + 7, false);
 		} else if (string_match("enable", line)) {
 			do_enable_disable(line + 6, true);
+		} else if (string_match("frustum", line)) {
+			piglit_frustum_projection(false);
 		} else if (sscanf(line, "ortho %f %f %f %f",
 				  c + 0, c + 1, c + 2, c + 3) == 4) {
 			piglit_gen_ortho_projection(c[0], c[1], c[2], c[3],

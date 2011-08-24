@@ -763,6 +763,24 @@ piglit_ortho_projection(int w, int h, GLboolean push)
 	piglit_gen_ortho_projection(0, w, 0, h, -1, 1, push);
 }
 
+/**
+ * Convenience function to configure frustum projection.
+ */
+void
+piglit_frustum_projection(GLboolean push)
+{
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	if (push)
+		glPushMatrix();
+	glFrustum(-1, 1, -1, 1, 1, 100);
+
+	glMatrixMode(GL_MODELVIEW);
+	if (push)
+		glPushMatrix();
+	glLoadIdentity();
+}
+
 
 
 /**
