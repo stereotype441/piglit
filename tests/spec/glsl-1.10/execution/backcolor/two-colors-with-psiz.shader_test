@@ -1,0 +1,71 @@
+# This test checks that the vertex shader outputs gl_FrontColor,
+# gl_BackColor, gl_FrontSecondaryColor, and gl_BackSecondaryColor are
+# correctly mapped to the fragment shader inputs gl_Color and
+# gl_SecondaryColor.
+#
+# It does so by setting up the vertex and fragment shaders to render a
+# rectangle whose primary colors are red on the front and green on the
+# back, and whose secondary colors are blue on the front and yellow on
+# the back.  It uses a uniform to tell the fragment shader whether to
+# display primary or secondary color.  Then, using the shader_runner
+# "ortho" command, it sets up transformations that cause both the
+# front and the back side of the rectangle to be rendered.
+#
+# In this test, the vertex shader outputs a value for gl_PointSize.
+
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+void main()
+{
+  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+  gl_FrontColor = vec4(1.0, 0.0, 0.0, 1.0); /* red */
+  gl_BackColor = vec4(0.0, 1.0, 0.0, 1.0); /* green */
+  gl_FrontSecondaryColor = vec4(0.0, 0.0, 1.0, 1.0); /* blue */
+  gl_BackSecondaryColor = vec4(1.0, 1.0, 0.0, 1.0); /* yellow */
+  gl_PointSize = 1.0;
+}
+
+[fragment shader]
+uniform bool secondary;
+
+void main()
+{
+  if (secondary)
+    gl_FragColor = gl_SecondaryColor;
+  else
+    gl_FragColor = gl_Color;
+}
+
+[test]
+# I think this is all that should be needed to enable two-sided color.
+enable GL_VERTEX_PROGRAM_TWO_SIDE
+
+# But mesa seems to require these too:
+enable GL_LIGHTING
+set GL_LIGHT_MODEL_TWO_SIDE 1
+
+# Render the front of the rectangle (primary color) and check that it's red
+ortho 0 1 0 1
+uniform int secondary 0
+draw rect 0 0 1 1
+probe all rgba 1 0 0 1
+
+# Render the back of the rectangle (primary color) and check that it's green
+ortho 1 0 0 1
+uniform int secondary 0
+draw rect 0 0 1 1
+probe all rgba 0 1 0 1
+
+# Render the front of the rectangle (secondary color) and check that it's blue
+ortho 0 1 0 1
+uniform int secondary 1
+draw rect 0 0 1 1
+probe all rgba 0 0 1 1
+
+# Render the back of the rectangle (secondary color) and check that it's yellow
+ortho 1 0 0 1
+uniform int secondary 1
+draw rect 0 0 1 1
+probe all rgba 1 1 0 1

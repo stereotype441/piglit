@@ -819,6 +819,8 @@ struct enable_table {
 	{ "GL_CLIP_PLANE3", GL_CLIP_PLANE3 },
 	{ "GL_CLIP_PLANE4", GL_CLIP_PLANE4 },
 	{ "GL_CLIP_PLANE5", GL_CLIP_PLANE5 },
+	{ "GL_VERTEX_PROGRAM_TWO_SIDE", GL_VERTEX_PROGRAM_TWO_SIDE },
+	{ "GL_LIGHTING", GL_LIGHTING },
 	{ NULL, 0 }
 };
 
@@ -988,6 +990,10 @@ piglit_display(void)
 			pass = pass &&
 				piglit_probe_rect_rgb(0, 0, piglit_width,
 						      piglit_height, c);
+		} else if (sscanf(line,
+				  "set GL_LIGHT_MODEL_TWO_SIDE %d",
+				  &x) == 1) {
+			glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, x);
 		} else if (sscanf(line,
 				  "texture rgbw %d ( %d , %d )",
 				  &tex, &w, &h) == 3) {
