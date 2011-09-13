@@ -1,0 +1,54 @@
+# [description]
+# Verify correct behavior of gl_MaxClipDistances.
+#
+# From section the GLSL 1.30 spec, section 7.4 (Built-In Constants):
+#
+#   "The following built-in constants are provided to vertex and
+#   fragment shaders. The actual values used are implementation
+#   dependent, but must be at least the value shown.
+#
+#   ...
+#
+#   const int gl_MaxClipDistances = 8;"
+#
+# This test verifies that gl_MaxClipDistances has the same value in
+# both the vertex and fragment shader, and that this value is at least
+# 8.
+
+[require]
+GLSL >= 1.30
+
+[vertex shader]
+#version 130
+
+out float maxClipDistances;
+
+void main()
+{
+	gl_Position = gl_Vertex;
+
+	maxClipDistances = gl_MaxClipDistances;
+}
+
+[fragment shader]
+#version 130
+
+in float maxClipDistances;
+
+void main()
+{
+	if (maxClipDistances != gl_MaxClipDistances) {
+		// Red: gl_MaxClipDistances values don't match
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	} else if (gl_MaxClipDistances < 8) {
+		// Yellow: gl_MaxClipDistances is too small
+		gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+	} else {
+		// Green: ok
+		gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+	}
+}
+
+[test]
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0

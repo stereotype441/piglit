@@ -1,0 +1,54 @@
+# [description]
+# Verify correct behavior of gl_MaxClipPlanes.
+#
+# From section the GLSL 1.30 spec, section 7.4 (Built-In Constants):
+#
+#   "The following built-in constants are provided to vertex and
+#   fragment shaders. The actual values used are implementation
+#   dependent, but must be at least the value shown.
+#
+#   ...
+#
+#   const int gl_MaxClipPlanes = 8; // deprecated"
+#
+# This test verifies that gl_MaxClipPlanes has the same value in
+# both the vertex and fragment shader, and that this value is at least
+# 8.
+
+[require]
+GLSL >= 1.30
+
+[vertex shader]
+#version 130
+
+out float maxClipPlanes;
+
+void main()
+{
+	gl_Position = gl_Vertex;
+
+	maxClipPlanes = gl_MaxClipPlanes;
+}
+
+[fragment shader]
+#version 130
+
+in float maxClipPlanes;
+
+void main()
+{
+	if (maxClipPlanes != gl_MaxClipPlanes) {
+		// Red: gl_MaxClipPlanes values don't match
+		gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	} else if (gl_MaxClipPlanes < 8) {
+		// Yellow: gl_MaxClipPlanes is too small
+		gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+	} else {
+		// Green: ok
+		gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+	}
+}
+
+[test]
+draw rect -1 -1 2 2
+probe all rgba 0.0 1.0 0.0 1.0
