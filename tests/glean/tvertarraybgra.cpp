@@ -42,6 +42,7 @@
 #include "rand.h"
 #include "timer.h"
 #include "image.h"
+#include "piglit-util.h"
 
 
 namespace GLEAN {
@@ -70,8 +71,7 @@ VertArrayBGRATest::testAPI(void)
 
 	// Get glVertexAttrib() function
 	PFNGLVERTEXATTRIBPOINTERARBPROC VertexAttribPointer = NULL;
-	const char *version = (const char *) glGetString(GL_VERSION);
-	if (version[0] == '2') {
+	if (!piglit_is_gles() && piglit_get_gl_version() >= 20) {
 		VertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERARBPROC)
 			GLUtils::getProcAddress("glVertexAttribPointer");
 	}
