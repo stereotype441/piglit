@@ -105,6 +105,7 @@ class vertex_attrib_description
 public:
 	vertex_attrib_description(const char *text);
 	bool parse_datum(const char **text, void *data) const;
+	void setup(size_t *offset, size_t stride) const;
 
 	type_table_entry *data_type;
 	size_t count;
@@ -151,9 +152,6 @@ vertex_attrib_description::vertex_attrib_description(const char *text)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 }
-
-
-GLushort float_to_half(float f); /* TODO */
 
 
 bool
@@ -236,6 +234,18 @@ vertex_attrib_description::parse_datum(const char **text, void *data) const
 }
 
 
+void
+vertex_attrib_description::setup(size_t *offset, size_t stride) const
+{
+	/* TODO: Require appropriate version of GL */
+	/* TODO: Deal with multiple function names */
+	assert (this->attrib_loc == VERTEX_ATTRIB_POSITION); /* TODO */
+	glVertexPointer(this->count, this->data_type->enum_value, stride, (void *) *offset);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	*offset += this->data_type->size;
+}
+
+
 class vbo_data
 {
 public:
@@ -250,7 +260,8 @@ private:
 	bool header_seen;
 	std::vector<vertex_attrib_description> attribs;
 	std::vector<char> raw_data;
-	size_t row_size;
+	size_t stride;
+	size_t num_rows;
 };
 
 
@@ -281,7 +292,7 @@ vbo_data::parse_header_line(const std::string &line)
 			std::string column_header = line.substr(pos, column_header_end);
 			vertex_attrib_description desc(column_header.c_str());
 			attribs.push_back(desc);
-			this->row_size += desc.data_type->size * desc.count;
+			this->stride += desc.data_type->size * desc.count;
 			pos = column_header_end + 1;
 		}
 	}
@@ -293,7 +304,7 @@ vbo_data::parse_data_line(const std::string &line, unsigned int line_num)
 {
 	/* Allocate space in raw_data for this line */
 	size_t old_size = this->raw_data.size();
-	this->raw_data.resize(old_size + this->row_size);
+	this->raw_data.resize(old_size + this->stride);
 	char *data_ptr = &this->raw_data[old_size];
 
 	const char *line_ptr = line.c_str();
@@ -307,6 +318,8 @@ vbo_data::parse_data_line(const std::string &line, unsigned int line_num)
 			data_ptr += this->attribs[i].data_type->size;
 		}
 	}
+
+	++this->num_rows;
 }
 
 
@@ -330,7 +343,7 @@ vbo_data::parse_line(std::string line, unsigned int line_num)
 
 
 vbo_data::vbo_data(const std::string &text)
-	: header_seen(false), row_size(0)
+	: header_seen(false), stride(0), num_rows(0)
 {
 	unsigned int line_num = 1;
 
@@ -348,7 +361,16 @@ vbo_data::vbo_data(const std::string &text)
 void
 vbo_data::setup() const
 {
-	/* TODO */
+	GLuint buffer_handle;
+	glGenBuffers(1, &buffer_handle);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer_handle);
+	glBufferData(GL_ARRAY_BUFFER, this->stride * this->num_rows, &this->raw_data[0], GL_STATIC_DRAW);
+
+	size_t offset = 0;
+	for (size_t i = 0; i < attribs.size(); ++i)
+		attribs[i].setup(&offset, this->stride);
+
+	/* Leave buffer bound for later draw calls */
 }
 
 
