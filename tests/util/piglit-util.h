@@ -222,6 +222,8 @@ extern void piglit_set_rlimit(unsigned long lim);
 static const GLint PIGLIT_ATTRIB_POS = 0;
 static const GLint PIGLIT_ATTRIB_TEX = 1;
 
+GLushort piglit_float_to_half(float f);
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
