@@ -40,6 +40,7 @@
 #include <libgen.h>
 #endif
 #include "piglit-util.h"
+#include "vbo_tools.h"
 
 int piglit_width = 250, piglit_height = 250;
 int piglit_window_mode = GLUT_RGB | GLUT_ALPHA | GLUT_DOUBLE;
@@ -68,6 +69,8 @@ unsigned num_fragment_shaders = 0;
 char *shader_strings[256];
 GLsizei shader_string_sizes[256];
 unsigned num_shader_strings = 0;
+const char *vertex_data_start = NULL;
+const char *vertex_data_end = NULL;
 GLuint prog;
 
 enum states {
@@ -478,6 +481,7 @@ leave_state(enum states state, const char *line)
 		break;
 
 	case vertex_data:
+		vertex_data_end = line;
 		break;
 
 	case test:
@@ -566,132 +570,6 @@ link_and_use_shaders(void)
 }
 
 
-enum SpecialVertexAttribLocs
-{
-	VERTEX_ATTRIB_VERTEX = -1,
-	VERTEX_ATTRIB_NORMAL = -2,
-	VERTEX_ATTRIB_COLOR = -3,
-	VERTEX_ATTRIB_SECONDARY_COLOR = -4,
-	VERTEX_ATTRIB_INDEX = -5,
-	VERTEX_ATTRIB_EDGE_FLAG = -6,
-	VERTEX_ATTRIB_FOG_COORD = -7,
-	VERTEX_ATTRIB_TEX_COORD = -8,
-};
-
-
-struct vertex_attrib_description
-{
-	GLenum data_type;
-	int count;
-	int attrib_loc;
-	int offset;
-};
-
-
-class VertexData
-{
-public:
-	VertexData();
-	void AcceptLine(const char *line);
-
-private:
-	vertex_attrib_description attribs[MAX_VERTEX_ATTRIB_DESCRIPTIONS];
-};
-
-
-struct type_table {
-	const char *type;
-	GLenum value;
-} type_table[] = {
-	{ "boolean", GL_ },
-	{ "byte", GL_BYTE },
-	{ "ubyte", GL_UNSIGNED_BYTE },
-	{ "short", GL_SHORT },
-	{ "ushort", GL_UNSIGNED_SHORT },
-	{ "int", GL_INT },
-	{ "uint", GL_UNSIGNED_INT },
-	{ "float", GL_FLOAT },
-	{ "half", GL_HALF_FLOAT },
-	{ "double", GL_DOUBLE },
-	{ NULL, 0 }
-}
-
-
-static GLenum decode_type(const char *type)
-{
-	for (int i = 0; type_table[i].name; ++i) {
-		if (0 == strcmp(type, type_table[i].type))
-			return type_table[i].value;
-	}
-
-	printf("Unrecognized type: %s\n", type);
-	piglit_report_result(PIGLIT_FAIL);
-	return 0;
-}
-
-
-void VertexData::decode_column_header(const char *column_header)
-{
-	/* Split the column header into name/type/size fields */
-	char *first_slash = strchr(name, '/');
-	if (first_slash == NULL) {
-		printf("Column headers must be in the form name/type/size.  Got: %s\n",
-		       column_header);
-		piglit_report_result(PIGLIT_FAIL);
-	}
-	std::string name(column_header, first_slash);
-	char *second_slash = strchr(first_slash + 1, '/');
-	if (second_slash == NULL) {
-		printf("Column headers must be in the form name/type/size.  Got: %s\n",
-		       column_header);
-		piglit_report_result(PIGLIT_FAIL);
-	}
-	std::string type_str(first_slash + 1, second_slash);
-	GLenum type = decode_type(type_str.c_str());
-	char *endptr;
-	unsigned long size = strtoul(second_slash + 1, &endptr, 10);
-	if (*endptr != '\0') {
-		printf("Column headers must be in the form name/type/size.  Got: %s\n",
-		       column_header);
-		piglit_report_result(PIGLIT_FAIL);
-	}
-
-	if (name != "gl_Position") {
-		/* TODO */
-		printf("Unexpected name.  Got: %s\n", name);
-		piglit_report_result(PIGLIT_FAIL);
-	}
-	if (size < 2 || size > 4) {
-		printf("Size must be between 2 and 4.  Got: %d\n", size);
-		piglit_report_result(PIGLIT_FAIL);
-	}
-	for (unsigned long i = 0; i < size; ++i) {
-		data_types.push_back(type);
-	}
-	offsets.push_back(offset);
-	offset += size_of_type(type) * size;
-}
-
-
-void VertexData::HandleHeaderLine(const char *line)
-{
-	while (true) {
-		/* Grab the next column header */
-		char column_header[256];
-		line = eat_whitespace(line);
-		if (*line == '\n' || *line == '\0')
-			break;
-		line = strcpy_to_space(buf, line);
-
-}
-
-
-void
-initialize_vertex_data()
-{
-}
-
-
 void
 process_test_script(const char *script_name)
 {
@@ -727,7 +605,7 @@ process_test_script(const char *script_name)
 				num_shader_strings = 0;
 			} else if (strncmp(line, "[vertex data]", 13) == 0) {
 				state = vertex_data;
-				initialize_vertex_data();
+				vertex_data_start = NULL;
 			} else if (strncmp(line, "[test]", 6) == 0) {
 				test_start = strchrnul(line, '\n');
 				if (test_start[0] != '\0')
@@ -759,6 +637,11 @@ process_test_script(const char *script_name)
 				line = eat_whitespace(line);
 				if ((line[0] != '\n') && (line[0] != '#'))
 				    load_shader_file(line);
+				break;
+
+			case vertex_data:
+				if (vertex_data_start == NULL)
+					vertex_data_start = line;
 				break;
 
 			case test:
@@ -1656,4 +1539,6 @@ piglit_init(int argc, char **argv)
 
 	process_test_script(argv[1]);
 	link_and_use_shaders();
+	if (vertex_data_start != NULL)
+		setup_vbos_from_text(vertex_data_start, vertex_data_end);
 }
