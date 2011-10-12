@@ -21,7 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #if defined(_MSC_VER)
 #define bool BOOL
 #define true 1
@@ -126,7 +129,7 @@ compile_glsl(GLenum target, bool release_text)
 		GLint size;
 
 		piglit_GetShaderiv(shader, GL_INFO_LOG_LENGTH, &size);
-		info = malloc(size);
+		info = new GLchar[size];
 
 		piglit_GetShaderInfoLog(shader, size, NULL, info);
 
@@ -134,7 +137,7 @@ compile_glsl(GLenum target, bool release_text)
 			target == GL_FRAGMENT_SHADER ? "FS" : "VS",
 			info);
 
-		free(info);
+		delete [] info;
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -528,14 +531,14 @@ link_and_use_shaders(void)
 		GLint size;
 
 		piglit_GetProgramiv(prog, GL_INFO_LOG_LENGTH, &size);
-		info = malloc(size);
+		info = new GLchar[size];
 
 		piglit_GetProgramInfoLog(prog, size, NULL, info);
 
 		fprintf(stderr, "Failed to link:\n%s\n",
 			info);
 
-		free(info);
+		delete [] info;
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
@@ -549,7 +552,7 @@ link_and_use_shaders(void)
 		printf("GL error after linking program: 0x%04x\n", err);
 
 		piglit_GetProgramiv(prog, GL_INFO_LOG_LENGTH, &size);
-		info = malloc(size);
+		info = new GLchar[size];
 
 		piglit_GetProgramInfoLog(prog, size, NULL, info);
 		fprintf(stderr, "Info log: %s\n", info);
