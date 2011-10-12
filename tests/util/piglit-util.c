@@ -343,3 +343,54 @@ piglit_set_rlimit(unsigned long lim)
 	printf("Cannot reset rlimit on this platform.\n\n");
 #endif
 }
+
+
+/* Largest magnitued positive half-precision float value.
+ */
+#define HALF_MAX 65504.0
+
+#define MAX2(a, b) ((a) > (b) ? (a) : (b))
+#define MIN2(a, b) ((a) > (b) ? (b) : (a))
+#define CLAMP(x, h, l) MIN2(MAX2(x, l), h)
+
+union uif {
+	float f;
+	unsigned int ui;
+};
+
+GLushort
+piglit_float_to_half(float f)
+{
+	union uif bits;
+	unsigned sign;
+	unsigned exponent;
+	unsigned mantissa;
+
+
+	/* Clamp the value to the range of values representable by a
+	 * half precision float.
+	 */
+	bits.f = CLAMP(f, HALF_MAX, -HALF_MAX);
+
+	sign = bits.ui & (1U << 31);
+	sign >>= 16;
+
+	/* Round denorms to zero, but keep the sign.
+	 */
+	exponent = bits.ui & (0x0ff << 23);
+	if (exponent == 0) {
+		return sign;
+	}
+
+	exponent >>= 23;
+	exponent += -(127 - 15);
+	exponent <<= 10;
+
+	/* Instead of just truncating bits of the mantissa, round the value.
+	 */
+	mantissa = bits.ui & ((1U << 23) - 1);
+	mantissa += (1U << (23 - 10)) >> 1;
+	mantissa >>= (23 - 10);
+
+	return (sign | exponent | mantissa);
+}
