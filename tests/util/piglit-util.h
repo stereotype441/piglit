@@ -127,6 +127,9 @@ extern const uint8_t fdo_bitmap[];
 extern const unsigned int fdo_bitmap_width;
 extern const unsigned int fdo_bitmap_height;
 
+void piglit_print_buffer(int width, int height,
+                         GLenum format, GLenum type);
+
 /**
  * Call glutInit() and, if EGLUT is used, also call glutInitAPIMask().
  */
