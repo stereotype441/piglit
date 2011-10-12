@@ -175,7 +175,7 @@ vertex_attrib_description::parse_datum(const char **text, void *data) const
 			*((GLfloat *) data) = (float) value;
 			break;
 		case GL_HALF_FLOAT:
-			*((GLushort *) data) = float_to_half((float) value);
+			*((GLushort *) data) = piglit_float_to_half((float) value);
 			break;
 		}
 	} else if (this->data_type->is_signed) {
@@ -343,6 +343,14 @@ vbo_data::vbo_data(const std::string &text)
 		pos = end_of_line + 1;
 	}
 }
+
+
+void
+vbo_data::setup() const
+{
+	/* TODO */
+}
+
 
 void setup_vbos_from_text(const char *text_start, const char *text_end)
 {
