@@ -72,6 +72,7 @@ unsigned num_shader_strings = 0;
 const char *vertex_data_start = NULL;
 const char *vertex_data_end = NULL;
 GLuint prog;
+size_t num_vbo_rows = 0;
 
 enum states {
 	none = 0,
@@ -903,6 +904,43 @@ draw_instanced_rect(int primcount, float x, float y, float w, float h)
 	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
+
+struct mode_table {
+	const char *name;
+	GLenum value;
+} mode_table[] = {
+	{ "GL_POINTS",         GL_POINTS         },
+	{ "GL_LINE_STRIP",     GL_LINE_STRIP     },
+	{ "GL_LINE_LOOP",      GL_LINE_LOOP      },
+	{ "GL_LINES",          GL_LINES          },
+	{ "GL_POLYGON",        GL_POLYGON        },
+	{ "GL_TRIANGLE_STRIP", GL_TRIANGLE_STRIP },
+	{ "GL_TRIANGLE_FAN",   GL_TRIANGLE_FAN   },
+	{ "GL_TRIANGLES",      GL_TRIANGLES      },
+	{ "GL_QUAD_STRIP",     GL_QUAD_STRIP     },
+	{ "GL_QUADS",          GL_QUADS          },
+	{ NULL, 0 }
+};
+
+
+GLenum
+decode_mode(const char *mode_str)
+{
+	int i;
+
+	for (i = 0; mode_table[i].name; ++i) {
+		if (0 == strcmp(mode_str, mode_table[i].name))
+			return mode_table[i].value;
+	}
+
+	printf("unknown drawing mode \"%s\"", mode_str);
+	piglit_report_result(PIGLIT_FAIL);
+
+	/* Should not be reached, but return 0 to avoid compiler warning */
+	return 0;
+}
+
+
 enum piglit_result
 piglit_display(void)
 {
@@ -919,6 +957,7 @@ piglit_display(void)
 		float c[32];
 		double d[4];
 		int x, y, w, h, l, tex, level;
+		char s[32];
 
 		line = eat_whitespace(line);
 
@@ -946,6 +985,26 @@ piglit_display(void)
 			       &primcount,
 			       c + 0, c + 1, c + 2, c + 3);
 			draw_instanced_rect(primcount, c[0], c[1], c[2], c[3]);
+		} else if (sscanf(line, "draw arrays %31s %d %d", s, &x, &y)) {
+			GLenum mode = decode_mode(s);
+			int first = x;
+			size_t count = (size_t) y;
+			if (first < 0) {
+				printf("draw arrays 'first' must be >= 0\n");
+				piglit_report_result(PIGLIT_FAIL);
+			} else if ((size_t) first >= num_vbo_rows) {
+				printf("draw arrays 'first' must be < %lu\n", num_vbo_rows);
+				piglit_report_result(PIGLIT_FAIL);
+			}
+			if (count <= 0) {
+				printf("draw arrays 'count' must be > 0\n");
+				piglit_report_result(PIGLIT_FAIL);
+			} else if (count > num_vbo_rows - (size_t) first) {
+				printf("draw arrays cannot draw beyond %lu\n", num_vbo_rows);
+				piglit_report_result(PIGLIT_FAIL);
+			}
+			/* TODO: wrapper? */
+			glDrawArrays(mode, first, count);
 		} else if (string_match("disable", line)) {
 			do_enable_disable(line + 7, false);
 		} else if (string_match("enable", line)) {
@@ -1540,5 +1599,5 @@ piglit_init(int argc, char **argv)
 	process_test_script(argv[1]);
 	link_and_use_shaders();
 	if (vertex_data_start != NULL)
-		setup_vbos_from_text(vertex_data_start, vertex_data_end);
+		num_vbo_rows = setup_vbos_from_text(vertex_data_start, vertex_data_end);
 }

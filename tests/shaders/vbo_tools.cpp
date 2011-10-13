@@ -47,7 +47,7 @@
 
 enum SpecialVertexAttribLocs
 {
-	VERTEX_ATTRIB_POSITION = -1,
+	VERTEX_ATTRIB_VERTEX = -1,
 	VERTEX_ATTRIB_NORMAL = -2,
 	VERTEX_ATTRIB_COLOR = -3,
 	VERTEX_ATTRIB_SECONDARY_COLOR = -4,
@@ -141,12 +141,12 @@ vertex_attrib_description::vertex_attrib_description(const char *text)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	if (name != "gl_Position") {
+	if (name != "gl_Vertex") {
 		/* TODO */
-		printf("Unexpected name.  Got: %s\n", name.c_str());
+		printf("Unexpected vbo column name.  Got: %s\n", name.c_str());
 		piglit_report_result(PIGLIT_FAIL);
 	}
-	this->attrib_loc = VERTEX_ATTRIB_POSITION;
+	this->attrib_loc = VERTEX_ATTRIB_VERTEX;
 	if (this->count < 2 || this->count > 4) {
 		printf("Count must be between 2 and 4.  Got: %lu\n", count);
 		piglit_report_result(PIGLIT_FAIL);
@@ -239,7 +239,7 @@ vertex_attrib_description::setup(size_t *offset, size_t stride) const
 {
 	/* TODO: Require appropriate version of GL */
 	/* TODO: Deal with multiple function names */
-	assert (this->attrib_loc == VERTEX_ATTRIB_POSITION); /* TODO */
+	assert (this->attrib_loc == VERTEX_ATTRIB_VERTEX); /* TODO */
 	glVertexPointer(this->count, this->data_type->enum_value, stride, (void *) *offset);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	*offset += this->data_type->size;
@@ -250,7 +250,7 @@ class vbo_data
 {
 public:
 	vbo_data(std::string const &text);
-	void setup() const;
+	size_t setup() const;
 
 private:
 	void parse_header_line(const std::string &line);
@@ -358,7 +358,7 @@ vbo_data::vbo_data(const std::string &text)
 }
 
 
-void
+size_t
 vbo_data::setup() const
 {
 	GLuint buffer_handle;
@@ -371,11 +371,13 @@ vbo_data::setup() const
 		attribs[i].setup(&offset, this->stride);
 
 	/* Leave buffer bound for later draw calls */
+
+	return this->num_rows;
 }
 
 
-void setup_vbos_from_text(const char *text_start, const char *text_end)
+size_t setup_vbos_from_text(const char *text_start, const char *text_end)
 {
 	std::string text(text_start, text_end);
-	vbo_data(text).setup();
+	return vbo_data(text).setup();
 }
