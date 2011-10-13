@@ -76,38 +76,50 @@ enum allowed_types {
 	                              | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT,
 };
 
-typedef void set_pointer_func(int count, GLenum type, size_t stride, void *pointer);
+typedef void set_pointer_func(int count, GLenum type, size_t stride, void *pointer, int extra);
 
-void set_vertex_pointer(int count, GLenum type, size_t stride, void *pointer)
+void set_vertex_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
 {
+	(void) extra;
 	glVertexPointer(count, type, stride, pointer);
 	glEnableClientState(GL_VERTEX_ARRAY);
 }
 
-void set_normal_pointer(int count, GLenum type, size_t stride, void *pointer)
+void set_normal_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
 {
 	(void) count;
+	(void) extra;
 	glNormalPointer(type, stride, pointer);
 	glEnableClientState(GL_NORMAL_ARRAY);
 }
 
-void set_color_pointer(int count, GLenum type, size_t stride, void *pointer)
+void set_color_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
 {
+	(void) extra;
 	glColorPointer(count, type, stride, pointer);
 	glEnableClientState(GL_COLOR_ARRAY);
 }
 
-void set_secondary_color_pointer(int count, GLenum type, size_t stride, void *pointer)
+void set_secondary_color_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
 {
+	(void) extra;
 	glSecondaryColorPointer(count, type, stride, pointer);
 	glEnableClientState(GL_SECONDARY_COLOR_ARRAY);
 }
 
-void set_fog_coord_pointer(int count, GLenum type, size_t stride, void *pointer)
+void set_fog_coord_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
 {
 	(void) count;
+	(void) extra;
 	glFogCoordPointer(type, stride, pointer);
 	glEnableClientState(GL_FOG_COORD_ARRAY);
+}
+
+void set_tex_coord_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
+{
+	glClientActiveTexture(GL_TEXTURE0 + extra);
+	glTexCoordPointer(count, type, stride, pointer);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
 struct attrib_type_table_entry {
@@ -126,6 +138,9 @@ struct attrib_type_table_entry {
 	/* TODO: add more */
 	{ NULL,                NULL,                        0,        0,        ALLOW_NONE              }
 };
+
+const attrib_type_table_entry tex_coord_attrib_type = {
+	"gl_MultiTexCoordn",   set_tex_coord_pointer,       1,        4,        ALLOW_TEX_COORD_POINTER };
 
 
 /* Fake GLenum value to represent the boolean type in the table below. */
@@ -183,15 +198,25 @@ public:
 
 private:
 	const attrib_type_table_entry *attrib_type;
+	int extra;
 };
 
 
 static const attrib_type_table_entry *
-determine_attrib_type(const std::string &name)
+determine_attrib_type(const std::string &name, int *extra)
 {
 	for (int i = 0; attrib_type_table[i].name; ++i) {
 		if (name == attrib_type_table[i].name)
 			return &attrib_type_table[i];
+	}
+
+	/* Special case handling for gl_MultiTexCoord[0-7] */
+	if (name.size() == 17 && strncmp(name.c_str(), "gl_MultiTexCoord", 16) == 0) {
+		int texture = name[16] - '0';
+		if (texture >= 0 && texture <= 7) {
+			*extra = texture;
+			return &tex_coord_attrib_type;
+		}
 	}
 
 	printf("Unexpected vbo column name.  Got: %s\n", name.c_str());
@@ -228,7 +253,7 @@ vertex_attrib_description::vertex_attrib_description(const char *text)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	this->attrib_type = determine_attrib_type(name);
+	this->attrib_type = determine_attrib_type(name, &this->extra);
 	if (this->count < this->attrib_type->min_count ||
 	    this->count > this->attrib_type->max_count) {
 		printf("Count must be between %lu and %lu.  Got: %lu\n",
@@ -332,7 +357,7 @@ vertex_attrib_description::setup(size_t *offset, size_t stride) const
 	int count = this->count;
 	GLenum type = this->data_type->enum_value;
 	void *pointer = (void *) *offset;
-	this->attrib_type->setter(count, type, stride, pointer);
+	this->attrib_type->setter(count, type, stride, pointer, this->extra);
 	*offset += this->data_type->size * this->count;
 }
 
