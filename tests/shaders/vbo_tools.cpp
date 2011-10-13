@@ -45,16 +45,66 @@
 #include <string>
 #include <errno.h>
 
-enum SpecialVertexAttribLocs
+enum allowed_types {
+	ALLOW_NONE    =     0,
+	ALLOW_BOOLEAN =   0x1,
+	ALLOW_BYTE    =   0x2,
+	ALLOW_UBYTE   =  0x04,
+	ALLOW_SHORT   =  0x08,
+	ALLOW_USHORT  =  0x10,
+	ALLOW_INT     =  0x20,
+	ALLOW_UINT    =  0x40,
+	ALLOW_FLOAT   =  0x80,
+	ALLOW_HALF    = 0x100,
+	ALLOW_DOUBLE  = 0x200,
+
+	ALLOW_VERTEX_POINTER = ALLOW_SHORT | ALLOW_INT | ALLOW_FLOAT
+	                     | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_NORMAL_POINTER = ALLOW_BYTE | ALLOW_SHORT | ALLOW_INT
+	                     | ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_COLOR_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
+	                    | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT
+	                    | ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_INDEX_POINTER = ALLOW_UBYTE | ALLOW_SHORT | ALLOW_INT
+	                    | ALLOW_FLOAT | ALLOW_DOUBLE,
+	ALLOW_FOG_COORD_POINTER = ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_TEX_COORD_POINTER = ALLOW_SHORT | ALLOW_INT | ALLOW_FLOAT
+	                        | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_EDGE_FLAG_POINTER = ALLOW_BOOLEAN,
+	ALLOW_VERTEX_ATTRIB_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
+	                            | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT
+	                            | ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_VERTEX_ATTRIB_I_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
+	                              | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT,
+};
+
+typedef void set_pointer_func(int count, GLenum type, size_t stride, void *pointer);
+
+void set_vertex_pointer(int count, GLenum type, size_t stride, void *pointer)
 {
-	VERTEX_ATTRIB_VERTEX = -1,
-	VERTEX_ATTRIB_NORMAL = -2,
-	VERTEX_ATTRIB_COLOR = -3,
-	VERTEX_ATTRIB_SECONDARY_COLOR = -4,
-	VERTEX_ATTRIB_INDEX = -5,
-	VERTEX_ATTRIB_EDGE_FLAG = -6,
-	VERTEX_ATTRIB_FOG_COORD = -7,
-	VERTEX_ATTRIB_TEX_COORD = -8,
+	glVertexPointer(count, type, stride, pointer);
+	glEnableClientState(GL_VERTEX_ARRAY);
+}
+
+void set_normal_pointer(int count, GLenum type, size_t stride, void *pointer)
+{
+	(void) count;
+	glNormalPointer(type, stride, pointer);
+	glEnableClientState(GL_NORMAL_ARRAY);
+}
+
+struct attrib_type_table_entry {
+	const char *name; /* NULL means end of table */
+	set_pointer_func *setter;
+	size_t min_count;
+	size_t max_count;
+	allowed_types allow_flags;
+} const attrib_type_table[] = {
+	/* name        setter              min_count max_count allow_flags */
+	{ "gl_Vertex", set_vertex_pointer, 2,        4,        ALLOW_VERTEX_POINTER },
+	{ "gl_Normal", set_normal_pointer, 3,        3,        ALLOW_NORMAL_POINTER },
+	/* TODO: add more */
+	{ NULL,        NULL,               0,        0,        ALLOW_NONE           }
 };
 
 
@@ -63,9 +113,8 @@ const GLenum GL_BOOLEAN = 0;
 
 
 struct type_table_entry {
-	bool is_allowed() const;
-
 	const char *type; /* NULL means end of table */
+	allowed_types allow_flag;
 	GLenum enum_value;
 	bool is_floating;
 	bool is_signed; /* Only if not is_floating */
@@ -73,30 +122,19 @@ struct type_table_entry {
 	unsigned int max_value; /* Only if is_integral */
 	size_t size;
 } const type_table[] = {
-	/* type      enum_value         is_floating is_signed min-value    max_value   size */
-	{ "boolean", GL_BOOLEAN,        false,      false,    0,           1,          sizeof(GLboolean) },
-	{ "byte",    GL_BYTE,           false,      true,     -0x80,       0x7f,       sizeof(GLbyte)    },
-	{ "ubyte",   GL_UNSIGNED_BYTE,  false,      false,    0,           0xff,       sizeof(GLubyte)   },
-	{ "short",   GL_SHORT,          false,      true,     -0x8000,     0x7fff,     sizeof(GLshort)   },
-	{ "ushort",  GL_UNSIGNED_SHORT, false,      false,    0,           0xffff,     sizeof(GLushort)  },
-	{ "int",     GL_INT,            false,      true,     -0x80000000, 0x7fffffff, sizeof(GLint)     },
-	{ "uint",    GL_UNSIGNED_INT,   false,      false,    0,           0xffffffff, sizeof(GLuint)    },
-	{ "float",   GL_FLOAT,          true,       false,    0,           0,          sizeof(GLfloat)   },
-	{ "half",    GL_HALF_FLOAT,     true,       false,    0,           0,          sizeof(GLhalf)    },
-	{ "double",  GL_DOUBLE,         true,       false,    0,           0,          sizeof(GLdouble)  },
-	{ NULL,      0,                 true,       false,    0,           0,          0                 }
+	/* type      allow_flag     enum_value         is_floating is_signed min-value    max_value   size */
+	{ "boolean", ALLOW_BOOLEAN, GL_BOOLEAN,        false,      false,    0,           1,          sizeof(GLboolean) },
+	{ "byte",    ALLOW_BYTE,    GL_BYTE,           false,      true,     -0x80,       0x7f,       sizeof(GLbyte)    },
+	{ "ubyte",   ALLOW_UBYTE,   GL_UNSIGNED_BYTE,  false,      false,    0,           0xff,       sizeof(GLubyte)   },
+	{ "short",   ALLOW_SHORT,   GL_SHORT,          false,      true,     -0x8000,     0x7fff,     sizeof(GLshort)   },
+	{ "ushort",  ALLOW_USHORT,  GL_UNSIGNED_SHORT, false,      false,    0,           0xffff,     sizeof(GLushort)  },
+	{ "int",     ALLOW_INT,     GL_INT,            false,      true,     -0x80000000, 0x7fffffff, sizeof(GLint)     },
+	{ "uint",    ALLOW_UINT,    GL_UNSIGNED_INT,   false,      false,    0,           0xffffffff, sizeof(GLuint)    },
+	{ "float",   ALLOW_FLOAT,   GL_FLOAT,          true,       false,    0,           0,          sizeof(GLfloat)   },
+	{ "half",    ALLOW_HALF,    GL_HALF_FLOAT,     true,       false,    0,           0,          sizeof(GLhalf)    },
+	{ "double",  ALLOW_DOUBLE,  GL_DOUBLE,         true,       false,    0,           0,          sizeof(GLdouble)  },
+	{ NULL,      ALLOW_NONE,    0,                 true,       false,    0,           0,          0                 }
 };
-
-
-bool type_table_entry::is_allowed() const
-{
-	if (this->enum_value == GL_BOOLEAN) {
-		/* boolean only allowed for edge flag */
-		return false; /* TODO */
-	}
-	/* TODO: handle other attrib locs */
-	return (this->is_floating || (this->is_signed && this->size >= sizeof(GLshort)));
-}
 
 
 static const type_table_entry *
@@ -124,8 +162,24 @@ public:
 	size_t count;
 
 private:
-	GLint attrib_loc;
+	const attrib_type_table_entry *attrib_type;
 };
+
+
+static const attrib_type_table_entry *
+determine_attrib_type(const std::string &name)
+{
+	for (int i = 0; attrib_type_table[i].name; ++i) {
+		if (name == attrib_type_table[i].name)
+			return &attrib_type_table[i];
+	}
+
+	printf("Unexpected vbo column name.  Got: %s\n", name.c_str());
+	piglit_report_result(PIGLIT_FAIL);
+
+	/* Should not be reached, but return NULL to avoid compiler warning */
+	return NULL;
+}
 
 
 vertex_attrib_description::vertex_attrib_description(const char *text)
@@ -154,18 +208,15 @@ vertex_attrib_description::vertex_attrib_description(const char *text)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	if (name != "gl_Vertex") {
-		/* TODO */
-		printf("Unexpected vbo column name.  Got: %s\n", name.c_str());
-		piglit_report_result(PIGLIT_FAIL);
-	}
-	this->attrib_loc = VERTEX_ATTRIB_VERTEX;
-	if (this->count < 2 || this->count > 4) {
-		printf("Count must be between 2 and 4.  Got: %lu\n", count);
+	this->attrib_type = determine_attrib_type(name);
+	if (this->count < this->attrib_type->min_count ||
+	    this->count > this->attrib_type->max_count) {
+		printf("Count must be between %lu and %lu.  Got: %lu\n",
+		       this->attrib_type->min_count, this->attrib_type->max_count, count);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	if (!this->data_type->is_allowed()) {
+	if (!(this->data_type->allow_flag & this->attrib_type->allow_flags)) {
 		printf("Type %s not allowed for %s\n", type_str.c_str(),
 		       name.c_str());
 		piglit_report_result(PIGLIT_FAIL);
@@ -258,10 +309,11 @@ vertex_attrib_description::setup(size_t *offset, size_t stride) const
 {
 	/* TODO: Require appropriate version of GL */
 	/* TODO: Deal with multiple function names */
-	assert (this->attrib_loc == VERTEX_ATTRIB_VERTEX); /* TODO */
-	glVertexPointer(this->count, this->data_type->enum_value, stride, (void *) *offset);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	*offset += this->data_type->size;
+	int count = this->count;
+	GLenum type = this->data_type->enum_value;
+	void *pointer = (void *) *offset;
+	this->attrib_type->setter(count, type, stride, pointer);
+	*offset += this->data_type->size * this->count;
 }
 
 
