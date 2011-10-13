@@ -65,8 +65,6 @@ enum allowed_types {
 	ALLOW_COLOR_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
 	                    | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT
 	                    | ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
-	ALLOW_INDEX_POINTER = ALLOW_UBYTE | ALLOW_SHORT | ALLOW_INT
-	                    | ALLOW_FLOAT | ALLOW_DOUBLE,
 	ALLOW_FOG_COORD_POINTER = ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
 	ALLOW_TEX_COORD_POINTER = ALLOW_SHORT | ALLOW_INT | ALLOW_FLOAT
 	                        | ALLOW_HALF | ALLOW_DOUBLE,
@@ -105,6 +103,13 @@ void set_secondary_color_pointer(int count, GLenum type, size_t stride, void *po
 	glEnableClientState(GL_SECONDARY_COLOR_ARRAY);
 }
 
+void set_fog_coord_pointer(int count, GLenum type, size_t stride, void *pointer)
+{
+	(void) count;
+	glFogCoordPointer(type, stride, pointer);
+	glEnableClientState(GL_FOG_COORD_ARRAY);
+}
+
 struct attrib_type_table_entry {
 	const char *name; /* NULL means end of table */
 	set_pointer_func *setter;
@@ -113,12 +118,13 @@ struct attrib_type_table_entry {
 	allowed_types allow_flags;
 } const attrib_type_table[] = {
 	/* name                setter                       min_count max_count allow_flags */
-	{ "gl_Vertex",         set_vertex_pointer,          2,        4,        ALLOW_VERTEX_POINTER },
-	{ "gl_Normal",         set_normal_pointer,          3,        3,        ALLOW_NORMAL_POINTER },
-	{ "gl_Color",          set_color_pointer,           3,        4,        ALLOW_COLOR_POINTER  },
-	{ "gl_SecondaryColor", set_secondary_color_pointer, 3,        4,        ALLOW_COLOR_POINTER  },
+	{ "gl_Vertex",         set_vertex_pointer,          2,        4,        ALLOW_VERTEX_POINTER    },
+	{ "gl_Normal",         set_normal_pointer,          3,        3,        ALLOW_NORMAL_POINTER    },
+	{ "gl_Color",          set_color_pointer,           3,        4,        ALLOW_COLOR_POINTER     },
+	{ "gl_SecondaryColor", set_secondary_color_pointer, 3,        4,        ALLOW_COLOR_POINTER     },
+	{ "gl_FogCoord",       set_fog_coord_pointer,       1,        1,        ALLOW_FOG_COORD_POINTER },
 	/* TODO: add more */
-	{ NULL,                NULL,                        0,        0,        ALLOW_NONE           }
+	{ NULL,                NULL,                        0,        0,        ALLOW_NONE              }
 };
 
 
