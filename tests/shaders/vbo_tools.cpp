@@ -47,16 +47,15 @@
 
 enum allowed_types {
 	ALLOW_NONE    =     0,
-	ALLOW_BOOLEAN =   0x1,
-	ALLOW_BYTE    =   0x2,
-	ALLOW_UBYTE   =  0x04,
-	ALLOW_SHORT   =  0x08,
-	ALLOW_USHORT  =  0x10,
-	ALLOW_INT     =  0x20,
-	ALLOW_UINT    =  0x40,
-	ALLOW_FLOAT   =  0x80,
-	ALLOW_HALF    = 0x100,
-	ALLOW_DOUBLE  = 0x200,
+	ALLOW_BYTE    =   0x1,
+	ALLOW_UBYTE   =   0x2,
+	ALLOW_SHORT   =   0x4,
+	ALLOW_USHORT  =   0x8,
+	ALLOW_INT     =  0x10,
+	ALLOW_UINT    =  0x20,
+	ALLOW_FLOAT   =  0x40,
+	ALLOW_HALF    =  0x80,
+	ALLOW_DOUBLE  = 0x100,
 
 	ALLOW_VERTEX_POINTER = ALLOW_SHORT | ALLOW_INT | ALLOW_FLOAT
 	                     | ALLOW_HALF | ALLOW_DOUBLE,
@@ -68,7 +67,6 @@ enum allowed_types {
 	ALLOW_FOG_COORD_POINTER = ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
 	ALLOW_TEX_COORD_POINTER = ALLOW_SHORT | ALLOW_INT | ALLOW_FLOAT
 	                        | ALLOW_HALF | ALLOW_DOUBLE,
-	ALLOW_EDGE_FLAG_POINTER = ALLOW_BOOLEAN,
 	ALLOW_VERTEX_ATTRIB_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
 	                            | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT
 	                            | ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
@@ -143,10 +141,6 @@ const attrib_type_table_entry tex_coord_attrib_type = {
 	"gl_MultiTexCoordn",   set_tex_coord_pointer,       1,        4,        ALLOW_TEX_COORD_POINTER };
 
 
-/* Fake GLenum value to represent the boolean type in the table below. */
-const GLenum GL_BOOLEAN = 0;
-
-
 struct type_table_entry {
 	const char *type; /* NULL means end of table */
 	allowed_types allow_flag;
@@ -158,7 +152,6 @@ struct type_table_entry {
 	size_t size;
 } const type_table[] = {
 	/* type      allow_flag     enum_value         is_floating is_signed min-value    max_value   size */
-	{ "boolean", ALLOW_BOOLEAN, GL_BOOLEAN,        false,      false,    0,           1,          sizeof(GLboolean) },
 	{ "byte",    ALLOW_BYTE,    GL_BYTE,           false,      true,     -0x80,       0x7f,       sizeof(GLbyte)    },
 	{ "ubyte",   ALLOW_UBYTE,   GL_UNSIGNED_BYTE,  false,      false,    0,           0xff,       sizeof(GLubyte)   },
 	{ "short",   ALLOW_SHORT,   GL_SHORT,          false,      true,     -0x8000,     0x7fff,     sizeof(GLshort)   },
@@ -330,9 +323,6 @@ vertex_attrib_description::parse_datum(const char **text, void *data) const
 			return false;
 		}
 		switch (this->data_type->enum_value) {
-		case GL_BOOLEAN:
-			*((GLboolean *) data) = (GLboolean) value;
-			break;
 		case GL_UNSIGNED_BYTE:
 			*((GLubyte *) data) = (GLubyte) value;
 			break;
