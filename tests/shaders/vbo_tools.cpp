@@ -99,6 +99,12 @@ void set_color_pointer(int count, GLenum type, size_t stride, void *pointer)
 	glEnableClientState(GL_COLOR_ARRAY);
 }
 
+void set_secondary_color_pointer(int count, GLenum type, size_t stride, void *pointer)
+{
+	glSecondaryColorPointer(count, type, stride, pointer);
+	glEnableClientState(GL_SECONDARY_COLOR_ARRAY);
+}
+
 struct attrib_type_table_entry {
 	const char *name; /* NULL means end of table */
 	set_pointer_func *setter;
@@ -106,12 +112,13 @@ struct attrib_type_table_entry {
 	size_t max_count;
 	allowed_types allow_flags;
 } const attrib_type_table[] = {
-	/* name        setter              min_count max_count allow_flags */
-	{ "gl_Vertex", set_vertex_pointer, 2,        4,        ALLOW_VERTEX_POINTER },
-	{ "gl_Normal", set_normal_pointer, 3,        3,        ALLOW_NORMAL_POINTER },
-	{ "gl_Color",  set_color_pointer,  3,        4,        ALLOW_COLOR_POINTER  },
+	/* name                setter                       min_count max_count allow_flags */
+	{ "gl_Vertex",         set_vertex_pointer,          2,        4,        ALLOW_VERTEX_POINTER },
+	{ "gl_Normal",         set_normal_pointer,          3,        3,        ALLOW_NORMAL_POINTER },
+	{ "gl_Color",          set_color_pointer,           3,        4,        ALLOW_COLOR_POINTER  },
+	{ "gl_SecondaryColor", set_secondary_color_pointer, 3,        4,        ALLOW_COLOR_POINTER  },
 	/* TODO: add more */
-	{ NULL,        NULL,               0,        0,        ALLOW_NONE           }
+	{ NULL,                NULL,                        0,        0,        ALLOW_NONE           }
 };
 
 
@@ -367,7 +374,7 @@ vbo_data::parse_header_line(const std::string &line)
 			while (column_header_end < line.size() &&
 			       !isspace(line[column_header_end]))
 				++column_header_end;
-			std::string column_header = line.substr(pos, column_header_end);
+			std::string column_header = line.substr(pos, column_header_end - pos);
 			vertex_attrib_description desc(column_header.c_str());
 			attribs.push_back(desc);
 			this->stride += desc.data_type->size * desc.count;
