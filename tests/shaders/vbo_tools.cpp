@@ -177,31 +177,6 @@ vertex_attrib_description::parse_datum(const char **text, void *data) const
 			break;
 		}
 	} else if (this->data_type->is_signed) {
-		unsigned long value = strtoul(*text, &endptr, 0);
-		if (errno == ERANGE) {
-			printf("Could not parse as unsigned integer\n");
-			return false;
-		}
-		if (value > this->data_type->max_value) {
-			printf("Value too large.  Must be %u or less\n",
-			       this->data_type->max_value);
-			return false;
-		}
-		switch (this->data_type->enum_value) {
-		case GL_BOOLEAN:
-			*((GLboolean *) data) = (GLboolean) value;
-			break;
-		case GL_UNSIGNED_BYTE:
-			*((GLubyte *) data) = (GLubyte) value;
-			break;
-		case GL_UNSIGNED_SHORT:
-			*((GLushort *) data) = (GLushort) value;
-			break;
-		case GL_UNSIGNED_INT:
-			*((GLuint *) data) = (GLuint) value;
-			break;
-		}
-	} else {
 		long value = strtol(*text, &endptr, 0);
 		if (errno == ERANGE) {
 			printf("Could not parse as signed integer\n");
@@ -226,6 +201,31 @@ vertex_attrib_description::parse_datum(const char **text, void *data) const
 			break;
 		case GL_INT:
 			*((GLint *) data) = (GLint) value;
+			break;
+		}
+	} else {
+		unsigned long value = strtoul(*text, &endptr, 0);
+		if (errno == ERANGE) {
+			printf("Could not parse as unsigned integer\n");
+			return false;
+		}
+		if (value > this->data_type->max_value) {
+			printf("Value too large.  Must be %u or less\n",
+			       this->data_type->max_value);
+			return false;
+		}
+		switch (this->data_type->enum_value) {
+		case GL_BOOLEAN:
+			*((GLboolean *) data) = (GLboolean) value;
+			break;
+		case GL_UNSIGNED_BYTE:
+			*((GLubyte *) data) = (GLubyte) value;
+			break;
+		case GL_UNSIGNED_SHORT:
+			*((GLushort *) data) = (GLushort) value;
+			break;
+		case GL_UNSIGNED_INT:
+			*((GLuint *) data) = (GLuint) value;
 			break;
 		}
 	}
