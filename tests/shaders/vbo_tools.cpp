@@ -63,6 +63,8 @@ const GLenum GL_BOOLEAN = 0;
 
 
 struct type_table_entry {
+	bool is_allowed() const;
+
 	const char *type; /* NULL means end of table */
 	GLenum enum_value;
 	bool is_floating;
@@ -70,7 +72,7 @@ struct type_table_entry {
 	int min_value; /* Only if (not is_floating) and is_signed */
 	unsigned int max_value; /* Only if is_integral */
 	size_t size;
-} type_table[] = {
+} const type_table[] = {
 	/* type      enum_value         is_floating is_signed min-value    max_value   size */
 	{ "boolean", GL_BOOLEAN,        false,      false,    0,           1,          sizeof(GLboolean) },
 	{ "byte",    GL_BYTE,           false,      true,     -0x80,       0x7f,       sizeof(GLbyte)    },
@@ -86,7 +88,18 @@ struct type_table_entry {
 };
 
 
-static type_table_entry *
+bool type_table_entry::is_allowed() const
+{
+	if (this->enum_value == GL_BOOLEAN) {
+		/* boolean only allowed for edge flag */
+		return false; /* TODO */
+	}
+	/* TODO: handle other attrib locs */
+	return (this->is_floating || (this->is_signed && this->size >= sizeof(GLshort)));
+}
+
+
+static const type_table_entry *
 decode_type(const char *type)
 {
 	for (int i = 0; type_table[i].type; ++i) {
@@ -107,7 +120,7 @@ public:
 	bool parse_datum(const char **text, void *data) const;
 	void setup(size_t *offset, size_t stride) const;
 
-	type_table_entry *data_type;
+	const type_table_entry *data_type;
 	size_t count;
 
 private:
@@ -149,6 +162,12 @@ vertex_attrib_description::vertex_attrib_description(const char *text)
 	this->attrib_loc = VERTEX_ATTRIB_VERTEX;
 	if (this->count < 2 || this->count > 4) {
 		printf("Count must be between 2 and 4.  Got: %lu\n", count);
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	if (!this->data_type->is_allowed()) {
+		printf("Type %s not allowed for %s\n", type_str.c_str(),
+		       name.c_str());
 		piglit_report_result(PIGLIT_FAIL);
 	}
 }
