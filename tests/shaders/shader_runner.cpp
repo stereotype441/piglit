@@ -1599,5 +1599,5 @@ piglit_init(int argc, char **argv)
 	process_test_script(argv[1]);
 	link_and_use_shaders();
 	if (vertex_data_start != NULL)
-		num_vbo_rows = setup_vbos_from_text(vertex_data_start, vertex_data_end);
+		num_vbo_rows = setup_vbos_from_text(vertex_data_start, vertex_data_end, prog);
 }

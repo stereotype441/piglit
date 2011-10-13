@@ -120,6 +120,13 @@ void set_tex_coord_pointer(int count, GLenum type, size_t stride, void *pointer,
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 }
 
+void set_vertex_attrib_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
+{
+	GLuint index = (GLuint) extra;
+	glVertexAttribPointer(index, count, type, GL_FALSE, stride, pointer);
+	glEnableVertexAttribArray(index);
+}
+
 struct attrib_type_table_entry {
 	const char *name; /* NULL means end of table */
 	set_pointer_func *setter;
@@ -128,17 +135,19 @@ struct attrib_type_table_entry {
 	allowed_types allow_flags;
 } const attrib_type_table[] = {
 	/* name                setter                       min_count max_count allow_flags */
-	{ "gl_Vertex",         set_vertex_pointer,          2,        4,        ALLOW_VERTEX_POINTER    },
-	{ "gl_Normal",         set_normal_pointer,          3,        3,        ALLOW_NORMAL_POINTER    },
-	{ "gl_Color",          set_color_pointer,           3,        4,        ALLOW_COLOR_POINTER     },
-	{ "gl_SecondaryColor", set_secondary_color_pointer, 3,        4,        ALLOW_COLOR_POINTER     },
-	{ "gl_FogCoord",       set_fog_coord_pointer,       1,        1,        ALLOW_FOG_COORD_POINTER },
-	/* TODO: add more */
-	{ NULL,                NULL,                        0,        0,        ALLOW_NONE              }
+	{ "gl_Vertex",         set_vertex_pointer,          2,        4,        ALLOW_VERTEX_POINTER        },
+	{ "gl_Normal",         set_normal_pointer,          3,        3,        ALLOW_NORMAL_POINTER        },
+	{ "gl_Color",          set_color_pointer,           3,        4,        ALLOW_COLOR_POINTER         },
+	{ "gl_SecondaryColor", set_secondary_color_pointer, 3,        4,        ALLOW_COLOR_POINTER         },
+	{ "gl_FogCoord",       set_fog_coord_pointer,       1,        1,        ALLOW_FOG_COORD_POINTER     },
+	{ NULL,                NULL,                        0,        0,        ALLOW_NONE                  }
 };
 
 const attrib_type_table_entry tex_coord_attrib_type = {
-	"gl_MultiTexCoordn",   set_tex_coord_pointer,       1,        4,        ALLOW_TEX_COORD_POINTER };
+	NULL,                  set_tex_coord_pointer,       1,        4,        ALLOW_TEX_COORD_POINTER     };
+
+const attrib_type_table_entry generic_floating_attrib_type = {
+	NULL,                  set_vertex_attrib_pointer,   1,        4,        ALLOW_VERTEX_ATTRIB_POINTER };
 
 
 struct type_table_entry {
@@ -182,7 +191,7 @@ decode_type(const char *type)
 class vertex_attrib_description
 {
 public:
-	vertex_attrib_description(const char *text);
+	vertex_attrib_description(GLuint prog, const char *text);
 	bool parse_datum(const char **text, void *data) const;
 	void setup(size_t *offset, size_t stride) const;
 
@@ -196,7 +205,7 @@ private:
 
 
 static const attrib_type_table_entry *
-determine_attrib_type(const std::string &name, int *extra)
+determine_attrib_type(GLuint prog, const std::string &name, int *extra)
 {
 	for (int i = 0; attrib_type_table[i].name; ++i) {
 		if (name == attrib_type_table[i].name)
@@ -212,15 +221,18 @@ determine_attrib_type(const std::string &name, int *extra)
 		}
 	}
 
-	printf("Unexpected vbo column name.  Got: %s\n", name.c_str());
-	piglit_report_result(PIGLIT_FAIL);
-
-	/* Should not be reached, but return NULL to avoid compiler warning */
-	return NULL;
+	/* Special case handling for ordinary variables */
+	GLint attrib_location = glGetAttribLocation(prog, name.c_str());
+	if (attrib_location == -1) {
+		printf("Unexpected vbo column name.  Got: %s\n", name.c_str());
+		piglit_report_result(PIGLIT_FAIL);
+	}
+	*extra = attrib_location;
+	return &generic_floating_attrib_type;
 }
 
 
-vertex_attrib_description::vertex_attrib_description(const char *text)
+vertex_attrib_description::vertex_attrib_description(GLuint prog, const char *text)
 {
 	/* Split the column header into name/type/count fields */
 	const char *first_slash = strchr(text, '/');
@@ -246,7 +258,7 @@ vertex_attrib_description::vertex_attrib_description(const char *text)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	this->attrib_type = determine_attrib_type(name, &this->extra);
+	this->attrib_type = determine_attrib_type(prog, name, &this->extra);
 	if (this->count < this->attrib_type->min_count ||
 	    this->count > this->attrib_type->max_count) {
 		printf("Count must be between %lu and %lu.  Got: %lu\n",
@@ -355,13 +367,13 @@ vertex_attrib_description::setup(size_t *offset, size_t stride) const
 class vbo_data
 {
 public:
-	vbo_data(std::string const &text);
+	vbo_data(std::string const &text, GLuint prog);
 	size_t setup() const;
 
 private:
-	void parse_header_line(const std::string &line);
+	void parse_header_line(const std::string &line, GLuint prog);
 	void parse_data_line(const std::string &line, unsigned int line_num);
-	void parse_line(std::string line, unsigned int line_num);
+	void parse_line(std::string line, unsigned int line_num, GLuint prog);
 
 	bool header_seen;
 	std::vector<vertex_attrib_description> attribs;
@@ -384,7 +396,7 @@ is_blank_line(const std::string &line)
 
 
 void
-vbo_data::parse_header_line(const std::string &line)
+vbo_data::parse_header_line(const std::string &line, GLuint prog)
 {
 	size_t pos = 0;
 	while (pos < line.size()) {
@@ -396,7 +408,7 @@ vbo_data::parse_header_line(const std::string &line)
 			       !isspace(line[column_header_end]))
 				++column_header_end;
 			std::string column_header = line.substr(pos, column_header_end - pos);
-			vertex_attrib_description desc(column_header.c_str());
+			vertex_attrib_description desc(prog, column_header.c_str());
 			attribs.push_back(desc);
 			this->stride += desc.data_type->size * desc.count;
 			pos = column_header_end + 1;
@@ -430,7 +442,7 @@ vbo_data::parse_data_line(const std::string &line, unsigned int line_num)
 
 
 void
-vbo_data::parse_line(std::string line, unsigned int line_num)
+vbo_data::parse_line(std::string line, unsigned int line_num, GLuint prog)
 {
 	/* Ignore end-of-line comments */
 	line = line.substr(0, line.find('#'));
@@ -441,14 +453,14 @@ vbo_data::parse_line(std::string line, unsigned int line_num)
 
 	if (!this->header_seen) {
 		this->header_seen = true;
-		parse_header_line(line);
+		parse_header_line(line, prog);
 	} else {
 		parse_data_line(line, line_num);
 	}
 }
 
 
-vbo_data::vbo_data(const std::string &text)
+vbo_data::vbo_data(const std::string &text, GLuint prog)
 	: header_seen(false), stride(0), num_rows(0)
 {
 	unsigned int line_num = 1;
@@ -458,7 +470,7 @@ vbo_data::vbo_data(const std::string &text)
 		size_t end_of_line = text.find('\n', pos);
 		if (end_of_line == std::string::npos)
 			end_of_line = text.size();
-		parse_line(text.substr(pos, end_of_line), line_num++);
+		parse_line(text.substr(pos, end_of_line), line_num++, prog);
 		pos = end_of_line + 1;
 	}
 }
@@ -482,8 +494,8 @@ vbo_data::setup() const
 }
 
 
-size_t setup_vbos_from_text(const char *text_start, const char *text_end)
+size_t setup_vbos_from_text(const char *text_start, const char *text_end, GLuint prog)
 {
 	std::string text(text_start, text_end);
-	return vbo_data(text).setup();
+	return vbo_data(text, prog).setup();
 }
