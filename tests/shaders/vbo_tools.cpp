@@ -21,6 +21,14 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+/* TODO:
+ * - Move to a file in the util directory
+ * - De-c++ shader_runner
+ * - Handle int attributes
+ * - Handle matrix attributes
+ * - Handle array attributes (not sure if these are allowed)
+ */
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
