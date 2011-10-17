@@ -42,7 +42,6 @@
 #include <cassert>
 #include <cstring>
 #include "tstencil2.h"
-#include "piglit-util.h"
 
 
 namespace GLEAN {
@@ -112,13 +111,13 @@ Stencil2Test::have_EXT_stencil_two_side(void) const
 bool
 Stencil2Test::have_GL2_stencil_two_side(void) const
 {
-	return !piglit_is_gles() && piglit_get_gl_version() >= 20;
+	return GLUtils::getVersion() >= 2.0;
 }
 
 bool
 Stencil2Test::have_stencil_wrap(void) const
 {
-	if (!piglit_is_gles() && piglit_get_gl_version() >= 20) {
+	if (GLUtils::getVersion() >= 2.0) {
 		return true;
 	}
 	else if (GLUtils::haveExtension("GL_EXT_stencil_wrap")) {

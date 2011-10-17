@@ -36,7 +36,6 @@
 #include <cassert>
 #include <math.h>
 #include "ttexunits.h"
-#include "piglit-util.h"
 
 
 namespace GLEAN {
@@ -71,7 +70,7 @@ bool
 TexUnitsTest::setup(void)
 {
    // check that we have at least OpenGL 2.0
-   if (piglit_is_gles() || piglit_get_gl_version() < 20) {
+   if (GLUtils::getVersion() < 2.0) {
       env->log << "OpenGL >= 2.0 not supported\n";
       return false;
    }

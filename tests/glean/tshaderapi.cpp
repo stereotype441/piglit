@@ -36,7 +36,6 @@
 #include "rand.h"
 #include "timer.h"
 #include "image.h"
-#include "piglit-util.h"
 
 
 namespace GLEAN {
@@ -574,7 +573,7 @@ ShaderAPIResult::getresults(istream &s)
 bool
 ShaderAPITest::isApplicable() const
 {
-	if (!piglit_is_gles() && piglit_get_gl_version() >= 20) {
+	if (GLUtils::getVersion() >= 2.0) {
 		return true;
 	}
 	else {

@@ -12,7 +12,6 @@ include_directories(
 	${GLEXT_INCLUDE_DIR}
 	${OPENGL_INCLUDE_PATH}
 	${TIFF_INCLUDE_DIR}
-	${piglit_SOURCE_DIR}/tests/util
 )
 
 add_executable (glean
@@ -95,5 +94,4 @@ target_link_libraries (glean
 	${X11_X11_LIB}
 	${TIFF_LIBRARY}
 	${CARBON_LIBRARY}
-	piglitutil
 )
