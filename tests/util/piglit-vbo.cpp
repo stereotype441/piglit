@@ -22,7 +22,6 @@
  */
 
 /* TODO:
- * - Move to a file in the util directory
  * - Handle int attributes
  * - Handle matrix attributes
  * - Handle array attributes (not sure if these are allowed)
@@ -76,9 +75,7 @@ enum allowed_types {
 	ALLOW_FOG_COORD_POINTER = ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
 	ALLOW_TEX_COORD_POINTER = ALLOW_SHORT | ALLOW_INT | ALLOW_FLOAT
 	                        | ALLOW_HALF | ALLOW_DOUBLE,
-	ALLOW_VERTEX_ATTRIB_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
-	                            | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT
-	                            | ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
+	ALLOW_VERTEX_ATTRIB_POINTER = ALLOW_FLOAT | ALLOW_HALF | ALLOW_DOUBLE,
 	ALLOW_VERTEX_ATTRIB_I_POINTER = ALLOW_BYTE | ALLOW_UBYTE | ALLOW_SHORT
 	                              | ALLOW_USHORT | ALLOW_INT | ALLOW_UINT,
 };
@@ -136,6 +133,13 @@ void set_vertex_attrib_pointer(int count, GLenum type, size_t stride, void *poin
 	glEnableVertexAttribArray(index);
 }
 
+void set_vertex_attrib_i_pointer(int count, GLenum type, size_t stride, void *pointer, int extra)
+{
+	GLuint index = (GLuint) extra;
+	glVertexAttribIPointer(index, count, type, stride, pointer);
+	glEnableVertexAttribArray(index);
+}
+
 struct attrib_type_table_entry {
 	const char *name; /* NULL means end of table */
 	set_pointer_func *setter;
@@ -157,6 +161,9 @@ const attrib_type_table_entry tex_coord_attrib_type = {
 
 const attrib_type_table_entry generic_floating_attrib_type = {
 	NULL,                  set_vertex_attrib_pointer,   1,        4,        ALLOW_VERTEX_ATTRIB_POINTER };
+
+const attrib_type_table_entry generic_integral_attrib_type = {
+	NULL,                  set_vertex_attrib_i_pointer, 1,        4,        ALLOW_VERTEX_ATTRIB_I_POINTER };
 
 
 struct type_table_entry {
@@ -214,7 +221,7 @@ private:
 
 
 static const attrib_type_table_entry *
-determine_attrib_type(GLuint prog, const std::string &name, int *extra)
+determine_attrib_type(GLuint prog, const std::string &name, allowed_types allow_flag, int *extra)
 {
 	for (int i = 0; attrib_type_table[i].name; ++i) {
 		if (name == attrib_type_table[i].name)
@@ -237,7 +244,10 @@ determine_attrib_type(GLuint prog, const std::string &name, int *extra)
 		piglit_report_result(PIGLIT_FAIL);
 	}
 	*extra = attrib_location;
-	return &generic_floating_attrib_type;
+	if (allow_flag & ALLOW_VERTEX_ATTRIB_POINTER)
+		return &generic_floating_attrib_type;
+	else
+		return &generic_integral_attrib_type;
 }
 
 
@@ -267,7 +277,7 @@ vertex_attrib_description::vertex_attrib_description(GLuint prog, const char *te
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
-	this->attrib_type = determine_attrib_type(prog, name, &this->extra);
+	this->attrib_type = determine_attrib_type(prog, name, this->data_type->allow_flag, &this->extra);
 	if (this->count < this->attrib_type->min_count ||
 	    this->count > this->attrib_type->max_count) {
 		printf("Count must be between %lu and %lu.  Got: %lu\n",
