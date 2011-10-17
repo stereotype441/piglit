@@ -1,0 +1,33 @@
+[require]
+GLSL >= 1.10
+GL >= 2.1
+
+[vertex shader]
+void main()
+{
+	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
+}
+
+[fragment shader]
+void main()
+{
+	gl_FragColor = vec4(1.0);
+}
+
+[vertex data]
+gl_Vertex/int/4
+ 1  1 0  10
+ 1  9 0  10
+90 90 0  100
+
+[test]
+ortho 0.0 1.0 0.0 1.0
+clear color 0.0 0.0 0.0 0.0
+clear
+draw arrays GL_TRIANGLES 0 3
+relative probe rgba (0.3, 0.7) (1.0, 1.0, 1.0, 1.0)
+relative probe rgba (0.7, 0.3) (0.0, 0.0, 0.0, 0.0)
+relative probe rgba (0.5, 0.0) (0.0, 0.0, 0.0, 0.0)
+relative probe rgba (0.5, 1.0) (0.0, 0.0, 0.0, 0.0)
+relative probe rgba (1.0, 0.5) (0.0, 0.0, 0.0, 0.0)
+relative probe rgba (1.0, 0.5) (0.0, 0.0, 0.0, 0.0)
