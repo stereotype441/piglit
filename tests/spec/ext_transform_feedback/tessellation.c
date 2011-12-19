@@ -129,6 +129,7 @@ static GLenum draw_mode;
 static GLenum xfb_mode;
 static unsigned num_input_vertices;
 static unsigned expected_num_output_vertices;
+static unsigned expected_num_output_primitives;
 static float (*vertex_positions)[2];
 static GLboolean monochrome;
 static GLboolean use_flat_color;
@@ -139,6 +140,7 @@ static GLboolean is_deprecated_draw_mode;
 static GLuint normal_prog;
 static GLuint xfb_prog;
 static GLuint xfb_buf;
+static GLuint xfb_query;
 static float vertex_colors[][4] = {
 	{ 0.00, 0.00, 0.00, 0.00 },
 	{ 1.00, 0.25, 0.25, 1.00 },
@@ -313,6 +315,7 @@ initialize_shader_and_xfb()
 		piglit_report_result(PIGLIT_FAIL);
 	}
 	glGenBuffers(1, &xfb_buf);
+	glGenQueries(1, &xfb_query);
 	glFrontFace(GL_CW);
 	piglit_check_gl_error(0, PIGLIT_FAIL);
 }
@@ -427,10 +430,14 @@ draw(GLuint prog, bool use_xfb, float y_offset, GLenum mode,
 		piglit_BindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0,
 				      xfb_buf);
 		piglit_BeginTransformFeedback(xfb_mode);
+		glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,
+			     xfb_query);
 	}
 	glDrawArrays(mode, 0, num_vertices);
-	if (use_xfb)
+	if (use_xfb) {
 		piglit_EndTransformFeedback();
+		glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+	}
 	piglit_check_gl_error(0, PIGLIT_FAIL);
 }
 
@@ -469,6 +476,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_POINTS;
 		num_input_vertices = 4;
 		expected_num_output_vertices = 4;
+		expected_num_output_primitives = 4;
 		vertex_positions = points_vertices;
 	} else if (strcmp(argv[1], "lines") == 0) {
 		draw_mode = GL_LINES;
@@ -476,6 +484,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_LINES;
 		num_input_vertices = 4;
 		expected_num_output_vertices = 4;
+		expected_num_output_primitives = 2;
 		vertex_positions = lines_vertices;
 	} else if (strcmp(argv[1], "line_loop") == 0) {
 		draw_mode = GL_LINE_LOOP;
@@ -483,6 +492,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_LINES;
 		num_input_vertices = 4;
 		expected_num_output_vertices = 8;
+		expected_num_output_primitives = 4;
 		vertex_positions = line_loop_vertices;
 	} else if (strcmp(argv[1], "line_strip") == 0) {
 		draw_mode = GL_LINE_STRIP;
@@ -490,6 +500,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_LINES;
 		num_input_vertices = 4;
 		expected_num_output_vertices = 6;
+		expected_num_output_primitives = 3;
 		vertex_positions = line_strip_vertices;
 	} else if (strcmp(argv[1], "triangles") == 0) {
 		draw_mode = GL_TRIANGLES;
@@ -497,6 +508,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_TRIANGLES;
 		num_input_vertices = 6;
 		expected_num_output_vertices = 6;
+		expected_num_output_primitives = 2;
 		vertex_positions = triangles_vertices;
 	} else if (strcmp(argv[1], "triangle_strip") == 0) {
 		draw_mode = GL_TRIANGLE_STRIP;
@@ -504,6 +516,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_TRIANGLES;
 		num_input_vertices = 5;
 		expected_num_output_vertices = 9;
+		expected_num_output_primitives = 3;
 		vertex_positions = triangle_strip_vertices;
 	} else if (strcmp(argv[1], "triangle_fan") == 0) {
 		draw_mode = GL_TRIANGLE_FAN;
@@ -511,6 +524,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_TRIANGLES;
 		num_input_vertices = 5;
 		expected_num_output_vertices = 9;
+		expected_num_output_primitives = 3;
 		vertex_positions = triangle_fan_vertices;
 	} else if (strcmp(argv[1], "quads") == 0) {
 		draw_mode = GL_QUADS;
@@ -518,6 +532,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_TRIANGLES;
 		num_input_vertices = 8;
 		expected_num_output_vertices = 12;
+		expected_num_output_primitives = 4;
 		vertex_positions = quads_vertices;
 	} else if (strcmp(argv[1], "quad_strip") == 0) {
 		draw_mode = GL_QUAD_STRIP;
@@ -525,6 +540,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_TRIANGLES;
 		num_input_vertices = 6;
 		expected_num_output_vertices = 12;
+		expected_num_output_primitives = 4;
 		vertex_positions = quad_strip_vertices;
 	} else if (strcmp(argv[1], "polygon") == 0) {
 		draw_mode = GL_POLYGON;
@@ -532,6 +548,7 @@ piglit_init(int argc, char **argv)
 		xfb_mode = GL_TRIANGLES;
 		num_input_vertices = 5;
 		expected_num_output_vertices = 9;
+		expected_num_output_primitives = 3;
 		vertex_positions = polygon_vertices;
 	} else {
 		print_usage_and_exit(argv[0]);
@@ -578,6 +595,7 @@ enum piglit_result piglit_display(void)
 	unsigned num_output_vertices;
 	GLboolean pass = GL_TRUE;
 	GLboolean warn = GL_FALSE;
+	GLuint num_output_primitives;
 
 	initialize_vertex_shader_inputs();
 
@@ -596,6 +614,13 @@ enum piglit_result piglit_display(void)
 	if (num_output_vertices != expected_num_output_vertices) {
 		printf("Expected %u output vertices, but got %u\n",
 		       expected_num_output_vertices, num_output_vertices);
+		pass = GL_FALSE;
+	}
+	glGetQueryObjectuiv(xfb_query, GL_QUERY_RESULT,
+			    &num_output_primitives);
+	if (num_output_primitives != expected_num_output_primitives) {
+		printf("Expected %u output primitives, but got %u\n",
+		       expected_num_output_primitives, num_output_primitives);
 		pass = GL_FALSE;
 	}
 
