@@ -58,6 +58,14 @@ piglit_display(void)
 	glEnable(GL_RASTERIZER_DISCARD);
 	glColor4f(1.0, 0.0, 0.0, 0.0);
 	piglit_draw_rect(-1, -1, 2, 2);
+	glBegin(GL_LINE_LOOP);
+	glVertex2f(-0.5, -0.5);
+	glVertex2f(0.5, -0.5);
+	glVertex2f(0.0, 0.5);
+	glEnd();
+	glBegin(GL_POINTS);
+	glVertex2f(0.0, 0.0);
+	glEnd();
 
 	pass = piglit_probe_rect_rgba(0, 0, piglit_width, piglit_height, green);
 
