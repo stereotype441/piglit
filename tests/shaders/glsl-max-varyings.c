@@ -29,6 +29,10 @@
  *
  * Tests whether each varying can be used at all numbers of varyings up to
  * GL_MAX_VARYING_FLOATS / 4.
+ *
+ * With the "xfb" option, also test that all varyings can be captured
+ * using transform feedback, up to
+ * GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS / 4.
  */
 
 #include "piglit-util.h"
@@ -38,6 +42,12 @@
 /* 10x10 rectangles with 2 pixels of pad.  Deal with up to 32 varyings. */
 int piglit_width = (2 + MAX_VARYING * 12), piglit_height = (2 + MAX_VARYING * 12);
 int piglit_window_mode = GLUT_RGB | GLUT_DOUBLE;
+
+static GLboolean use_xfb = GL_FALSE;
+static const char *xfb_varying_array[MAX_VARYING];
+static GLuint xfb_buf;
+
+#define MIN2(A, B) ((A) < (B) ? (A) : (B))
 
 /* Generate a VS that writes to num_varyings vec4s, and put
  * interesting data in data_varying with 0.0 everywhere else.
@@ -133,16 +143,72 @@ static GLint get_fs(int num_varyings, int data_varying)
 	return shader;
 }
 
+/**
+ * Initialize xfb_varying_array to contain the names of the varyings
+ * used by get_vs and get_fs.
+ */
+static void
+init_xfb_varying_array()
+{
+	int i;
+	for (i = 0; i < MAX_VARYING; ++i) {
+		char *buf = malloc(4);
+		sprintf(buf, "v%d", i);
+		xfb_varying_array[i] = buf;
+	}
+}
+
 static int
 coord_from_index(int index)
 {
 	return 2 + 12 * index;
 }
 
-static void
-draw(int num_varyings)
+static GLboolean
+check_xfb_output(int max_varyings, int xfb_varyings, int green_varying)
 {
-	int data_varying;
+	GLboolean pass = GL_TRUE;
+	int vertex, varying;
+	float green[4] = {0.0, 1.0, 0.0, 0.0};
+	float red[4] = {1.0, 0.0, 0.0, 0.0};
+	float (*buffer)[4] = glMapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER,
+					 GL_READ_ONLY);
+
+	for (vertex = 0; vertex < 6; ++vertex) {
+		for (varying = 0; varying < xfb_varyings; ++varying) {
+			float *expected =
+				varying == green_varying ? green : red;
+			float *actual =
+				buffer[vertex * max_varyings + varying];
+			if (memcmp(expected, actual, 4 * sizeof(float)) != 0) {
+				printf("When testing %i varyings\n",
+				       max_varyings);
+				printf("And setting varying %i to green\n",
+				       green_varying);
+				printf("Got incorrect transform feedback data "
+				       "for vertex %i, varying %i\n", vertex,
+				       varying);
+				printf("Expected (%f, %f, %f, %f)\n",
+				       expected[0], expected[1], expected[2],
+				       expected[3]);
+				printf("Actual (%f, %f, %f, %f)\n",
+				       actual[0], actual[1], actual[2],
+				       actual[3]);
+				pass = GL_FALSE;
+			}
+		}
+	}
+
+	glUnmapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER);
+
+	return pass;
+}
+
+static GLboolean
+draw(int num_varyings, int max_xfb_varyings)
+{
+	GLboolean pass = GL_TRUE;
+	int data_varying, xfb_varyings;
 	float green[4][4] = { {0.0, 1.0, 0.0, 0.0},
 			      {0.0, 1.0, 0.0, 0.0},
 			      {0.0, 1.0, 0.0, 0.0},
@@ -173,6 +239,13 @@ draw(int num_varyings)
 		glBindAttribLocation(prog, 1, "green");
 		glBindAttribLocation(prog, 2, "red");
 
+		if (use_xfb) {
+			xfb_varyings = MIN2(num_varyings, max_xfb_varyings);
+			piglit_TransformFeedbackVaryings(prog, xfb_varyings,
+							 xfb_varying_array,
+							 GL_INTERLEAVED_ATTRIBS);
+		}
+
 		glLinkProgram(prog);
 		if (!piglit_link_check_status(prog))
 			piglit_report_result(PIGLIT_FAIL);
@@ -187,15 +260,36 @@ draw(int num_varyings)
 		assert(loc != -1); /* should always be used */
 		glUniform1f(loc, 1.0);
 
+		if (use_xfb) {
+			float initial_buffer[MAX_VARYING * 6][4];
+			glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, xfb_buf);
+			memset(initial_buffer, 0, sizeof(initial_buffer));
+			glBufferData(GL_TRANSFORM_FEEDBACK_BUFFER,
+				     sizeof(initial_buffer), initial_buffer,
+				     GL_STREAM_READ);
+			piglit_BindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0,
+					      xfb_buf);
+			piglit_BeginTransformFeedback(GL_TRIANGLES);
+		}
+
 		piglit_draw_rect(coord_from_index(data_varying),
 				 coord_from_index(num_varyings - 1),
 				 10,
 				 10);
 
+		if (use_xfb) {
+			piglit_EndTransformFeedback();
+			pass = check_xfb_output(num_varyings, xfb_varyings,
+						data_varying)
+				&& pass;
+		}
+
 		glDeleteShader(vs);
 		glDeleteShader(fs);
 		glDeleteProgram(prog);
 	}
+
+	return pass;
 }
 
 enum piglit_result
@@ -203,6 +297,7 @@ piglit_display(void)
 {
 	GLint max_components;
 	int max_varyings, row, col;
+	int max_xfb_varyings = 0;
 	GLboolean pass = GL_TRUE, warned = GL_FALSE;
 
 	piglit_ortho_projection(piglit_width, piglit_height, GL_FALSE);
@@ -220,11 +315,21 @@ piglit_display(void)
 		warned = GL_TRUE;
 	}
 
+	if (use_xfb) {
+		GLint max_xfb_components;
+		glGetIntegerv(GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS,
+			      &max_xfb_components);
+		max_xfb_varyings = max_xfb_components / 4;
+
+		printf("GL_MAX_TRANSFORM_FEEDBACK_INTERLEAVED_COMPONENTS = %i\n",
+		       max_xfb_components);
+	}
+
 	glClearColor(0.5, 0.5, 0.5, 0.5);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	for (row = 0; row < max_varyings; row++) {
-		draw(row + 1);
+		pass = draw(row + 1, max_xfb_varyings) && pass;
 	}
 
 	for (row = 0; row < max_varyings; row++) {
@@ -256,11 +361,37 @@ piglit_display(void)
 		return PIGLIT_PASS;
 }
 
+static void
+print_usage_and_exit(char *prog_name)
+{
+	printf("Usage: %s [options]\n"
+	       "  permissible options:\n"
+	       "    xfb  Also capture varyings with transform feedback\n",
+	       prog_name);
+	exit(1);
+}
+
 void piglit_init(int argc, char **argv)
 {
+	int i;
+
+	/* Interpret command line args */
+	for (i = 1; i < argc; ++i) {
+		if (strcmp(argv[i], "xfb") == 0)
+			use_xfb = GL_TRUE;
+		else
+			print_usage_and_exit(argv[0]);
+	}
+
 	if (!GLEW_VERSION_2_0) {
 		printf("Requires OpenGL 2.0\n");
 		piglit_report_result(PIGLIT_SKIP);
+	}
+
+	if (use_xfb) {
+		piglit_require_transform_feedback();
+		init_xfb_varying_array();
+		glGenBuffers(1, &xfb_buf);
 	}
 
 	printf("Vertical axis: Increasing numbers of varyings.\n");
