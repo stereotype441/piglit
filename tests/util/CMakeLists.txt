@@ -2,6 +2,7 @@ add_definitions(-DSOURCE_DIR="${piglit_SOURCE_DIR}/")
 
 include_directories(
 	${OPENGL_INCLUDE_PATH}
+	${WRAPPERS_INCLUDE_PATH}
 	${piglit_SOURCE_DIR}/tests/util
 )
 
