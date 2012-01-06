@@ -1,3 +1,9 @@
+add_subdirectory(wrappers)
+
+set(
+	WRAPPERS_INCLUDE_PATH ${WRAPPERS_INCLUDE_PATH}
+	PARENT_SCOPE)
+
 add_definitions(-DSOURCE_DIR="${piglit_SOURCE_DIR}/")
 
 include_directories(
