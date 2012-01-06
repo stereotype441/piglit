@@ -70,6 +70,23 @@ typedef unsigned int GLhandleARB;
 
 #include "wrappers.h"
 
+#define GLEW_VERSION_1_3 (piglit_get_gl_version() >= 13)
+#define GLEW_VERSION_1_4 (piglit_get_gl_version() >= 14)
+#define GLEW_VERSION_1_5 (piglit_get_gl_version() >= 15)
+#define GLEW_VERSION_2_0 (piglit_get_gl_version() >= 20)
+#define GLEW_VERSION_3_0 (piglit_get_gl_version() >= 30)
+#define GLEW_ARB_depth_texture (piglit_is_extension_supported("ARB_depth_texture"))
+#define GLEW_ARB_fragment_program (piglit_is_extension_supported("ARB_fragment_program"))
+#define GLEW_ARB_fragment_shader (piglit_is_extension_supported("ARB_fragment_shader"))
+#define GLEW_ARB_shader_objects (piglit_is_extension_supported("ARB_shader_objects"))
+#define GLEW_ARB_shading_language_100 (piglit_is_extension_supported("ARB_shading_language_100"))
+#define GLEW_ARB_texture_env_combine (piglit_is_extension_supported("ARB_texture_env_combine"))
+#define GLEW_ARB_texture_non_power_of_two (piglit_is_extension_supported("ARB_texture_non_power_of_two"))
+#define GLEW_ARB_vertex_program (piglit_is_extension_supported("ARB_vertex_program"))
+#define GLEW_ARB_vertex_shader (piglit_is_extension_supported("ARB_vertex_shader"))
+#define GLEW_EXT_transform_feedback (piglit_is_extension_supported("EXT_transform_feedback"))
+#define glewInit() do { } while (0)
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
