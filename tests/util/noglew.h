@@ -87,6 +87,9 @@ typedef unsigned int GLhandleARB;
 #define GLEW_EXT_transform_feedback (piglit_is_extension_supported("EXT_transform_feedback"))
 #define glewInit() do { } while (0)
 
+// Why is this necessary?
+#define GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI 0x8837
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
