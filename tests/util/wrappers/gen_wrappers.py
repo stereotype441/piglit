@@ -93,17 +93,18 @@ class Function(object):
         return """\
 {s.wrapper_function_sig}
 {{
-\tstatic {s.rettype} (*func)({s.param_types}) = NULL;
+\tstatic {s.rettype} (*function_pointer)({s.param_types}) = NULL;
 
-\tif (func == NULL) {{
-\t\tfunc = glGetProcAddress("{s.name}");
-\t\tif (func == NULL) {{
+\tif (function_pointer == NULL) {{
+\t\tfunction_pointer = ({s.rettype} (*)({s.param_types}))
+\t\t\tglGetProcAddress((const GLubyte *) "{s.name}");
+\t\tif (function_pointer == NULL) {{
 \t\t\tprintf("Implementation does not support function \\"{s.name}\\"\\n");
 \t\t\tpiglit_report_result(PIGLIT_FAIL);
 \t\t}}
 \t}}
 
-\t{s.opt_return}func({s.param_names});
+\t{s.opt_return}function_pointer({s.param_names});
 }}
 """.format(s = self)
 
