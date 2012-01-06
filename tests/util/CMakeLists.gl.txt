@@ -6,7 +6,7 @@ include_directories(
 
 set(UTIL_SOURCES
 	${UTIL_SOURCES}
-	glew.c
+	noglew.c
 	piglit-shader.c
 	piglit-shader-gl.c
 	piglit-transform-feedback.c
@@ -33,7 +33,7 @@ IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 		    piglit-util-gl.c
 		    piglit-glx-framework.c
 		    piglit-glx-util.c
-		    glew.c
+		    noglew.c
 	)
 	set (UTIL_SOURCES
 		${UTIL_SOURCES}
