@@ -97,7 +97,7 @@ class Function(object):
 
 \tif (function_pointer == NULL) {{
 \t\tfunction_pointer = ({s.rettype} (*)({s.param_types}))
-\t\t\tglGetProcAddress((const GLubyte *) "{s.name}");
+\t\t\tglGetProcAddress((const GLubyte *) "gl{s.name}");
 \t\tif (function_pointer == NULL) {{
 \t\t\tprintf("Implementation does not support function \\"{s.name}\\"\\n");
 \t\t\tpiglit_report_result(PIGLIT_FAIL);
