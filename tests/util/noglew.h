@@ -77,6 +77,7 @@ typedef unsigned int GLhandleARB;
 #define GLEW_VERSION_2_0 (piglit_get_gl_version() >= 20)
 #define GLEW_VERSION_3_0 (piglit_get_gl_version() >= 30)
 #define GLEW_VERSION_3_2 (piglit_get_gl_version() >= 32)
+#define GLEW_3DFX_texture_compression_FXT1 (piglit_is_extension_supported("3DFX_texture_compression_FXT1"))
 #define GLEW_ARB_ES2_compatibility (piglit_is_extension_supported("ARB_ES2_compatibility"))
 #define GLEW_ARB_depth_texture (piglit_is_extension_supported("ARB_depth_texture"))
 #define GLEW_ARB_draw_buffers (piglit_is_extension_supported("ARB_draw_buffers"))
@@ -88,6 +89,7 @@ typedef unsigned int GLhandleARB;
 #define GLEW_ARB_shader_objects (piglit_is_extension_supported("ARB_shader_objects"))
 #define GLEW_ARB_shader_texture_lod (piglit_is_extension_supported("ARB_shader_texture_lod"))
 #define GLEW_ARB_shading_language_100 (piglit_is_extension_supported("ARB_shading_language_100"))
+#define GLEW_ARB_texture_compression_bptc (piglit_is_extension_supported("ARB_texture_compression_bptc"))
 #define GLEW_ARB_texture_compression_rgtc (piglit_is_extension_supported("ARB_texture_compression_rgtc"))
 #define GLEW_ARB_texture_env_combine (piglit_is_extension_supported("ARB_texture_env_combine"))
 #define GLEW_ARB_texture_float (piglit_is_extension_supported("ARB_texture_float"))
@@ -108,12 +110,23 @@ typedef unsigned int GLhandleARB;
 #define GLEW_EXT_transform_feedback (piglit_is_extension_supported("EXT_transform_feedback"))
 #define GLEW_NV_blend_square (piglit_is_extension_supported("NV_blend_square"))
 #define GLEW_NV_geometry_shader4 (piglit_is_extension_supported("NV_geometry_shader4"))
+#define GLEW_OES_compressed_paletted_texture (piglit_is_extension_supported("OES_compressed_paletted_texture"))
 #define glewInit() do { } while (0)
 
 // Why is this necessary?
 #define GL_COMPRESSED_LUMINANCE_ALPHA_3DC_ATI 0x8837
 #define GL_CLIP_PLANE6 0x3006
 #define GL_CLIP_PLANE7 0x3007
+#define GL_PALETTE4_RGB8_OES 0x8B90
+#define GL_PALETTE4_RGBA8_OES 0x8B91
+#define GL_PALETTE4_R5_G6_B5_OES 0x8B92
+#define GL_PALETTE4_RGBA4_OES 0x8B93
+#define GL_PALETTE4_RGB5_A1_OES 0x8B94
+#define GL_PALETTE8_RGB8_OES 0x8B95
+#define GL_PALETTE8_RGBA8_OES 0x8B96
+#define GL_PALETTE8_R5_G6_B5_OES 0x8B97
+#define GL_PALETTE8_RGBA4_OES 0x8B98
+#define GL_PALETTE8_RGB5_A1_OES 0x8B99
 
 #ifdef __cplusplus
 } /* end extern "C" */
