@@ -68,7 +68,10 @@ class Function(object):
 
     @property
     def param_decls(self):
-        return ', '.join(p.decl for p in self.__params)
+	if self.__params:
+	    return ', '.join(p.decl for p in self.__params)
+	else:
+	    return 'void'
 
     @property
     def param_names(self):
@@ -76,7 +79,10 @@ class Function(object):
 
     @property
     def param_types(self):
-        return ', '.join(p.typ for p in self.__params)
+	if self.__params:
+	    return ', '.join(p.typ for p in self.__params)
+	else:
+	    return 'void'
 
     @property
     def wrapper_function_sig(self):
