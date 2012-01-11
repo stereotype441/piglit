@@ -108,6 +108,16 @@ class Function(object):
 }}
 """.format(s = self)
 
+    @property
+    def glew_typedef_name(self):
+	return 'pfngl{s.name}proc'.format(s = self).upper()
+
+    @property
+    def glew_typedef(self):
+	return """\
+typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
+""".format(s = self)
+
 
 def read_xml(filename):
     result = []
@@ -150,6 +160,7 @@ h_file = []
 c_file = []
 
 for fn in read_xml(file_to_parse):
+    h_file.append(fn.glew_typedef)
     h_file.append(fn.wrapper_function_decl)
     c_file.append(fn.wrapper_function_def)
 
