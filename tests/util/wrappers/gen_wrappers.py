@@ -125,15 +125,41 @@ typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
 """.format(s = self)
 
 
+class Enum(object):
+    def __init__(self, enum_xml):
+	self.__name = enum_xml.getAttribute('name')
+	self.__value = enum_xml.getAttribute('value')
+
+    @property
+    def name(self):
+	return self.__name
+
+    @property
+    def value(self):
+	return self.__value
+
+    @property
+    def enum_decl(self):
+	return """\
+#define GL_{s.name} {s.value}
+""".format(s = self)
+
+
 class Api(object):
     def __init__(self, filename):
 	self.__functions = []
+	self.__enums = []
 	self.__traverse(filename)
 	self.__functions = tuple(self.__functions)
+	self.__enums = tuple(self.__enums)
 
     @property
     def functions(self):
 	return self.__functions
+
+    @property
+    def enums(self):
+	return self.__enums
 
     def __traverse(self, filename):
         doc = xml.dom.minidom.parse(filename)
@@ -155,8 +181,7 @@ class Api(object):
                 if item.tagName == 'function':
                     self.__functions.append(Function(item))
                 elif item.tagName == 'enum':
-                    # TODO: handle this.
-                    pass
+		    self.__enums.append(Enum(item))
                 elif item.tagName == 'type':
                     # TODO: handle this.
                     pass
@@ -175,6 +200,9 @@ for fn in api.functions:
     h_file.append(fn.glew_typedef)
     h_file.append(fn.wrapper_function_decl)
     c_file.append(fn.wrapper_function_def)
+
+for en in api.enums:
+    h_file.append(en.enum_decl)
 
 with open(sys.argv[2], 'w') as f:
     f.write(''.join(c_file))
