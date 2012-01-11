@@ -174,9 +174,6 @@ class Api(object):
                 continue
             if category.tagName != 'category':
                 raise UnexpectedElement(category)
-	    if category.getAttribute('name') == '1.0':
-		# TODO: as an experiment, skip 1.0 stuff.
-		continue
             for item in child_elements(category):
                 if item.tagName == 'function':
                     self.__functions.append(Function(item))
