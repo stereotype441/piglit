@@ -125,10 +125,17 @@ typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
 """.format(s = self)
 
 
-def read_xml(filename):
-    result = []
+class Api(object):
+    def __init__(self, filename):
+	self.__functions = []
+	self.__traverse(filename)
+	self.__functions = tuple(self.__functions)
 
-    def traverse(filename):
+    @property
+    def functions(self):
+	return self.__functions
+
+    def __traverse(self, filename):
         doc = xml.dom.minidom.parse(filename)
 
         if doc.documentElement.tagName != 'OpenGLAPI':
@@ -137,7 +144,7 @@ def read_xml(filename):
         # TODO: category is a bad name.
         for category in child_elements(doc.documentElement):
             if category.tagName == 'xi:include':
-                traverse(os.path.join(os.path.dirname(filename), category.getAttribute('href')))
+                self.__traverse(os.path.join(os.path.dirname(filename), category.getAttribute('href')))
                 continue
             if category.tagName != 'category':
                 raise UnexpectedElement(category)
@@ -146,7 +153,7 @@ def read_xml(filename):
 		continue
             for item in child_elements(category):
                 if item.tagName == 'function':
-                    result.append(Function(item))
+                    self.__functions.append(Function(item))
                 elif item.tagName == 'enum':
                     # TODO: handle this.
                     pass
@@ -156,16 +163,15 @@ def read_xml(filename):
                 else:
                     raise UnexpectedElement(item)
 
-    traverse(filename)
-    return result
-
 
 file_to_parse = sys.argv[1]
 
 h_file = []
 c_file = []
 
-for fn in read_xml(file_to_parse):
+api = Api(file_to_parse)
+
+for fn in api.functions:
     h_file.append(fn.glew_typedef)
     h_file.append(fn.wrapper_function_decl)
     c_file.append(fn.wrapper_function_def)
