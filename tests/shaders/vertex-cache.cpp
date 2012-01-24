@@ -1,5 +1,5 @@
 /*
- * Copyright © 2011 Intel Corporation
+ * Copyright © 2012 Intel Corporation
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -21,8 +21,26 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
+/**
+ * Theory of operation:
+ *
+ * - Use a fletcher checksum (easy to compute)
+ * - Draw a uniform grid of small triangles, where each grid position is drawn in pseudo-random order.
+ * - Both FS and VS compute checksums, so that we are certain that neither attribute data nor varying data is corrupted.
+ * - Attribute/varying 0 contains the checksum
+ * - Attribute/varying 1 contains the screen position
+ * - Remaining attributes/varyings contain pseudo-random data.
+ * - Use a deterministic pseudo-random number generator for repeatability (and uniformity across OSes)
+ * - FS outputs a small number if ok, large if bad
+ * - Draw using a blend mode that is additive with saturation, so that we will catch (a) parts of screen covered by no triangles, (b) parts of screen covered by too many triangles, (c) parts of screen where checksum failed.
+ * - Optionally, confirm varyings using XFB.
+ *
+ * TODO: need to rewrite everything below this line.
+ */
+
 compile_vs(unsigned num_attributes, unsigned num_varyings)
 {
+	std::string vs_text;
 	char tmp[1024];
 	vs_text += "#version 130\n";
 	sprintf(tmp, "#define NUM_ATTRIBUTES %u\n", num_attributes);
