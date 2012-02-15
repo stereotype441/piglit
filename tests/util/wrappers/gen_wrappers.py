@@ -21,9 +21,9 @@ class UnexpectedElement(Exception):
                 elem.tagName, context))
 
 class Param(object):
-    def __init__(self, param_xml):
-        self.__name = param_xml.getAttribute('name')
-        self.__type = param_xml.getAttribute('type')
+    def __init__(self, name, typ):
+	self.__name = name
+	self.__type = typ
 
     @property
     def name(self):
@@ -37,6 +37,10 @@ class Param(object):
     def decl(self):
         return '{0} {1}'.format(self.__type, self.__name)
 
+def xml_to_param(param_xml):
+    return Param(param_xml.getAttribute('name'),
+		 param_xml.getAttribute('type'))
+
 class Function(object):
     def __init__(self, func_xml):
         self.__name = func_xml.getAttribute('name')
@@ -45,7 +49,7 @@ class Function(object):
         for item in child_elements(func_xml):
             if item.tagName == 'param':
                 if item.getAttribute('padding') != 'true':
-                    self.__params.append(Param(item))
+                    self.__params.append(xml_to_param(item))
             elif item.tagName == 'return':
                 self.__rettype = item.getAttribute('type')
             elif item.tagName == 'glx':
