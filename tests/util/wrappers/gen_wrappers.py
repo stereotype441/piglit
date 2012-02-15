@@ -54,11 +54,9 @@ class Signature(object):
 		param_decls = ', '.join(p.decl for p in self.__params)
 	else:
 	    param_decls = 'void'
-        return '{s.c_rettype} {name}({param_decls})'.format(s = self, name = name, param_decls = param_decls)
-
-    @property
-    def c_rettype(self):
-        return self.__rettype or 'void'
+        return '{rettype} {name}({param_decls})'.format(
+	    rettype = self.__rettype or 'void', name = name,
+	    param_decls = param_decls)
 
     @property
     def opt_return(self):
