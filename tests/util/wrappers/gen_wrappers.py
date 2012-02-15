@@ -82,20 +82,8 @@ class Function(object):
         return '{s.rettype} gl{s.name}({s.param_decls})'.format(s = self)
 
     @property
-    def wrapper_function_decl(self):
-        return """\
-{s.wrapper_function_sig};
-""".format(s = self)
-
-    @property
     def glew_typedef_name(self):
 	return 'pfngl{s.name}proc'.format(s = self).upper()
-
-    @property
-    def glew_typedef(self):
-	return """\
-typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
-""".format(s = self)
 
 def xml_to_function(func_xml):
     name = func_xml.getAttribute('name')
@@ -127,12 +115,6 @@ class Enum(object):
     @property
     def value(self):
 	return self.__value
-
-    @property
-    def enum_decl(self):
-	return """\
-#define GL_{s.name} {s.value}
-""".format(s = self)
 
 def xml_to_enum(enum_xml):
     return Enum(enum_xml.getAttribute('name'), enum_xml.getAttribute('value'))
@@ -197,23 +179,27 @@ class Api(object):
 """.format(s = fn))
 	return ''.join(contents)
 
+    def generate_h_file_contents(self):
+	contents = []
+	for fn in self.functions:
+	    contents.append("""\
+typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
+{s.wrapper_function_sig};
+""".format(s = fn))
+	for en in self.enums:
+	    contents.append("""\
+#define GL_{s.name} {s.value}
+""".format(s = en))
+	return ''.join(contents)
+
+
 
 file_to_parse = sys.argv[1]
-
-h_file = []
-c_file = []
 
 api = Api()
 api.traverse(file_to_parse)
 
-for fn in api.functions:
-    h_file.append(fn.glew_typedef)
-    h_file.append(fn.wrapper_function_decl)
-
-for en in api.enums:
-    h_file.append(en.enum_decl)
-
 with open(sys.argv[2], 'w') as f:
     f.write(api.generate_c_file_contents())
 with open(sys.argv[3], 'w') as f:
-    f.write(''.join(h_file))
+    f.write(api.generate_h_file_contents())
