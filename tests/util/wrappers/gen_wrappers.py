@@ -26,31 +26,22 @@ def xml_to_param(param_xml):
     return Param(param_xml.getAttribute('name'),
 		 param_xml.getAttribute('type'))
 
-class Signature(object):
+class Signature(collections.namedtuple('Signature', 'rettype params')):
     def __init__(self, rettype, params):
-	self.__rettype = rettype
-	self.__params = tuple(params)
+	super(Signature, self).__init__(rettype, tuple(params))
 
     def c_form(self, name, anonymous_args):
-	if self.__params:
+	if self.params:
 	    if anonymous_args:
-		param_decls = ', '.join(p.typ for p in self.__params)
+		param_decls = ', '.join(p.typ for p in self.params)
 	    else:
 		param_decls = ', '.join('{0} {1}'.format(p.typ, p.name)
-					for p in self.__params)
+					for p in self.params)
 	else:
 	    param_decls = 'void'
         return '{rettype} {name}({param_decls})'.format(
-	    rettype = self.__rettype or 'void', name = name,
+	    rettype = self.rettype or 'void', name = name,
 	    param_decls = param_decls)
-
-    @property
-    def rettype(self):
-	return self.__rettype
-
-    @property
-    def param_names(self):
-        return ', '.join(p.name for p in self.__params)
 
 
 class Function(object):
@@ -162,7 +153,7 @@ class Api(object):
 	    contents.append('\n')
 	    contents.append('\t{opt_ret}function_pointer({params});\n'.format(
 		    opt_ret = 'return ' if fn.sig.rettype else '',
-		    params = fn.sig.param_names))
+		    params = ', '.join(p.name for p in fn.sig.params)))
 	    contents.append('}\n')
 	return ''.join(contents)
 
