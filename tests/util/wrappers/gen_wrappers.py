@@ -59,8 +59,8 @@ class Signature(object):
 	    param_decls = param_decls)
 
     @property
-    def opt_return(self):
-        return 'return ' if self.__rettype else ''
+    def rettype(self):
+	return self.__rettype
 
     @property
     def param_names(self):
@@ -174,7 +174,9 @@ class Api(object):
 	    contents.append('\t\t}\n')
 	    contents.append('\t}\n')
 	    contents.append('\n')
-	    contents.append('\t{s.opt_return}function_pointer({s.param_names});\n'.format(s = fn.sig))
+	    contents.append('\t{opt_ret}function_pointer({params});\n'.format(
+		    opt_ret = 'return ' if fn.sig.rettype else '',
+		    params = fn.sig.param_names))
 	    contents.append('}\n')
 	return ''.join(contents)
 
