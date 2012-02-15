@@ -88,26 +88,6 @@ class Function(object):
 """.format(s = self)
 
     @property
-    def wrapper_function_def(self):
-        return """\
-{s.wrapper_function_sig}
-{{
-\tstatic {s.rettype} (*function_pointer)({s.param_types}) = NULL;
-
-\tif (function_pointer == NULL) {{
-\t\tfunction_pointer = ({s.rettype} (*)({s.param_types}))
-\t\t\tglGetProcAddress((const GLubyte *) "gl{s.name}");
-\t\tif (function_pointer == NULL) {{
-\t\t\tprintf("Implementation does not support function \\"{s.name}\\"\\n");
-\t\t\tpiglit_report_result(PIGLIT_FAIL);
-\t\t}}
-\t}}
-
-\t{s.opt_return}function_pointer({s.param_names});
-}}
-""".format(s = self)
-
-    @property
     def glew_typedef_name(self):
 	return 'pfngl{s.name}proc'.format(s = self).upper()
 
@@ -195,6 +175,28 @@ class Api(object):
                 else:
                     raise UnexpectedElement(item)
 
+    def generate_c_file_contents(self):
+	contents = []
+	for fn in self.functions:
+	    contents.append("""\
+{s.wrapper_function_sig}
+{{
+\tstatic {s.rettype} (*function_pointer)({s.param_types}) = NULL;
+
+\tif (function_pointer == NULL) {{
+\t\tfunction_pointer = ({s.rettype} (*)({s.param_types}))
+\t\t\tglGetProcAddress((const GLubyte *) "gl{s.name}");
+\t\tif (function_pointer == NULL) {{
+\t\t\tprintf("Implementation does not support function \\"{s.name}\\"\\n");
+\t\t\tpiglit_report_result(PIGLIT_FAIL);
+\t\t}}
+\t}}
+
+\t{s.opt_return}function_pointer({s.param_names});
+}}
+""".format(s = fn))
+	return ''.join(contents)
+
 
 file_to_parse = sys.argv[1]
 
@@ -207,12 +209,11 @@ api.traverse(file_to_parse)
 for fn in api.functions:
     h_file.append(fn.glew_typedef)
     h_file.append(fn.wrapper_function_decl)
-    c_file.append(fn.wrapper_function_def)
 
 for en in api.enums:
     h_file.append(en.enum_decl)
 
 with open(sys.argv[2], 'w') as f:
-    f.write(''.join(c_file))
+    f.write(api.generate_c_file_contents())
 with open(sys.argv[3], 'w') as f:
     f.write(''.join(h_file))
