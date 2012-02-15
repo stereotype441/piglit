@@ -136,9 +136,9 @@ def xml_to_function(func_xml):
 
 
 class Enum(object):
-    def __init__(self, enum_xml):
-	self.__name = enum_xml.getAttribute('name')
-	self.__value = enum_xml.getAttribute('value')
+    def __init__(self, name, value):
+	self.__name = name
+	self.__value = value
 
     @property
     def name(self):
@@ -153,6 +153,9 @@ class Enum(object):
 	return """\
 #define GL_{s.name} {s.value}
 """.format(s = self)
+
+def xml_to_enum(enum_xml):
+    return Enum(enum_xml.getAttribute('name'), enum_xml.getAttribute('value'))
 
 
 class Api(object):
@@ -188,7 +191,7 @@ class Api(object):
                 if item.tagName == 'function':
                     self.__functions.append(xml_to_function(item))
                 elif item.tagName == 'enum':
-		    self.__enums.append(Enum(item))
+		    self.__enums.append(xml_to_enum(item))
                 elif item.tagName == 'type':
                     # TODO: handle this.
                     pass
