@@ -41,14 +41,23 @@ def xml_to_param(param_xml):
     return Param(param_xml.getAttribute('name'),
 		 param_xml.getAttribute('type'))
 
-class Function(object):
-    def __init__(self, rettype, name, params):
+class Signature(object):
+    def __init__(self, rettype, params):
 	self.__rettype = rettype
-	self.__name = name
 	self.__params = tuple(params)
 
+    def c_form(self, name, anonymous_args):
+	if self.__params:
+	    if anonymous_args:
+		param_decls = ', '.join(p.typ for p in self.__params)
+	    else:
+		param_decls = ', '.join(p.decl for p in self.__params)
+	else:
+	    param_decls = 'void'
+        return '{s.c_rettype} {name}({param_decls})'.format(s = self, name = name, param_decls = param_decls)
+
     @property
-    def rettype(self):
+    def c_rettype(self):
         return self.__rettype or 'void'
 
     @property
@@ -56,30 +65,22 @@ class Function(object):
         return 'return ' if self.__rettype else ''
 
     @property
-    def name(self):
-        return self.__name
-
-    @property
-    def param_decls(self):
-	if self.__params:
-	    return ', '.join(p.decl for p in self.__params)
-	else:
-	    return 'void'
-
-    @property
     def param_names(self):
         return ', '.join(p.name for p in self.__params)
 
-    @property
-    def param_types(self):
-	if self.__params:
-	    return ', '.join(p.typ for p in self.__params)
-	else:
-	    return 'void'
+
+class Function(object):
+    def __init__(self, name, sig):
+	self.__name = name
+	self.__sig = sig
 
     @property
-    def wrapper_function_sig(self):
-        return '{s.rettype} gl{s.name}({s.param_decls})'.format(s = self)
+    def sig(self):
+	return self.__sig
+
+    @property
+    def name(self):
+        return self.__name
 
     @property
     def glew_typedef_name(self):
@@ -100,7 +101,7 @@ def xml_to_function(func_xml):
 	    pass
 	else:
 	    raise UnexpectedElement(item)
-    return Function(rettype, name, params)
+    return Function(name, Signature(rettype, params))
 
 
 class Enum(object):
@@ -160,32 +161,32 @@ class Api(object):
     def generate_c_file_contents(self):
 	contents = []
 	for fn in self.functions:
-	    contents.append("""\
-{s.wrapper_function_sig}
-{{
-\tstatic {s.rettype} (*function_pointer)({s.param_types}) = NULL;
-
-\tif (function_pointer == NULL) {{
-\t\tfunction_pointer = ({s.rettype} (*)({s.param_types}))
-\t\t\tglGetProcAddress((const GLubyte *) "gl{s.name}");
-\t\tif (function_pointer == NULL) {{
-\t\t\tprintf("Implementation does not support function \\"{s.name}\\"\\n");
-\t\t\tpiglit_report_result(PIGLIT_FAIL);
-\t\t}}
-\t}}
-
-\t{s.opt_return}function_pointer({s.param_names});
-}}
-""".format(s = fn))
+	    gl_name = 'gl' + fn.name
+	    contents.append(fn.sig.c_form(gl_name, anonymous_args = False) + '\n')
+	    contents.append('{\n')
+	    contents.append('\tstatic {0} = NULL;\n'.format(fn.sig.c_form('(*function_pointer)',
+									  anonymous_args = True)))
+	    contents.append('\n')
+	    contents.append('\tif (function_pointer == NULL) {\n')
+	    contents.append('\t\tfunction_pointer = ({0})\n'.format(fn.sig.c_form('(*)', anonymous_args = True)))
+	    contents.append('\t\t\tglGetProcAddress((const GLubyte *) "{0}");\n'.format(gl_name))
+	    contents.append('\t\tif (function_pointer == NULL) {\n')
+	    contents.append('\t\t\tprintf("Implementation does not support function \\"{0}\\"\\n");\n'.format(fn.name))
+	    contents.append('\t\t\tpiglit_report_result(PIGLIT_FAIL);\n')
+	    contents.append('\t\t}\n')
+	    contents.append('\t}\n')
+	    contents.append('\n')
+	    contents.append('\t{s.opt_return}function_pointer({s.param_names});\n'.format(s = fn.sig))
+	    contents.append('}\n')
 	return ''.join(contents)
 
     def generate_h_file_contents(self):
 	contents = []
 	for fn in self.functions:
-	    contents.append("""\
-typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
-{s.wrapper_function_sig};
-""".format(s = fn))
+	    gl_name = 'gl' + fn.name
+	    contents.append(
+		'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(fn.glew_typedef_name), anonymous_args = True)))
+	    contents.append('{0};\n'.format(fn.sig.c_form(gl_name, anonymous_args = False)))
 	for en in self.enums:
 	    contents.append("""\
 #define GL_{s.name} {s.value}
