@@ -159,12 +159,9 @@ def xml_to_enum(enum_xml):
 
 
 class Api(object):
-    def __init__(self, filename):
+    def __init__(self):
 	self.__functions = []
 	self.__enums = []
-	self.__traverse(filename)
-	self.__functions = tuple(self.__functions)
-	self.__enums = tuple(self.__enums)
 
     @property
     def functions(self):
@@ -174,7 +171,7 @@ class Api(object):
     def enums(self):
 	return self.__enums
 
-    def __traverse(self, filename):
+    def traverse(self, filename):
         doc = xml.dom.minidom.parse(filename)
 
         if doc.documentElement.tagName != 'OpenGLAPI':
@@ -183,7 +180,7 @@ class Api(object):
         # TODO: category is a bad name.
         for category in child_elements(doc.documentElement):
             if category.tagName == 'xi:include':
-                self.__traverse(os.path.join(os.path.dirname(filename), category.getAttribute('href')))
+                self.traverse(os.path.join(os.path.dirname(filename), category.getAttribute('href')))
                 continue
             if category.tagName != 'category':
                 raise UnexpectedElement(category)
@@ -204,7 +201,8 @@ file_to_parse = sys.argv[1]
 h_file = []
 c_file = []
 
-api = Api(file_to_parse)
+api = Api()
+api.traverse(file_to_parse)
 
 for fn in api.functions:
     h_file.append(fn.glew_typedef)
