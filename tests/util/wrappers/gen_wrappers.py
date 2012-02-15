@@ -20,18 +20,7 @@ class UnexpectedElement(Exception):
         Exception.__init__(self, 'Unexpected element "{0}" {1}'.format(
                 elem.tagName, context))
 
-class Param(object):
-    def __init__(self, name, typ):
-	self.__name = name
-	self.__type = typ
-
-    @property
-    def name(self):
-        return self.__name
-
-    @property
-    def typ(self):
-        return self.__type
+Param = collections.namedtuple('Param', 'name typ')
 
 def xml_to_param(param_xml):
     return Param(param_xml.getAttribute('name'),
