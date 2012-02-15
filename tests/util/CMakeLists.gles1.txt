@@ -1,3 +1,7 @@
+include_directories(
+	${WRAPPERS_INCLUDE_PATH}
+	)
+
 set(UTIL_SOURCES
 	${UTIL_SOURCES}
 	piglit-util-gles.c

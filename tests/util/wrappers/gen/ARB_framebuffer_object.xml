@@ -270,6 +270,12 @@
     <function name="GenerateMipmap" alias="GenerateMipmapEXT">
         <param name="target" type="GLenum"/>
     </function>
+
+    <enum name="TEXTURE_RED_TYPE"               value="0x8C10"/>
+    <enum name="TEXTURE_GREEN_TYPE"             value="0x8C11"/>
+    <enum name="TEXTURE_BLUE_TYPE"              value="0x8C12"/>
+    <enum name="TEXTURE_ALPHA_TYPE"             value="0x8C13"/>
+    <enum name="TEXTURE_DEPTH_TYPE"             value="0x8C16"/>
 </category>
 
 </OpenGLAPI>

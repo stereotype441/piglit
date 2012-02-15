@@ -41,11 +41,11 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/stat.h>
-#if defined(__APPLE__)
-#include <GLUT/glut.h>
-#else
-#include "GL/glut.h"
-#endif
+//#if defined(__APPLE__)
+//#include <GLUT/glut.h>
+//#else
+//#include "GL/glut.h"
+//#endif
 
 #include "piglit-util.h"
 

@@ -128,6 +128,15 @@ typedef unsigned int GLhandleARB;
 #define GL_PALETTE8_RGBA4_OES 0x8B98
 #define GL_PALETTE8_RGB5_A1_OES 0x8B99
 
+// Prevent redundant stuff from being defined.  TODO: autogen this.
+#define GL_ARB_framebuffer_object
+#define GL_ARB_geometry_shader4
+#define GL_ARB_seamless_cube_map
+#define GL_EXT_cull_vertex
+#define GL_EXT_framebuffer_blit
+#define GL_SUN_triangle_list
+#define GL_APPLE_texture_range
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif
