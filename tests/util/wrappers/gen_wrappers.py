@@ -33,10 +33,6 @@ class Param(object):
     def typ(self):
         return self.__type
 
-    @property
-    def decl(self):
-        return '{0} {1}'.format(self.__type, self.__name)
-
 def xml_to_param(param_xml):
     return Param(param_xml.getAttribute('name'),
 		 param_xml.getAttribute('type'))
@@ -51,7 +47,8 @@ class Signature(object):
 	    if anonymous_args:
 		param_decls = ', '.join(p.typ for p in self.__params)
 	    else:
-		param_decls = ', '.join(p.decl for p in self.__params)
+		param_decls = ', '.join('{0} {1}'.format(p.typ, p.name)
+					for p in self.__params)
 	else:
 	    param_decls = 'void'
         return '{rettype} {name}({param_decls})'.format(
