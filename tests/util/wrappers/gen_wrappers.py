@@ -42,21 +42,10 @@ def xml_to_param(param_xml):
 		 param_xml.getAttribute('type'))
 
 class Function(object):
-    def __init__(self, func_xml):
-        self.__name = func_xml.getAttribute('name')
-        self.__params = []
-        self.__rettype = None
-        for item in child_elements(func_xml):
-            if item.tagName == 'param':
-                if item.getAttribute('padding') != 'true':
-                    self.__params.append(xml_to_param(item))
-            elif item.tagName == 'return':
-                self.__rettype = item.getAttribute('type')
-            elif item.tagName == 'glx':
-                # TODO: don't know what to do with this yet
-                pass
-            else:
-                raise UnexpectedElement(item)
+    def __init__(self, rettype, name, params):
+	self.__rettype = rettype
+	self.__name = name
+	self.__params = tuple(params)
 
     @property
     def rettype(self):
@@ -128,6 +117,23 @@ class Function(object):
 typedef {s.rettype} (*{s.glew_typedef_name})({s.param_types});
 """.format(s = self)
 
+def xml_to_function(func_xml):
+    name = func_xml.getAttribute('name')
+    params = []
+    rettype = None
+    for item in child_elements(func_xml):
+	if item.tagName == 'param':
+	    if item.getAttribute('padding') != 'true':
+		params.append(xml_to_param(item))
+	elif item.tagName == 'return':
+	    rettype = item.getAttribute('type')
+	elif item.tagName == 'glx':
+	    # TODO: don't know what to do with this yet
+	    pass
+	else:
+	    raise UnexpectedElement(item)
+    return Function(rettype, name, params)
+
 
 class Enum(object):
     def __init__(self, enum_xml):
@@ -180,7 +186,7 @@ class Api(object):
                 raise UnexpectedElement(category)
             for item in child_elements(category):
                 if item.tagName == 'function':
-                    self.__functions.append(Function(item))
+                    self.__functions.append(xml_to_function(item))
                 elif item.tagName == 'enum':
 		    self.__enums.append(Enum(item))
                 elif item.tagName == 'type':
