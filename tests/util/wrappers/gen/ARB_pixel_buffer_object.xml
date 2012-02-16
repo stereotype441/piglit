@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_ARB_pixel_buffer_object" number="42">
+
+  <enum name="PIXEL_PACK_BUFFER_ARB"                        value="0x88EB"/>
+  <enum name="PIXEL_UNPACK_BUFFER_ARB"                      value="0x88EC"/>
+  <enum name="PIXEL_PACK_BUFFER_BINDING_ARB"                value="0x88ED"/>
+  <enum name="PIXEL_UNPACK_BUFFER_BINDING_ARB"              value="0x88EF"/>
+
+</category>
+
+</OpenGLAPI>

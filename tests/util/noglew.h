@@ -136,6 +136,7 @@ typedef unsigned int GLhandleARB;
 #define GL_EXT_framebuffer_blit
 #define GL_SUN_triangle_list
 #define GL_APPLE_texture_range
+#define __gl_h_
 
 #ifdef __cplusplus
 } /* end extern "C" */

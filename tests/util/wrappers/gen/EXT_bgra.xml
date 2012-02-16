@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE OpenGLAPI SYSTEM "gl_API.dtd">
+
+<OpenGLAPI>
+
+<category name="GL_EXT_bgra" number="129">
+
+  <enum name="BGR_EXT"                 value="0x80E0"/>
+  <enum name="BGRA_EXT"                value="0x80E1"/>
+
+</category>
+
+</OpenGLAPI>
