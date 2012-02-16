@@ -145,9 +145,9 @@ def generate_code(api):
 static {signature}
 {{
 \t{typedef_name} function_pointer = ({typedef_name})
-\t\tglGetProcAddress((const GLubyte *) "{name}");
+\t\tglGetProcAddress((const GLubyte *) "{gl_name}");
 \tif (function_pointer == NULL) {{
-\t\tprintf("GetProcAddress failed for \\"{name}\\"\\n");
+\t\tprintf("GetProcAddress failed for \\"{gl_name}\\"\\n");
 \t\tpiglit_report_result(PIGLIT_FAIL);
 \t}}
 
@@ -156,7 +156,7 @@ static {signature}
 }}
 """.format(signature = fn.sig.c_form('stub_' + gl_name,
 				     anonymous_args = False),
-	   gl_name = gl_name, typedef_name = typedef_name, name = fn.name,
+	   gl_name = gl_name, typedef_name = typedef_name,
 	   opt_ret = 'return ' if fn.sig.rettype else '',
 	   params = ', '.join(p.name for p in fn.sig.params)))
 
