@@ -105,44 +105,6 @@ class Api(object):
     def enums(self):
 	return self.__enums
 
-    def generate_c_file_contents(self):
-	contents = []
-	for fn in self.functions:
-	    gl_name = 'gl' + fn.name
-	    contents.append(fn.sig.c_form(gl_name, anonymous_args = False) + '\n')
-	    contents.append('{\n')
-	    contents.append('\tstatic {0} = NULL;\n'.format(fn.sig.c_form('(*function_pointer)',
-									  anonymous_args = True)))
-	    contents.append('\n')
-	    contents.append('\tif (function_pointer == NULL) {\n')
-	    contents.append('\t\tfunction_pointer = ({0})\n'.format(fn.sig.c_form('(*)', anonymous_args = True)))
-	    contents.append('\t\t\tglGetProcAddress((const GLubyte *) "{0}");\n'.format(gl_name))
-	    contents.append('\t\tif (function_pointer == NULL) {\n')
-	    contents.append('\t\t\tprintf("Implementation does not support function \\"{0}\\"\\n");\n'.format(fn.name))
-	    contents.append('\t\t\tpiglit_report_result(PIGLIT_FAIL);\n')
-	    contents.append('\t\t}\n')
-	    contents.append('\t}\n')
-	    contents.append('\n')
-	    contents.append('\t{opt_ret}function_pointer({params});\n'.format(
-		    opt_ret = 'return ' if fn.sig.rettype else '',
-		    params = ', '.join(p.name for p in fn.sig.params)))
-	    contents.append('}\n')
-	return ''.join(contents)
-
-    def generate_h_file_contents(self):
-	contents = []
-	for fn in self.functions:
-	    gl_name = 'gl' + fn.name
-	    typedef_name = 'pfn{0}proc'.format(gl_name).upper()
-	    contents.append(
-		'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(typedef_name), anonymous_args = True)))
-	    contents.append('{0};\n'.format(fn.sig.c_form(gl_name, anonymous_args = False)))
-	for en in self.enums:
-	    contents.append("""\
-#define GL_{s.name} {s.value}
-""".format(s = en))
-	return ''.join(contents)
-
 def read_xml(filename, api):
     doc = xml.dom.minidom.parse(filename)
 
@@ -167,12 +129,49 @@ def read_xml(filename, api):
 	    else:
 		raise UnexpectedElement(item)
 
+def generate_code(api):
+    c_contents = []
+    h_contents = []
+    for fn in api.functions:
+	gl_name = 'gl' + fn.name
+	typedef_name = 'pfn{0}proc'.format(gl_name).upper()
+
+	# typedef
+	h_contents.append(
+	    'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(typedef_name), anonymous_args = True)))
+
+	# dispatch function
+	dispatch_sig = fn.sig.c_form(gl_name, anonymous_args = False)
+	h_contents.append('{0};\n'.format(dispatch_sig))
+	c_contents.append(dispatch_sig + '\n')
+	c_contents.append('{\n')
+	c_contents.append('\tstatic {0} = NULL;\n'.format(fn.sig.c_form('(*function_pointer)',
+									anonymous_args = True)))
+	c_contents.append('\n')
+	c_contents.append('\tif (function_pointer == NULL) {\n')
+	c_contents.append('\t\tfunction_pointer = ({0})\n'.format(fn.sig.c_form('(*)', anonymous_args = True)))
+	c_contents.append('\t\t\tglGetProcAddress((const GLubyte *) "{0}");\n'.format(gl_name))
+	c_contents.append('\t\tif (function_pointer == NULL) {\n')
+	c_contents.append('\t\t\tprintf("Implementation does not support function \\"{0}\\"\\n");\n'.format(fn.name))
+	c_contents.append('\t\t\tpiglit_report_result(PIGLIT_FAIL);\n')
+	c_contents.append('\t\t}\n')
+	c_contents.append('\t}\n')
+	c_contents.append('\n')
+	c_contents.append('\t{opt_ret}function_pointer({params});\n'.format(
+		opt_ret = 'return ' if fn.sig.rettype else '',
+		params = ', '.join(p.name for p in fn.sig.params)))
+	c_contents.append('}\n')
+    for en in api.enums:
+	h_contents.append('#define GL_{s.name} {s.value}\n'.format(s = en))
+    return ''.join(c_contents), ''.join(h_contents)
+
 file_to_parse = sys.argv[1]
 
 api = Api()
 read_xml(file_to_parse, api)
 
+c_contents, h_contents = generate_code(api)
 with open(sys.argv[2], 'w') as f:
-    f.write(api.generate_c_file_contents())
+    f.write(c_contents)
 with open(sys.argv[3], 'w') as f:
-    f.write(api.generate_h_file_contents())
+    f.write(h_contents)
