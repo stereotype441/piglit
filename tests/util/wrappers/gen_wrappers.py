@@ -57,10 +57,6 @@ class Function(object):
     def name(self):
         return self.__name
 
-    @property
-    def glew_typedef_name(self):
-	return 'pfngl{s.name}proc'.format(s = self).upper()
-
 def xml_to_function(func_xml):
     name = func_xml.getAttribute('name')
     params = []
@@ -161,8 +157,9 @@ class Api(object):
 	contents = []
 	for fn in self.functions:
 	    gl_name = 'gl' + fn.name
+	    typedef_name = 'pfn{0}proc'.format(gl_name).upper()
 	    contents.append(
-		'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(fn.glew_typedef_name), anonymous_args = True)))
+		'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(typedef_name), anonymous_args = True)))
 	    contents.append('{0};\n'.format(fn.sig.c_form(gl_name, anonymous_args = False)))
 	for en in self.enums:
 	    contents.append("""\
