@@ -105,30 +105,6 @@ class Api(object):
     def enums(self):
 	return self.__enums
 
-    def traverse(self, filename):
-        doc = xml.dom.minidom.parse(filename)
-
-        if doc.documentElement.tagName != 'OpenGLAPI':
-            raise UnexpectedElement(doc.documentElement)
-
-        # TODO: category is a bad name.
-        for category in child_elements(doc.documentElement):
-            if category.tagName == 'xi:include':
-                self.traverse(os.path.join(os.path.dirname(filename), category.getAttribute('href')))
-                continue
-            if category.tagName != 'category':
-                raise UnexpectedElement(category)
-            for item in child_elements(category):
-                if item.tagName == 'function':
-                    self.__functions.append(xml_to_function(item))
-                elif item.tagName == 'enum':
-		    self.__enums.append(xml_to_enum(item))
-                elif item.tagName == 'type':
-                    # TODO: handle this.
-                    pass
-                else:
-                    raise UnexpectedElement(item)
-
     def generate_c_file_contents(self):
 	contents = []
 	for fn in self.functions:
@@ -167,12 +143,34 @@ class Api(object):
 """.format(s = en))
 	return ''.join(contents)
 
+def read_xml(filename, api):
+    doc = xml.dom.minidom.parse(filename)
 
+    if doc.documentElement.tagName != 'OpenGLAPI':
+	raise UnexpectedElement(doc.documentElement)
+
+    # TODO: category is a bad name.
+    for category in child_elements(doc.documentElement):
+	if category.tagName == 'xi:include':
+	    read_xml(os.path.join(os.path.dirname(filename), category.getAttribute('href')), api)
+	    continue
+	if category.tagName != 'category':
+	    raise UnexpectedElement(category)
+	for item in child_elements(category):
+	    if item.tagName == 'function':
+		api.functions.append(xml_to_function(item))
+	    elif item.tagName == 'enum':
+		api.enums.append(xml_to_enum(item))
+	    elif item.tagName == 'type':
+		# TODO: handle this.
+		pass
+	    else:
+		raise UnexpectedElement(item)
 
 file_to_parse = sys.argv[1]
 
 api = Api()
-api.traverse(file_to_parse)
+read_xml(file_to_parse, api)
 
 with open(sys.argv[2], 'w') as f:
     f.write(api.generate_c_file_contents())
