@@ -140,29 +140,34 @@ def generate_code(api):
 	h_contents.append(
 	    'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(typedef_name), anonymous_args = True)))
 
-	# dispatch function
-	dispatch_sig = fn.sig.c_form(gl_name, anonymous_args = False)
-	h_contents.append('{0};\n'.format(dispatch_sig))
-	c_contents.append(dispatch_sig + '\n')
-	c_contents.append('{\n')
-	c_contents.append('\tstatic {0} = NULL;\n'.format(fn.sig.c_form('(*function_pointer)',
-									anonymous_args = True)))
-	c_contents.append('\n')
-	c_contents.append('\tif (function_pointer == NULL) {\n')
-	c_contents.append('\t\tfunction_pointer = ({0})\n'.format(fn.sig.c_form('(*)', anonymous_args = True)))
-	c_contents.append('\t\t\tglGetProcAddress((const GLubyte *) "{0}");\n'.format(gl_name))
-	c_contents.append('\t\tif (function_pointer == NULL) {\n')
-	c_contents.append('\t\t\tprintf("Implementation does not support function \\"{0}\\"\\n");\n'.format(fn.name))
-	c_contents.append('\t\t\tpiglit_report_result(PIGLIT_FAIL);\n')
-	c_contents.append('\t\t}\n')
-	c_contents.append('\t}\n')
-	c_contents.append('\n')
-	c_contents.append('\t{opt_ret}function_pointer({params});\n'.format(
-		opt_ret = 'return ' if fn.sig.rettype else '',
-		params = ', '.join(p.name for p in fn.sig.params)))
-	c_contents.append('}\n')
+	# dispatch stub
+	c_contents.append("""\
+static {signature}
+{{
+\t{typedef_name} function_pointer = ({typedef_name})
+\t\tglGetProcAddress((const GLubyte *) "{name}");
+\tif (function_pointer == NULL) {{
+\t\tprintf("GetProcAddress failed for \\"{name}\\"\\n");
+\t\tpiglit_report_result(PIGLIT_FAIL);
+\t}}
+
+\t{gl_name} = function_pointer;
+\t{opt_ret}function_pointer({params});
+}}
+""".format(signature = fn.sig.c_form('stub_' + gl_name,
+				     anonymous_args = False),
+	   gl_name = gl_name, typedef_name = typedef_name, name = fn.name,
+	   opt_ret = 'return ' if fn.sig.rettype else '',
+	   params = ', '.join(p.name for p in fn.sig.params)))
+
+	# function pointer
+	h_contents.append('extern {0} {1};\n'.format(typedef_name, gl_name))
+	c_contents.append(
+	    '{0} {1} = stub_{1};\n'.format(typedef_name, gl_name))
+
     for en in api.enums:
 	h_contents.append('#define GL_{s.name} {s.value}\n'.format(s = en))
+
     return ''.join(c_contents), ''.join(h_contents)
 
 file_to_parse = sys.argv[1]
