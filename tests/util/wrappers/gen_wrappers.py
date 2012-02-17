@@ -20,6 +20,17 @@ class UnexpectedElement(Exception):
         Exception.__init__(self, 'Unexpected element "{0}" {1}'.format(
                 elem.tagName, context))
 
+class Category(collections.namedtuple('Category', 'typ data')):
+    def __str__(self):
+	if self.typ == 'GL':
+	    return 'GL {0}.{1}'.format(self.data // 10, self.data % 10)
+	elif self.typ == 'extension':
+	    return self.data
+	else:
+	    raise Exception(
+		'Unexpected category type {0!r}'.format(self.typ))
+
+
 Param = collections.namedtuple('Param', 'name typ')
 
 def xml_to_param(param_xml):
@@ -44,21 +55,25 @@ class Signature(collections.namedtuple('Signature', 'rettype params')):
 	    param_decls = param_decls)
 
 
-class Function(object):
-    def __init__(self, name, sig):
-	self.__name = name
-	self.__sig = sig
+class Function(collections.namedtuple('Function', 'name sig alias category')):
+    @property
+    def gl_name(self):
+	return 'gl' + self.name
 
     @property
-    def sig(self):
-	return self.__sig
+    def typedef_name(self):
+	return 'pfn{0}proc'.format(self.gl_name).upper()
 
-    @property
-    def name(self):
-        return self.__name
 
-def xml_to_function(func_xml):
+def xml_to_function(func_xml, category_name):
+    # Decode category name
+    try:
+	gl_version = float(category_name)
+	decoded_category = Category('GL', int(round(gl_version*10)))
+    except ValueError:
+	decoded_category = Category('extension', category_name)
     name = func_xml.getAttribute('name')
+    alias = func_xml.getAttribute('alias') or None
     params = []
     rettype = None
     for item in child_elements(func_xml):
@@ -72,7 +87,7 @@ def xml_to_function(func_xml):
 	    pass
 	else:
 	    raise UnexpectedElement(item)
-    return Function(name, Signature(rettype, params))
+    return Function(name, Signature(rettype, params), alias, decoded_category)
 
 
 class Enum(object):
@@ -92,18 +107,107 @@ def xml_to_enum(enum_xml):
     return Enum(enum_xml.getAttribute('name'), enum_xml.getAttribute('value'))
 
 
-class Api(object):
+class SynonymMap(object):
     def __init__(self):
-	self.__functions = []
-	self.__enums = []
+	self.__name_to_synonyms = {}
+
+    def add_singleton(self, name):
+	if name not in self.__name_to_synonyms:
+	    self.__name_to_synonyms[name] = set([name])
+	return self.__name_to_synonyms[name]
+
+    def add_alias(self, name, alias):
+	name_ss = self.add_singleton(name)
+	alias_ss = self.add_singleton(alias)
+	combined_set = name_ss | alias_ss
+	for n in combined_set:
+	    self.__name_to_synonyms[n] = combined_set
+
+    def get_synonyms_for(self, name):
+	return self.__name_to_synonyms[name]
+
+
+class DispatchSet(object):
+    @staticmethod
+    def __function_category_sort_key(fn):
+	if fn.category.typ == 'GL':
+	    return 0, fn.category.data
+	elif fn.category.typ == 'extension':
+	    return 1, fn.category.data
+	else:
+	    raise Exception(
+		'Unexpected category type {0!r}'.format(category.typ))
+
+    def __init__(self, functions):
+	# Sort functions by category, with GL categories preceding extensions.
+	self.__functions = tuple(
+	    sorted(functions, key = self.__function_category_sort_key))
 
     @property
     def functions(self):
 	return self.__functions
 
     @property
+    def primary_function(self):
+	return self.__functions[0]
+
+    @property
+    def dispatch_name(self):
+	return '__piglit_dispatch_' + self.primary_function.gl_name
+
+    @property
+    def stub_name(self):
+	return 'stub_' + self.primary_function.gl_name
+
+
+class Api(object):
+    def __init__(self):
+	self.__functions = []
+	self.__enums = []
+	self.__synonyms = SynonymMap()
+	self.__function_map = collections.defaultdict(list)
+
+    @property
     def enums(self):
 	return self.__enums
+
+    @property
+    def synonyms(self):
+	return self.__synonyms
+
+    def add_function(self, fn):
+	self.__functions.append(fn)
+	self.__function_map[fn.name].append(fn)
+	if fn.alias:
+	    self.__synonyms.add_alias(fn.name, fn.alias)
+	else:
+	    self.__synonyms.add_singleton(fn.name)
+
+    def compute_dispatch_sets(self):
+	sets = []
+	remaining_names = set(f.name for f in self.__functions)
+	while remaining_names:
+	    name = remaining_names.pop()
+	    synonym_set = self.__synonyms.get_synonyms_for(name)
+	    functions = []
+	    for name in synonym_set:
+		for function in self.__function_map[name]:
+		    functions.append(function)
+	    sets.append(DispatchSet(functions))
+	    for n in synonym_set:
+		remaining_names.discard(n)
+
+	return sets
+
+    def compute_unique_functions(self):
+	functions = []
+	names_used = set()
+	for f in self.__functions:
+	    if f.name in names_used:
+		continue
+	    functions.append(f)
+	return functions
+
 
 def read_xml(filename, api):
     doc = xml.dom.minidom.parse(filename)
@@ -118,9 +222,10 @@ def read_xml(filename, api):
 	    continue
 	if category.tagName != 'category':
 	    raise UnexpectedElement(category)
+	category_name = category.getAttribute('name')
 	for item in child_elements(category):
 	    if item.tagName == 'function':
-		api.functions.append(xml_to_function(item))
+		api.add_function(xml_to_function(item, category_name))
 	    elif item.tagName == 'enum':
 		api.enums.append(xml_to_enum(item))
 	    elif item.tagName == 'type':
@@ -132,35 +237,83 @@ def read_xml(filename, api):
 def generate_code(api):
     c_contents = []
     h_contents = []
-    for fn in api.functions:
-	gl_name = 'gl' + fn.name
-	piglit_name = '__piglit_' + gl_name
-	stub_name = 'stub_' + gl_name
-	typedef_name = 'pfn{0}proc'.format(gl_name).upper()
 
-	# typedef PFNGLFOOPROC
+    unique_functions = api.compute_unique_functions()
+
+    # Emit typedefs for each name
+    for f in unique_functions:
 	h_contents.append(
-	    'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(typedef_name), anonymous_args = True)))
+	    'typedef {0};\n'.format(
+		f.sig.c_form('(*{0})'.format(f.typedef_name),
+			     anonymous_args = True)))
 
-	# define glFoo __piglit_glFoo
-	h_contents.append('#define {0} {1}\n'.format(gl_name, piglit_name))
+    for ds in api.compute_dispatch_sets():
+	f0 = ds.primary_function
 
-	# static stub_glFoo()
-	c_contents.append("""\
-static {signature}
-{{
-\t{opt_ret}({piglit_name} = __piglit_get_proc_address("{gl_name}"))({params});
-}}
-""".format(signature = fn.sig.c_form(stub_name, anonymous_args = False),
-	   gl_name = gl_name, piglit_name = piglit_name,
-	   opt_ret = 'return ' if fn.sig.rettype else '',
-	   params = ', '.join(p.name for p in fn.sig.params)))
+	# Emit comment block
+	comments = '\n'
+	for f in ds.functions:
+	    comments += '// {0} ({1})\n'.format(f.gl_name, f.category)
+	c_contents.append(comments)
+	h_contents.append(comments)
 
-	# extern PFNGLFOOPROC __piglit_glFoo
-	h_contents.append('extern {0} {1};\n'.format(typedef_name, piglit_name))
+	# Emit extern declaration of dispatch pointer
+	h_contents.append(
+	    'extern {0} {1};\n'.format(f0.typedef_name, ds.dispatch_name))
+
+	# Emit defines aliasing each GL function to the dispatch
+	# pointer
+	for f in ds.functions:
+	    h_contents.append(
+		'#define {0} {1}\n'.format(f.gl_name, ds.dispatch_name))
+
+	# Emit stub function
 	c_contents.append(
-	    '{0} {1} = {2};\n'.format(typedef_name, piglit_name, stub_name))
+	    'static {0}\n'.format(
+		f0.sig.c_form(ds.stub_name, anonymous_args = False)))
+	c_contents.append('{\n')
+	opt_else = ''
+	for f in ds.functions:
+	    if f.category.typ == 'GL':
+		condition = 'piglit_get_gl_version() >= {0}'.format(
+		    f.category.data)
+	    elif f.category.typ == 'extension':
+		condition = 'piglit_is_extension_supported("{0}")'.format(
+		    f.category.data)
+	    else:
+		raise Exception(
+		    'Unexpected category type {0!r}'.format(f.category.type))
+	    c_contents.append('\t{0}if ({1})\n'.format(opt_else, condition))
+	    # Special case: glTexImage3DEXT has a slightly different
+	    # type than glTexImage3D (argument 3 is a GLenum rather
+	    # than a GLint).  This is not a problem, since GLenum and
+	    # GLint are treated identically by function calling
+	    # conventions.  So when calling get_proc_address() on
+	    # glTexImage3DEXT, cast the result to PFNGLTEXIMAGE3DPROC
+	    # to avoid a warning.
+	    if f.name == 'TexImage3DEXT':
+		typedef_name = 'PFNGLTEXIMAGE3DPROC'
+	    else:
+		typedef_name = f.typedef_name
+	    c_contents.append(
+		'\t\t{0} = ({1}) get_proc_address("{2}");\n'.format(
+		    ds.dispatch_name, typedef_name, f.gl_name))
+	    opt_else = 'else '
+	c_contents.append('\telse\n')
+	c_contents.append('\t\tunsupported("{0}");\n'.format(f0.name))
+	c_contents.append(
+	    '\t{0}{1}({2});\n'.format(
+		'return ' if f0.sig.rettype else '',
+		ds.dispatch_name,
+		', '.join(p.name for p in f0.sig.params)))
+	c_contents.append('}\n')
 
+	# Emit initializer for dispatch pointer
+	c_contents.append(
+	    '{0} {1} = {2};\n'.format(
+		f0.typedef_name, ds.dispatch_name, ds.stub_name))
+
+    # Emit enum #defines
     for en in api.enums:
 	h_contents.append('#define GL_{s.name} {s.value}\n'.format(s = en))
 
