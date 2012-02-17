@@ -134,13 +134,18 @@ def generate_code(api):
     h_contents = []
     for fn in api.functions:
 	gl_name = 'gl' + fn.name
+	piglit_name = '__piglit_' + gl_name
+	stub_name = 'stub_' + gl_name
 	typedef_name = 'pfn{0}proc'.format(gl_name).upper()
 
-	# typedef
+	# typedef PFNGLFOOPROC
 	h_contents.append(
 	    'typedef {0};\n'.format(fn.sig.c_form('(*{0})'.format(typedef_name), anonymous_args = True)))
 
-	# dispatch stub
+	# define glFoo __piglit_glFoo
+	h_contents.append('#define {0} {1}\n'.format(gl_name, piglit_name))
+
+	# static stub_glFoo()
 	c_contents.append("""\
 static {signature}
 {{
@@ -154,16 +159,15 @@ static {signature}
 \t{gl_name} = function_pointer;
 \t{opt_ret}function_pointer({params});
 }}
-""".format(signature = fn.sig.c_form('stub_' + gl_name,
-				     anonymous_args = False),
+""".format(signature = fn.sig.c_form(stub_name, anonymous_args = False),
 	   gl_name = gl_name, typedef_name = typedef_name,
 	   opt_ret = 'return ' if fn.sig.rettype else '',
 	   params = ', '.join(p.name for p in fn.sig.params)))
 
-	# function pointer
-	h_contents.append('extern {0} {1};\n'.format(typedef_name, gl_name))
+	# extern PFNGLFOOPROC __piglit_glFoo
+	h_contents.append('extern {0} {1};\n'.format(typedef_name, piglit_name))
 	c_contents.append(
-	    '{0} {1} = stub_{1};\n'.format(typedef_name, gl_name))
+	    '{0} {1} = {2};\n'.format(typedef_name, piglit_name, stub_name))
 
     for en in api.enums:
 	h_contents.append('#define GL_{s.name} {s.value}\n'.format(s = en))
