@@ -149,18 +149,10 @@ def generate_code(api):
 	c_contents.append("""\
 static {signature}
 {{
-\t{typedef_name} function_pointer = ({typedef_name})
-\t\tglGetProcAddress((const GLubyte *) "{gl_name}");
-\tif (function_pointer == NULL) {{
-\t\tprintf("GetProcAddress failed for \\"{gl_name}\\"\\n");
-\t\tpiglit_report_result(PIGLIT_FAIL);
-\t}}
-
-\t{gl_name} = function_pointer;
-\t{opt_ret}function_pointer({params});
+\t{opt_ret}({piglit_name} = __piglit_get_proc_address("{gl_name}"))({params});
 }}
 """.format(signature = fn.sig.c_form(stub_name, anonymous_args = False),
-	   gl_name = gl_name, typedef_name = typedef_name,
+	   gl_name = gl_name, piglit_name = piglit_name,
 	   opt_ret = 'return ' if fn.sig.rettype else '',
 	   params = ', '.join(p.name for p in fn.sig.params)))
 

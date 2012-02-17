@@ -19,20 +19,17 @@
 #include "piglit-util.h"
 #include "glxew.h"
 
-// TODO: it seems bad to call this "glGetProcAddress".
-#if defined(_WIN32)
-#  define glGetProcAddress(name) wglGetProcAddress((LPCSTR)name)
-#else
-#  if defined(__APPLE__)
-#    define glGetProcAddress(name) NSGLGetProcAddress(name)
-#  else
-#    if defined(__sgi) || defined(__sun)
-#      define glGetProcAddress(name) dlGetProcAddress(name)
-#    else /* __linux */
-#      define glGetProcAddress(name) (*glXGetProcAddressARB)(name)
-#    endif
-#  endif
-#endif
+static void *
+__piglit_get_proc_address(char *name)
+{
+	/* TODO: support stuff other than GLX */
+	void *function_pointer = (*glXGetProcAddressARB)(name);
+	if (function_pointer == NULL) {
+		printf("GetProcAddress failed for \"%s\"\n", name);
+		piglit_report_result(PIGLIT_FAIL);
+	}
+	return function_pointer;
+}
 
 #include "wrappers.c"
 
