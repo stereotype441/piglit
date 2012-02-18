@@ -234,6 +234,78 @@ def read_xml(filename, api):
 	    else:
 		raise UnexpectedElement(item)
 
+def generate_stub_function(ds):
+    f0 = ds.primary_function
+
+    # First figure out all the conditions we want to check in order to
+    # figure out which function to dispatch to, and the code we will
+    # execute in each case.
+    condition_code_pairs = []
+    for f in ds.functions:
+	if f.category.typ == 'GL':
+	    if f.category.data == 10:
+		# Function has always been available--no need to check
+		# a condition.
+		condition = 'true'
+	    else:
+		condition = 'piglit_get_gl_version() >= {0}'.format(
+		    f.category.data)
+	elif f.category.typ == 'extension':
+	    condition = 'piglit_is_extension_supported("{0}")'.format(
+		f.category.data)
+	else:
+	    raise Exception(
+		'Unexpected category type {0!r}'.format(f.category.type))
+
+	if f.name == 'TexImage3DEXT':
+	    # Special case: glTexImage3DEXT has a slightly different
+	    # type than glTexImage3D (argument 3 is a GLenum rather
+	    # than a GLint).  This is not a problem, since GLenum and
+	    # GLint are treated identically by function calling
+	    # conventions.  So when calling get_proc_address() on
+	    # glTexImage3DEXT, cast the result to PFNGLTEXIMAGE3DPROC
+	    # to avoid a warning.
+	    typedef_name = 'PFNGLTEXIMAGE3DPROC'
+	else:
+	    typedef_name = f.typedef_name
+
+	code = '{0} = ({1}) get_proc_address("{2}");'.format(
+	    ds.dispatch_name, typedef_name, f.gl_name)
+
+	condition_code_pairs.append((condition, code))
+
+    condition_code_pairs.append(
+	('true', 'unsupported("{0}");'.format(f0.name)))
+
+    # Start the stub function
+    stub_fn = 'static {0}\n'.format(
+	f0.sig.c_form(ds.stub_name, anonymous_args = False))
+    stub_fn += '{\n'
+
+    # Output code that checks each condition in turn and executes the
+    # appropriate case.
+    if condition_code_pairs[0][0] == 'true':
+	stub_fn += '\t{0}\n'.format(condition_code_pairs[0][1])
+    else:
+	stub_fn += '\tif ({0})\n\t\t{1}\n'.format(*condition_code_pairs[0])
+	for i in xrange(1, len(condition_code_pairs)):
+	    if condition_code_pairs[i][0] == 'true':
+		stub_fn += '\telse\n\t\t{0}\n'.format(
+		    condition_code_pairs[i][1])
+		break
+	    else:
+		stub_fn += '\telse if ({0})\n\t\t{1}\n'.format(
+		    *condition_code_pairs[i])
+
+    # Output the call to the dispatch function.
+    stub_fn += '\t{0}{1}({2});\n'.format(
+	'return ' if f0.sig.rettype else '',
+	ds.dispatch_name,
+	', '.join(p.name for p in f0.sig.params))
+    stub_fn += '}\n'
+    return stub_fn
+
+
 def generate_code(api):
     c_contents = []
     h_contents = []
@@ -268,45 +340,7 @@ def generate_code(api):
 		'#define {0} {1}\n'.format(f.gl_name, ds.dispatch_name))
 
 	# Emit stub function
-	c_contents.append(
-	    'static {0}\n'.format(
-		f0.sig.c_form(ds.stub_name, anonymous_args = False)))
-	c_contents.append('{\n')
-	opt_else = ''
-	for f in ds.functions:
-	    if f.category.typ == 'GL':
-		condition = 'piglit_get_gl_version() >= {0}'.format(
-		    f.category.data)
-	    elif f.category.typ == 'extension':
-		condition = 'piglit_is_extension_supported("{0}")'.format(
-		    f.category.data)
-	    else:
-		raise Exception(
-		    'Unexpected category type {0!r}'.format(f.category.type))
-	    c_contents.append('\t{0}if ({1})\n'.format(opt_else, condition))
-	    # Special case: glTexImage3DEXT has a slightly different
-	    # type than glTexImage3D (argument 3 is a GLenum rather
-	    # than a GLint).  This is not a problem, since GLenum and
-	    # GLint are treated identically by function calling
-	    # conventions.  So when calling get_proc_address() on
-	    # glTexImage3DEXT, cast the result to PFNGLTEXIMAGE3DPROC
-	    # to avoid a warning.
-	    if f.name == 'TexImage3DEXT':
-		typedef_name = 'PFNGLTEXIMAGE3DPROC'
-	    else:
-		typedef_name = f.typedef_name
-	    c_contents.append(
-		'\t\t{0} = ({1}) get_proc_address("{2}");\n'.format(
-		    ds.dispatch_name, typedef_name, f.gl_name))
-	    opt_else = 'else '
-	c_contents.append('\telse\n')
-	c_contents.append('\t\tunsupported("{0}");\n'.format(f0.name))
-	c_contents.append(
-	    '\t{0}{1}({2});\n'.format(
-		'return ' if f0.sig.rettype else '',
-		ds.dispatch_name,
-		', '.join(p.name for p in f0.sig.params)))
-	c_contents.append('}\n')
+	c_contents.append(generate_stub_function(ds))
 
 	# Emit initializer for dispatch pointer
 	c_contents.append(
