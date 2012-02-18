@@ -196,6 +196,7 @@ class Api(object):
 	    sets.append(DispatchSet(functions))
 	    for n in synonym_set:
 		remaining_names.discard(n)
+	sets.sort(key = lambda ds: ds.stub_name)
 
 	return sets
 
@@ -206,6 +207,7 @@ class Api(object):
 	    if f.name in names_used:
 		continue
 	    functions.append(f)
+	functions.sort(key = lambda f: f.name)
 	return functions
 
 
