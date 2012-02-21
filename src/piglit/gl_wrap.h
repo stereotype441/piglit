@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 #if defined(USE_OPENGL)
-#	include "noglew.h"
+#	include "piglit-dispatch.h"
 	/* Include the real headers too, in case GLEW misses something. */
 #	ifdef __APPLE__
 #		include <OpenGL/gl.h>
