@@ -1,7 +1,7 @@
 add_subdirectory (util)
 
 include_directories(
-	${WRAPPERS_INCLUDE_PATH}
+	${PIGLIT_DISPATCH_INCLUDE_PATH}
 )
 
 add_subdirectory (bugs)

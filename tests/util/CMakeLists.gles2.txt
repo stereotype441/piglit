@@ -1,5 +1,5 @@
 include_directories(
-	${WRAPPERS_INCLUDE_PATH}
+	${PIGLIT_DISPATCH_INCLUDE_PATH}
 	)
 
 set(UTIL_SOURCES
