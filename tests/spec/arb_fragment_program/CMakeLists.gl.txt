@@ -1,6 +1,5 @@
 include_directories(
 	${OPENGL_INCLUDE_PATH}
-	${WRAPPERS_INCLUDE_PATH}
 	${GLUT_INCLUDE_DIR}
 	${piglit_SOURCE_DIR}/tests/util
 )
