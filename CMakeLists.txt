@@ -134,6 +134,8 @@ configure_file(
 	"${piglit_SOURCE_DIR}/tests/util/config.h"
 )
 
+include(cmake/piglit_util.cmake)
+
 include_directories(src)
 add_subdirectory(cmake/target_api)
 add_subdirectory(generated_tests)
