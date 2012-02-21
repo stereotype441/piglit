@@ -38,5 +38,5 @@ unsupported(char *name)
 	piglit_report_result(PIGLIT_SKIP);
 }
 
-#include "wrappers.c"
+#include "generated_dispatch.c"
 

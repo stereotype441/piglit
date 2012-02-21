@@ -68,7 +68,7 @@ typedef ptrdiff_t GLsizeiptrARB;
 typedef char GLcharARB;
 typedef unsigned int GLhandleARB;
 
-#include "wrappers.h"
+#include "generated_dispatch.h"
 
 #define GLEW_VERSION_1_2 (piglit_get_gl_version() >= 12)
 #define GLEW_VERSION_1_3 (piglit_get_gl_version() >= 13)
