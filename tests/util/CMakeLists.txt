@@ -1,4 +1,4 @@
-add_subdirectory(wrappers)
+add_subdirectory(dispatch)
 
 set(
 	PIGLIT_DISPATCH_INCLUDE_PATH ${PIGLIT_DISPATCH_INCLUDE_PATH}
