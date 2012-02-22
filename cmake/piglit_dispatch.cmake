@@ -30,7 +30,7 @@ set(piglit_dispatch_gen_outputs
 
 set(piglit_dispatch_gen_inputs
    ${CMAKE_SOURCE_DIR}/tests/util/dispatch/gen_dispatch.py
-   ${CMAKE_SOURCE_DIR}/tests/util/dispatch/gen/gl_API.xml
+   ${CMAKE_SOURCE_DIR}/glapi/gl_API.xml
    )
 
 # FIXME: The custom command should depend on all xml files.
