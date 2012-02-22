@@ -21,4 +21,31 @@
 
 set(piglit_dispatch_gen_output_dir ${CMAKE_BINARY_DIR}/src/pigit_dispatch)
 
+file(MAKE_DIRECTORY ${piglit_dispatch_gen_output_dir})
+
+set(piglit_dispatch_gen_outputs
+    ${piglit_dispatch_gen_output_dir}/generated_dispatch.c
+    ${piglit_dispatch_gen_output_dir}/generated_dispatch.h
+    )
+
+set(piglit_dispatch_gen_inputs
+   ${CMAKE_SOURCE_DIR}/tests/util/dispatch/gen_dispatch.py
+   ${CMAKE_SOURCE_DIR}/tests/util/dispatch/gen/gl_API.xml
+   )
+
+# FIXME: The custom command should depend on all xml files.
+set(piglit_dispatch_gen_deps
+    ${piglit_dispatch_gen_inputs}
+    )
+
+add_custom_command(
+    OUTPUT ${piglit_dispatch_gen_outputs}
+    DEPENDS ${piglit_dispatch_gen_inputs}
+    COMMAND python ${piglit_dispatch_gen_inputs} ${piglit_dispatch_gen_outputs}
+    )
+
+add_custom_target(piglit_dispatch_gen
+    DEPENDS ${piglit_dispatch_gen_outputs}
+    )
+
 include_directories(${piglit_dispatch_gen_output_dir})

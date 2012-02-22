@@ -1,5 +1,3 @@
-add_subdirectory(dispatch)
-
 add_definitions(-DSOURCE_DIR="${piglit_SOURCE_DIR}/")
 
 include_directories(
