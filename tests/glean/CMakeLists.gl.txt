@@ -14,7 +14,7 @@ include_directories(
 	${TIFF_INCLUDE_DIR}
 )
 
-add_executable (glean
+piglit_add_executable (glean
 	codedid.cpp
 	dsconfig.cpp
 	dsfilt.cpp
