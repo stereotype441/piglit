@@ -135,6 +135,7 @@ configure_file(
 )
 
 include(cmake/piglit_util.cmake)
+include(cmake/piglit_dispatch.cmake)
 
 include_directories(src)
 add_subdirectory(cmake/target_api)

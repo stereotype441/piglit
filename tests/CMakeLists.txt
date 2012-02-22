@@ -1,9 +1,5 @@
 add_subdirectory (util)
 
-include_directories(
-	${PIGLIT_DISPATCH_INCLUDE_PATH}
-)
-
 add_subdirectory (bugs)
 add_subdirectory (fbo)
 add_subdirectory (general)

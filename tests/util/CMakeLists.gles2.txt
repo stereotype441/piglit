@@ -1,7 +1,3 @@
-include_directories(
-	${PIGLIT_DISPATCH_INCLUDE_PATH}
-	)
-
 set(UTIL_SOURCES
 	${UTIL_SOURCES}
 	piglit-shader.c
