@@ -12,6 +12,7 @@ find_package(TIFF)
 find_package(GLUT REQUIRED)
 find_package(PNG REQUIRED)
 find_package(X11)
+find_package(PkgConfig REQUIRED)
 
 # Check for presence of Python 2.6 or greater.
 foreach(python_cmd python2 python)
@@ -128,6 +129,13 @@ check_include_file(sys/resource.h  HAVE_SYS_RESOURCE_H)
 check_include_file(sys/stat.h  HAVE_SYS_STAT_H)
 check_include_file(unistd.h    HAVE_UNISTD_H)
 check_include_file(fcntl.h     HAVE_FCNTL_H)
+
+execute_process(
+	COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=datadir glapi
+	OUTPUT_STRIP_TRAILING_WHITESPACE
+	OUTPUT_VARIABLE glapi_datadir
+	RESULT_VARIABLE glapi_datadir_result)
+set(GLAPI_XML_PATH ${glapi_datadir}/xml/glapi)
 
 configure_file(
 	"${piglit_SOURCE_DIR}/tests/util/config.h.in"
