@@ -83,14 +83,8 @@ typedef unsigned int GLhandleARB;
 #define GLEW_OES_compressed_paletted_texture (piglit_is_extension_supported("OES_compressed_paletted_texture"))
 #define glewInit() do { } while (0)
 
-// Prevent redundant stuff from being defined.  TODO: autogen this.
-#define GL_ARB_framebuffer_object
-#define GL_ARB_geometry_shader4
-#define GL_ARB_seamless_cube_map
-#define GL_EXT_cull_vertex
-#define GL_EXT_framebuffer_blit
-#define GL_SUN_triangle_list
-#define GL_APPLE_texture_range
+// Prevent gl.h from being included, since it will attempt to define
+// the functions we've already defined.
 #define __gl_h_
 
 #ifdef __cplusplus

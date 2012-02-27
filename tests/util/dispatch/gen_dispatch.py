@@ -49,13 +49,7 @@ class Function(collections.namedtuple('Function', 'name sig alias category')):
 	return 'pfn{0}proc'.format(self.gl_name).upper()
 
 
-def xml_to_function(func_xml, category_name):
-    # Decode category name
-    try:
-	gl_version = float(category_name)
-	decoded_category = Category('GL', int(round(gl_version*10)))
-    except ValueError:
-	decoded_category = Category('extension', category_name)
+def xml_to_function(func_xml, category):
     name = func_xml.attrib['name']
     alias = func_xml.get('alias')
     params = []
@@ -68,7 +62,7 @@ def xml_to_function(func_xml, category_name):
 	raise Exception('Too many <return> elements')
     if len(ret) == 1:
 	rettype = ret[0].attrib['type']
-    return Function(name, Signature(rettype, params), alias, decoded_category)
+    return Function(name, Signature(rettype, params), alias, category)
 
 
 class Enum(object):
@@ -147,6 +141,7 @@ class Api(object):
 	self.__enums = []
 	self.__synonyms = SynonymMap()
 	self.__function_map = collections.defaultdict(list)
+	self.__extensions = set()
 
     @property
     def enums(self):
@@ -155,6 +150,10 @@ class Api(object):
     @property
     def synonyms(self):
 	return self.__synonyms
+
+    @property
+    def extensions(self):
+	return self.__extensions
 
     def add_function(self, fn):
 	self.__functions.append(fn)
@@ -192,16 +191,26 @@ class Api(object):
 	return functions
 
 
+def decode_category(category_name):
+    try:
+	gl_version = float(category_name)
+	return Category('GL', int(round(gl_version*10)))
+    except ValueError:
+	return Category('extension', category_name)
+
+
 def read_xml(filename, api):
     os.chdir(os.path.dirname(filename))
     root = xml.etree.ElementTree.parse(filename).getroot()
     xml.etree.ElementInclude.include(root)
 
-    for category in root.findall('.//category'):
-	category_name = category.attrib['name']
-	for func in category.findall('function'):
-	    api.add_function(xml_to_function(func, category_name))
-	for enum in category.findall('enum'):
+    for category_xml in root.findall('.//category'):
+	category = decode_category(category_xml.attrib['name'])
+	if category.typ == 'extension':
+	    api.extensions.add(category.data)
+	for func in category_xml.findall('function'):
+	    api.add_function(xml_to_function(func, category))
+	for enum in category_xml.findall('enum'):
 	    api.enums.append(xml_to_enum(enum))
 
 
@@ -321,6 +330,11 @@ def generate_code(api):
     # Emit enum #defines
     for en in api.enums:
 	h_contents.append('#define GL_{s.name} {s.value}\n'.format(s = en))
+
+    # Emit extension #defines
+    h_contents.append('\n')
+    for ext in sorted(api.extensions):
+	h_contents.append('#define {0}\n'.format(ext))
 
     return ''.join(c_contents), ''.join(h_contents)
 
