@@ -1,4 +1,6 @@
-// FOO
+#include <stdint.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,45 +21,20 @@ typedef float GLclampf;
 typedef double GLdouble;
 typedef double GLclampd;
 typedef void GLvoid;
-#if defined(_MSC_VER) && _MSC_VER < 1400
-typedef __int64 GLint64EXT;
-typedef unsigned __int64 GLuint64EXT;
-#elif defined(_MSC_VER) || defined(__BORLANDC__)
-typedef signed long long GLint64EXT;
-typedef unsigned long long GLuint64EXT;
-#else
-#  if defined(__MINGW32__) || defined(__CYGWIN__)
-#include <inttypes.h>
-#  endif
-#include <stdint.h>
 typedef int64_t GLint64EXT;
 typedef uint64_t GLuint64EXT;
-#endif
 typedef GLint64EXT  GLint64;
 typedef GLuint64EXT GLuint64;
 typedef struct __GLsync *GLsync;
 typedef double GLclampd;
 typedef void GLvoid;
-#if defined(_MSC_VER) && _MSC_VER < 1400
-typedef __int64 GLint64EXT;
-typedef unsigned __int64 GLuint64EXT;
-#elif defined(_MSC_VER) || defined(__BORLANDC__)
-typedef signed long long GLint64EXT;
-typedef unsigned long long GLuint64EXT;
-#else
-#  if defined(__MINGW32__) || defined(__CYGWIN__)
-#include <inttypes.h>
-#  endif
 typedef int64_t GLint64EXT;
 typedef uint64_t GLuint64EXT;
-#endif
 typedef GLint64EXT  GLint64;
 typedef GLuint64EXT GLuint64;
 typedef struct __GLsync *GLsync;
 
 typedef char GLchar;
-
-#include <stddef.h> // TODO: make more portable
 
 typedef ptrdiff_t GLintptr;
 typedef ptrdiff_t GLsizeiptr;
