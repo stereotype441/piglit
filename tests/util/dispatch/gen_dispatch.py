@@ -1,24 +1,8 @@
 import collections
 import os.path
 import sys
-import xml.dom
-import xml.dom.minidom
-
-def child_elements(node):
-    for child in node.childNodes:
-        if child.nodeType == xml.dom.Node.ELEMENT_NODE:
-            yield child
-
-class UnexpectedElement(Exception):
-    def __init__(self, elem, context = None):
-        if context is None:
-            if elem.parentNode.nodeType == xml.dom.Node.DOCUMENT_NODE:
-                context = 'at top level'
-            else:
-                context = 'inside element "{0}"'.format(
-                    elem.parentNode.tagName)
-        Exception.__init__(self, 'Unexpected element "{0}" {1}'.format(
-                elem.tagName, context))
+import xml.etree.ElementTree
+import xml.etree.ElementInclude
 
 class Category(collections.namedtuple('Category', 'typ data')):
     def __str__(self):
@@ -34,8 +18,8 @@ class Category(collections.namedtuple('Category', 'typ data')):
 Param = collections.namedtuple('Param', 'name typ')
 
 def xml_to_param(param_xml):
-    return Param(param_xml.getAttribute('name'),
-		 param_xml.getAttribute('type'))
+    return Param(param_xml.attrib['name'],
+		 param_xml.attrib['type'])
 
 class Signature(collections.namedtuple('Signature', 'rettype params')):
     def __init__(self, rettype, params):
@@ -72,21 +56,18 @@ def xml_to_function(func_xml, category_name):
 	decoded_category = Category('GL', int(round(gl_version*10)))
     except ValueError:
 	decoded_category = Category('extension', category_name)
-    name = func_xml.getAttribute('name')
-    alias = func_xml.getAttribute('alias') or None
+    name = func_xml.attrib['name']
+    alias = func_xml.get('alias')
     params = []
     rettype = None
-    for item in child_elements(func_xml):
-	if item.tagName == 'param':
-	    if item.getAttribute('padding') != 'true':
-		params.append(xml_to_param(item))
-	elif item.tagName == 'return':
-	    rettype = item.getAttribute('type')
-	elif item.tagName == 'glx':
-	    # TODO: don't know what to do with this yet
-	    pass
-	else:
-	    raise UnexpectedElement(item)
+    for param in func_xml.findall('param'):
+	if param.get('padding') != 'true':
+	    params.append(xml_to_param(param))
+    ret = func_xml.findall('return')
+    if len(ret) > 1:
+	raise Exception('Too many <return> elements')
+    if len(ret) == 1:
+	rettype = ret[0].attrib['type']
     return Function(name, Signature(rettype, params), alias, decoded_category)
 
 
@@ -104,7 +85,7 @@ class Enum(object):
 	return self.__value
 
 def xml_to_enum(enum_xml):
-    return Enum(enum_xml.getAttribute('name'), enum_xml.getAttribute('value'))
+    return Enum(enum_xml.attrib['name'], enum_xml.attrib['value'])
 
 
 class SynonymMap(object):
@@ -212,29 +193,17 @@ class Api(object):
 
 
 def read_xml(filename, api):
-    doc = xml.dom.minidom.parse(filename)
+    os.chdir(os.path.dirname(filename))
+    root = xml.etree.ElementTree.parse(filename).getroot()
+    xml.etree.ElementInclude.include(root)
 
-    if doc.documentElement.tagName != 'OpenGLAPI':
-	raise UnexpectedElement(doc.documentElement)
+    for category in root.findall('.//category'):
+	category_name = category.attrib['name']
+	for func in category.findall('function'):
+	    api.add_function(xml_to_function(func, category_name))
+	for enum in category.findall('enum'):
+	    api.enums.append(xml_to_enum(enum))
 
-    # TODO: category is a bad name.
-    for category in child_elements(doc.documentElement):
-	if category.tagName == 'xi:include':
-	    read_xml(os.path.join(os.path.dirname(filename), category.getAttribute('href')), api)
-	    continue
-	if category.tagName != 'category':
-	    raise UnexpectedElement(category)
-	category_name = category.getAttribute('name')
-	for item in child_elements(category):
-	    if item.tagName == 'function':
-		api.add_function(xml_to_function(item, category_name))
-	    elif item.tagName == 'enum':
-		api.enums.append(xml_to_enum(item))
-	    elif item.tagName == 'type':
-		# TODO: handle this.
-		pass
-	    else:
-		raise UnexpectedElement(item)
 
 def generate_stub_function(ds):
     f0 = ds.primary_function
