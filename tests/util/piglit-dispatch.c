@@ -1,5 +1,4 @@
 #include "piglit-util.h"
-#include "glxew.h"
 
 static piglit_get_proc_address_function *__get_core_proc_address = NULL;
 static piglit_get_proc_address_function *__get_ext_proc_address = NULL;
@@ -24,29 +23,6 @@ get_ext_proc_address(const char *name)
 	return function_pointer;
 }
 
-#include "generated_dispatch.c"
-
-static void
-default_unsupported(const char *name)
-{
-	printf("Function \"%s\" not supported on this implementation\n", name);
-	piglit_report_result(PIGLIT_SKIP);
-}
-
-static void
-default_get_proc_address_failure(const char *function_name)
-{
-	printf("GetProcAddress failed for \"%s\"\n", function_name);
-	piglit_report_result(PIGLIT_FAIL);
-}
-
-static piglit_dispatch_function *
-default_get_proc_address(const char *function_name)
-{
-	/* TODO: support stuff other than GLX */
-	return glXGetProcAddressARB(function_name);
-}
-
 void
 piglit_dispatch_init(piglit_dispatch_api api,
 		     piglit_get_proc_address_function *get_core_proc,
@@ -65,19 +41,4 @@ piglit_dispatch_init(piglit_dispatch_api api,
 	__get_proc_address_failure = failure_proc;
 }
 
-void
-glewInit()
-{
-	static bool already_initialized = false;
-
-	if (already_initialized)
-		return;
-
-	piglit_dispatch_init(PIGLIT_DISPATCH_GL,
-			     default_get_proc_address,
-			     default_get_proc_address,
-			     default_unsupported,
-			     default_get_proc_address_failure);
-
-	already_initialized = true;
-}
+#include "generated_dispatch.c"
