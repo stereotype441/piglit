@@ -223,6 +223,7 @@ def generate_stub_function(ds):
     condition_code_pairs = []
     for f in ds.functions:
 	if f.category.typ == 'GL':
+	    getter = 'get_core_proc_address'
 	    if f.category.data == 10:
 		# Function has always been available--no need to check
 		# a condition.
@@ -231,6 +232,7 @@ def generate_stub_function(ds):
 		condition = 'piglit_get_gl_version() >= {0}'.format(
 		    f.category.data)
 	elif f.category.typ == 'extension':
+	    getter = 'get_ext_proc_address'
 	    condition = 'piglit_is_extension_supported("{0}")'.format(
 		f.category.data)
 	else:
@@ -249,8 +251,8 @@ def generate_stub_function(ds):
 	else:
 	    typedef_name = f.typedef_name
 
-	code = '{0} = ({1}) get_proc_address("{2}");'.format(
-	    ds.dispatch_name, typedef_name, f.gl_name)
+	code = '{0} = ({1}) {2}("{3}");'.format(
+	    ds.dispatch_name, typedef_name, getter, f.gl_name)
 
 	condition_code_pairs.append((condition, code))
 
