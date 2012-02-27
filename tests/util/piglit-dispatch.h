@@ -38,6 +38,8 @@ typedef ptrdiff_t GLsizeiptrARB;
 typedef char GLcharARB;
 typedef unsigned int GLhandleARB;
 
+typedef void (*GLDEBUGPROCARB)(GLenum source,GLenum type,GLuint id,GLenum severity,GLsizei length,const GLchar *message,GLvoid *userParam);
+
 typedef void piglit_dispatch_function(void);
 
 typedef piglit_dispatch_function *piglit_get_proc_address_function(const char *);
