@@ -1,21 +1,3 @@
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
-
-#include "config.h"
-#if defined(HAVE_SYS_TIME_H) && defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_SETRLIMIT)
-#include <sys/time.h>
-#include <sys/resource.h>
-#define USE_SETRLIMIT
-#endif
-
 #include "piglit-util.h"
 #include "glxew.h"
 
