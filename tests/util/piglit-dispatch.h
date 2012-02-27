@@ -26,13 +26,6 @@ typedef uint64_t GLuint64EXT;
 typedef GLint64EXT  GLint64;
 typedef GLuint64EXT GLuint64;
 typedef struct __GLsync *GLsync;
-typedef double GLclampd;
-typedef void GLvoid;
-typedef int64_t GLint64EXT;
-typedef uint64_t GLuint64EXT;
-typedef GLint64EXT  GLint64;
-typedef GLuint64EXT GLuint64;
-typedef struct __GLsync *GLsync;
 
 typedef char GLchar;
 
