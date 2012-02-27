@@ -38,6 +38,25 @@ typedef ptrdiff_t GLsizeiptrARB;
 typedef char GLcharARB;
 typedef unsigned int GLhandleARB;
 
+typedef void piglit_dispatch_function(void);
+
+typedef piglit_dispatch_function *piglit_get_proc_address_function(const char *);
+
+typedef void piglit_error_function(const char *);
+
+typedef enum {
+	PIGLIT_DISPATCH_GL,
+	PIGLIT_DISPATCH_GL_FWD,
+	PIGLIT_DISPATCH_ES1,
+	PIGLIT_DISPATCH_ES2
+} piglit_dispatch_api;
+
+void piglit_dispatch_init(piglit_dispatch_api api,
+			  piglit_get_proc_address_function *get_core_proc,
+			  piglit_get_proc_address_function *get_ext_proc,
+			  piglit_error_function *unsupported_proc,
+			  piglit_error_function *failure_proc);
+
 #include "generated_dispatch.h"
 
 #define GLEW_VERSION_1_2 (piglit_get_gl_version() >= 12)
@@ -81,7 +100,7 @@ typedef unsigned int GLhandleARB;
 #define GLEW_NV_blend_square (piglit_is_extension_supported("NV_blend_square"))
 #define GLEW_NV_geometry_shader4 (piglit_is_extension_supported("NV_geometry_shader4"))
 #define GLEW_OES_compressed_paletted_texture (piglit_is_extension_supported("OES_compressed_paletted_texture"))
-#define glewInit() do { } while (0)
+void glewInit();
 
 // Prevent gl.h from being included, since it will attempt to define
 // the functions we've already defined.

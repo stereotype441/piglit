@@ -257,7 +257,7 @@ def generate_stub_function(ds):
 	condition_code_pairs.append((condition, code))
 
     condition_code_pairs.append(
-	('true', 'unsupported("{0}");'.format(f0.name)))
+	('true', '__unsupported("{0}");'.format(f0.name)))
 
     # Start the stub function
     stub_fn = 'static {0}\n'.format(
