@@ -316,7 +316,7 @@ def generate_code(api):
 	# Emit comment block
 	comments = '\n'
 	for f in ds.functions:
-	    comments += '// {0} ({1})\n'.format(f.gl_name, f.category)
+	    comments += '/* {0} ({1}) */\n'.format(f.gl_name, f.category)
 	c_contents.append(comments)
 	h_contents.append(comments)
 
