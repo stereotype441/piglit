@@ -45,6 +45,8 @@ get_ext_proc_address(const char *name)
 	return function_pointer;
 }
 
+#include "generated_dispatch.c"
+
 void
 piglit_dispatch_init(piglit_dispatch_api api,
 		     piglit_get_proc_address_function *get_core_proc,
@@ -61,6 +63,6 @@ piglit_dispatch_init(piglit_dispatch_api api,
 	__get_ext_proc_address = get_ext_proc;
 	__unsupported = unsupported_proc;
 	__get_proc_address_failure = failure_proc;
-}
 
-#include "generated_dispatch.c"
+	initialize_dispatch_pointers();
+}

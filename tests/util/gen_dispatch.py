@@ -418,6 +418,18 @@ def generate_stub_function(ds):
     return stub_fn
 
 
+def generate_dispatch_pointer_initializer(dispatch_sets):
+    result = []
+    result.append('static void\n')
+    result.append('initialize_dispatch_pointers()\n')
+    result.append('{\n')
+    for ds in dispatch_sets:
+	result.append(
+	    '\t{0} = {1};\n'.format(ds.dispatch_name, ds.stub_name))
+    result.append('}\n')
+    return ''.join(result)
+
+
 def generate_code(api):
     c_contents = [generated_header()]
     h_contents = [generated_header()]
@@ -431,7 +443,9 @@ def generate_code(api):
 		f.sig.c_form('(*{0})'.format(f.typedef_name),
 			     anonymous_args = True)))
 
-    for ds in api.compute_dispatch_sets():
+    dispatch_sets = api.compute_dispatch_sets()
+
+    for ds in dispatch_sets:
 	f0 = ds.primary_function
 
 	# Emit comment block
@@ -456,8 +470,11 @@ def generate_code(api):
 
 	# Emit initializer for dispatch pointer
 	c_contents.append(
-	    '{0} {1} = {2};\n'.format(
-		f0.typedef_name, ds.dispatch_name, ds.stub_name))
+	    '{0} {1} = NULL;\n'.format(
+		f0.typedef_name, ds.dispatch_name))
+
+    # Emit dispatch pointer initialization function
+    c_contents.append(generate_dispatch_pointer_initializer(dispatch_sets))
 
     # Emit enum #defines
     for en in api.enums:
