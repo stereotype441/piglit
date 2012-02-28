@@ -33,14 +33,17 @@ set(piglit_dispatch_gen_inputs
    ${GLAPI_XML_PATH}/gl_API.xml
    )
 
-# FIXME: The custom command should depend on all xml files.
+file(GLOB piglit_dispatch_gen_xml_inputs
+     ${GLAPI_XML_PATH}/*.xml)
+
 set(piglit_dispatch_gen_deps
     ${piglit_dispatch_gen_inputs}
+    ${piglit_dispatch_gen_xml_inputs}
     )
 
 add_custom_command(
     OUTPUT ${piglit_dispatch_gen_outputs}
-    DEPENDS ${piglit_dispatch_gen_inputs}
+    DEPENDS ${piglit_dispatch_gen_deps}
     COMMAND python ${piglit_dispatch_gen_inputs} ${piglit_dispatch_gen_outputs}
     )
 
