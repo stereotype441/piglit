@@ -91,9 +91,10 @@
 # The generated C file consists of the following:
 #
 # - A stub function corresponding to each set of synonymous functions
-#   in the GL API.  The stub function determines which of the
-#   synonymous names the implementation supports (by consulting the
-#   current GL version and/or the extension string), and calls either
+#   in the GL API.  The stub function first calls
+#   __check_initialized().  Then it determines which of the synonymous
+#   names the implementation supports (by consulting the current GL
+#   version and/or the extension string), and calls either
 #   __get_core_proc() or __get_ext_proc() to get the function pointer.
 #   It stores the result in the dispatch function pointer, and then
 #   calls it.  If the implementation does not support any of the
@@ -103,6 +104,7 @@
 #   /* glMapBufferARB (GL_ARB_vertex_buffer_object) */
 #   static GLvoid * stub_glMapBuffer(GLenum target, GLenum access)
 #   {
+#     __check_initialized();
 #     if (__check_version(15))
 #       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERPROC) __get_core_proc("glMapBuffer");
 #     else if (__check_extension("GL_ARB_vertex_buffer_object"))
@@ -114,7 +116,7 @@
 #
 # - A declaration for each dispatch function pointer, e.g.:
 #
-# PFNGLMAPBUFFERPROC __piglit_dispatch_glMapBuffer = stub_glMapBuffer;
+#   PFNGLMAPBUFFERPROC __piglit_dispatch_glMapBuffer = stub_glMapBuffer;
 
 
 
@@ -392,6 +394,7 @@ def generate_stub_function(ds):
     stub_fn = 'static {0}\n'.format(
 	f0.sig.c_form(ds.stub_name, anonymous_args = False))
     stub_fn += '{\n'
+    stub_fn += '\t__check_initialized();\n'
 
     # Output code that checks each condition in turn and executes the
     # appropriate case.
@@ -469,8 +472,8 @@ def generate_code(api):
 
 	# Emit initializer for dispatch pointer
 	c_contents.append(
-	    '{0} {1} = NULL;\n'.format(
-		f0.typedef_name, ds.dispatch_name))
+	    '{0} {1} = {2};\n'.format(
+		f0.typedef_name, ds.dispatch_name, ds.stub_name))
 
     # Emit dispatch pointer initialization function
     c_contents.append(generate_dispatch_pointer_initializer(dispatch_sets))

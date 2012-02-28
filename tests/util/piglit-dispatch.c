@@ -28,6 +28,18 @@ static piglit_error_function *__unsupported = NULL;
 static piglit_error_function *__get_proc_address_failure = NULL;
 static int __gl_version = 0;
 static const char *__gl_extensions = NULL;
+static bool __is_initialized = false;
+
+static void
+__check_initialized()
+{
+	if (__is_initialized)
+		return;
+
+	printf("piglit_dispatch_init() must be called before GL functions\n");
+	assert(false);
+	exit(1);
+}
 
 static piglit_dispatch_function *
 __get_core_proc(const char *name)
@@ -79,6 +91,8 @@ piglit_dispatch_init(piglit_dispatch_api api,
 	__get_proc_address_failure = failure_proc;
 
 	initialize_dispatch_pointers();
+
+	__is_initialized = true;
 
 	/* Store the GL version and extension string for use by
 	 * __check_version() and __check_extension().  Note: the
