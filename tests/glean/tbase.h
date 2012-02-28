@@ -309,6 +309,10 @@ public:
 					// XXX need to throw exception here
 				}
 
+				// Make sure glew is initialized so we can call
+				// GL functions safely.
+				glewInit();
+
 				// Check if test is applicable to this context
 				if (!isApplicable())
 					continue;
