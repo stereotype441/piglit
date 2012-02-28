@@ -19,6 +19,106 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+# This script generates a C file (and corresponding header) allowing
+# Piglit to dispatch calls to OpenGL based on an XML description of
+# the GL api (and extensions).
+#
+# The input files look like this:
+#
+# <OpenGLAPI>
+#
+#   <!-- A category name is either the name of an extension
+#        (e.g. "GL_ARB_vertex_buffer_object") or a GL version (e.g.
+#        "1.0").
+#        -->
+#   <category name="GL_ARB_vertex_buffer_object">
+#
+#     <!-- Enum names omit the "GL_" prefix -->
+#     <enum name="FRONT" value="0x0404"/>
+#
+#     <!-- Function names omit the "gl" prefix.  So, for example the
+#          following defines a function
+#
+#          GLvoid *glMapBuffer(GLenum target, GLenum access);
+#
+#          The alias attribute declares that this function is
+#          synonymous to another function defined elsewhere.  So the
+#          following declaration specifies that "glMapBuffer" is
+#          synonymous with "glMapBufferARB".
+#
+#          Note: a return type of "void" is assumed if there is no
+#          <return> element.
+#          -->
+#     <function name="MapBuffer" alias="MapBufferARB">
+#         <param name="target" type="GLenum"/>
+#         <param name="access" type="GLenum"/>
+#         <return type="GLvoid *"/>
+#     </function>
+#
+#   </category>
+#
+# </OpenGLAPI>
+#
+# The generated header consists of the following:
+#
+# - A typedef for each function, of the form that would normally
+#   appear in gl.h or glext.h, e.g.:
+#
+#   typedef GLvoid * (*PFNGLMAPBUFFERPROC)(GLenum, GLenum);
+#   typedef GLvoid * (*PFNGLMAPBUFFERARBPROC)(GLenum, GLenum);
+#
+# - A set of extern declarations for "dispatch function pointers".
+#   There is one dispatch function pointer for each set of synonymous
+#   functions in the GL API, e.g.:
+#
+#   extern PFNGLMAPBUFFERPROC __piglit_dispatch_glMapBuffer;
+#
+# - A set of #defines mapping each function name to the corresponding
+#   dispatch function pointer, e.g.:
+#
+#   #define glMapBuffer __piglit_dispatch_glMapBuffer
+#   #define glMapBufferARB __piglit_dispatch_glMapBuffer
+#
+# - A #define for each enum in the GL API, e.g.:
+#
+#   #define GL_FRONT 0x0404
+#
+# - A #define for each extension, e.g.:
+#
+#   #define GL_ARB_vertex_buffer_object
+#
+#
+# The generated C file consists of the following:
+#
+# - A stub function corresponding to each set of synonymous functions
+#   in the GL API.  The stub function determines which of the
+#   synonymous names the implementation supports (by consulting the
+#   current GL version and/or the extension string), and calls either
+#   get_core_proc_address() or get_ext_proc_address() to get the
+#   function pointer.  It stores the result in the dispatch function
+#   pointer, and then calls it.  If the implementation does not
+#   support any of the synonymous names, it calls __unsupported().
+#   E.g.:
+#
+#   /* glMapBuffer (GL 1.5) */
+#   /* glMapBufferARB (GL_ARB_vertex_buffer_object) */
+#   static GLvoid * stub_glMapBuffer(GLenum target, GLenum access)
+#   {
+#     if (piglit_get_gl_version() >= 15)
+#       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERPROC) get_core_proc_address("glMapBuffer");
+#     else if (piglit_is_extension_supported("GL_ARB_vertex_buffer_object"))
+#       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERARBPROC) get_ext_proc_address("glMapBufferARB");
+#     else
+#       __unsupported("MapBuffer");
+#     return __piglit_dispatch_glMapBuffer(target, access);
+#   }
+#
+# - A declaration for each dispatch function pointer, e.g.:
+#
+# PFNGLMAPBUFFERPROC __piglit_dispatch_glMapBuffer = stub_glMapBuffer;
+
+
+
 import collections
 import os.path
 import sys
