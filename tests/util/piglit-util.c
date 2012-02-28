@@ -121,6 +121,13 @@ int piglit_get_gl_version()
 	int major;
 	int minor;
 
+	if (version_string == NULL) {
+		printf("GL_VERSION string is NULL.  "
+		       "Context not initialized?\n");
+		piglit_report_result(PIGLIT_FAIL);
+		exit(1);
+	}
+
 	/* skip to version number */
 	if (strncmp("OpenGL ES ", version_string, 10) == 0)
 		version_number_string = version_string + 10;
