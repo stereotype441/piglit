@@ -94,20 +94,19 @@
 #   in the GL API.  The stub function determines which of the
 #   synonymous names the implementation supports (by consulting the
 #   current GL version and/or the extension string), and calls either
-#   get_core_proc_address() or get_ext_proc_address() to get the
-#   function pointer.  It stores the result in the dispatch function
-#   pointer, and then calls it.  If the implementation does not
-#   support any of the synonymous names, it calls __unsupported().
-#   E.g.:
+#   __get_core_proc() or __get_ext_proc() to get the function pointer.
+#   It stores the result in the dispatch function pointer, and then
+#   calls it.  If the implementation does not support any of the
+#   synonymous names, it calls __unsupported().  E.g.:
 #
 #   /* glMapBuffer (GL 1.5) */
 #   /* glMapBufferARB (GL_ARB_vertex_buffer_object) */
 #   static GLvoid * stub_glMapBuffer(GLenum target, GLenum access)
 #   {
-#     if (piglit_get_gl_version() >= 15)
-#       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERPROC) get_core_proc_address("glMapBuffer");
-#     else if (piglit_is_extension_supported("GL_ARB_vertex_buffer_object"))
-#       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERARBPROC) get_ext_proc_address("glMapBufferARB");
+#     if (__check_version(15))
+#       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERPROC) __get_core_proc("glMapBuffer");
+#     else if (__check_extension("GL_ARB_vertex_buffer_object"))
+#       __piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERARBPROC) __get_ext_proc("glMapBufferARB");
 #     else
 #       __unsupported("MapBuffer");
 #     return __piglit_dispatch_glMapBuffer(target, access);
@@ -353,17 +352,17 @@ def generate_stub_function(ds):
     condition_code_pairs = []
     for f in ds.functions:
 	if f.category.typ == 'GL':
-	    getter = 'get_core_proc_address'
+	    getter = '__get_core_proc'
 	    if f.category.data == 10:
 		# Function has always been available--no need to check
 		# a condition.
 		condition = 'true'
 	    else:
-		condition = 'piglit_get_gl_version() >= {0}'.format(
+		condition = '__check_version({0})'.format(
 		    f.category.data)
 	elif f.category.typ == 'extension':
-	    getter = 'get_ext_proc_address'
-	    condition = 'piglit_is_extension_supported("{0}")'.format(
+	    getter = '__get_ext_proc'
+	    condition = '__check_extension("{0}")'.format(
 		f.category.data)
 	else:
 	    raise Exception(

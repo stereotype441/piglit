@@ -26,9 +26,11 @@ static piglit_get_proc_address_function *__get_core_proc_address = NULL;
 static piglit_get_proc_address_function *__get_ext_proc_address = NULL;
 static piglit_error_function *__unsupported = NULL;
 static piglit_error_function *__get_proc_address_failure = NULL;
+static int __gl_version = 0;
+static const char *__gl_extensions = NULL;
 
 static piglit_dispatch_function *
-get_core_proc_address(const char *name)
+__get_core_proc(const char *name)
 {
 	void *function_pointer = __get_core_proc_address(name);
 	if (function_pointer == NULL)
@@ -37,12 +39,24 @@ get_core_proc_address(const char *name)
 }
 
 static piglit_dispatch_function *
-get_ext_proc_address(const char *name)
+__get_ext_proc(const char *name)
 {
 	void *function_pointer = __get_ext_proc_address(name);
 	if (function_pointer == NULL)
 		__get_proc_address_failure(name);
 	return function_pointer;
+}
+
+static inline bool
+__check_version(int required_version)
+{
+	return __gl_version >= required_version;
+}
+
+static inline bool
+__check_extension(const char *name)
+{
+	return piglit_is_extension_in_string(__gl_extensions, name);
 }
 
 #include "generated_dispatch.c"
@@ -65,4 +79,14 @@ piglit_dispatch_init(piglit_dispatch_api api,
 	__get_proc_address_failure = failure_proc;
 
 	initialize_dispatch_pointers();
+
+	/* Store the GL version and extension string for use by
+	 * __check_version() and __check_extension().  Note: the
+	 * following two calls are safe because the only GL function
+	 * they call is glGetString(), and the stub function for
+	 * glGetString does not need to call __check_version() or
+	 * __check_extension().
+	 */
+	__gl_version = piglit_get_gl_version();
+	__gl_extensions = (const char *) glGetString(GL_EXTENSIONS);
 }
