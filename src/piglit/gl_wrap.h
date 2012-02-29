@@ -44,7 +44,7 @@ extern "C" {
 
 #if defined(USE_OPENGL)
 #	include "piglit-dispatch.h"
-	/* Include the real headers too, in case GLEW misses something. */
+	/* Include the real headers too, in case piglit-dispatch misses something. */
 #	ifdef __APPLE__
 #		include <OpenGL/gl.h>
 #		include <OpenGL/glu.h>

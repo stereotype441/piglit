@@ -23,6 +23,14 @@
 #include "piglit-util.h"
 #include "glxew.h"
 
+/**
+ * Generated code calls this function if the test tries to use a GL
+ * function that is not supported on the current implementation.
+ *
+ * This function terminates the test with a SKIP; this saves the
+ * piglit test from the burden of having to pre-check whether the
+ * implementation supports the functionality being tested.
+ */
 static void
 default_unsupported(const char *name)
 {
@@ -30,6 +38,14 @@ default_unsupported(const char *name)
 	piglit_report_result(PIGLIT_SKIP);
 }
 
+/**
+ * Generated code calls this function if a call to GetProcAddress()
+ * returns NULL.
+ *
+ * We don't expect this to ever happen, since we only call
+ * GetProcAddress() for functions that the implementation claims to
+ * support.  So if it does happen we terminate the test with a FAIL.
+ */
 static void
 default_get_proc_address_failure(const char *function_name)
 {
@@ -37,6 +53,13 @@ default_get_proc_address_failure(const char *function_name)
 	piglit_report_result(PIGLIT_FAIL);
 }
 
+/**
+ * Generated code calls this function to retrieve the address of a
+ * function from the implementation.
+ *
+ * For the moment we only support GLX.  In the future there will be
+ * versions of this function for EGL, Windows, and Apple.
+ */
 static piglit_dispatch_function *
 default_get_proc_address(const char *function_name)
 {
@@ -44,6 +67,13 @@ default_get_proc_address(const char *function_name)
 	return glXGetProcAddressARB((const GLubyte *) function_name);
 }
 
+/**
+ * Initialize the GL dispatch mechanism.  Idempotent.
+ *
+ * This function is called glewInit() so that it interacts well with
+ * existing Piglit tests (which were written assuming the GLEW
+ * framework).
+ */
 void
 glewInit()
 {

@@ -20,6 +20,12 @@
  * IN THE SOFTWARE.
  */
 
+/** \file piglit-dispatch.h
+ *
+ * Dispatch mechanism allowing a single set of piglit tests to select
+ * at run time whether to use OpenGL or GLES.
+ */
+
 #include <stdint.h>
 #include <stddef.h>
 
