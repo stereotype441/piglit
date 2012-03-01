@@ -201,8 +201,8 @@ def xml_to_param(param_xml):
 # - Signature.params is a tuple of Param objects representing the
 #   function's parameters.
 class Signature(collections.namedtuple('Signature', 'rettype params')):
-    def __init__(self, rettype, params):
-	super(Signature, self).__init__(rettype, tuple(params))
+    def __new__(self, rettype, params):
+	return super(Signature, self).__new__(self, rettype, tuple(params))
 
     # Generate a string representing the function signature in C.
     #
