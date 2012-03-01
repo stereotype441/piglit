@@ -1,0 +1,3 @@
+[submodule "glapi"]
+	path = glapi
+	url = git://github.com/stereotype441/glapi.git

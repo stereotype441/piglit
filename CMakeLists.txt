@@ -130,12 +130,7 @@ check_include_file(sys/stat.h  HAVE_SYS_STAT_H)
 check_include_file(unistd.h    HAVE_UNISTD_H)
 check_include_file(fcntl.h     HAVE_FCNTL_H)
 
-execute_process(
-	COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=datadir glapi
-	OUTPUT_STRIP_TRAILING_WHITESPACE
-	OUTPUT_VARIABLE glapi_datadir
-	RESULT_VARIABLE glapi_datadir_result)
-set(GLAPI_XML_PATH ${glapi_datadir}/xml/glapi)
+set(GLAPI_XML_PATH ${piglit_SOURCE_DIR}/glapi)
 
 configure_file(
 	"${piglit_SOURCE_DIR}/tests/util/config.h.in"
