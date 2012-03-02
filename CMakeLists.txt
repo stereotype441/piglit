@@ -12,6 +12,7 @@ find_package(TIFF)
 find_package(GLUT REQUIRED)
 find_package(PNG REQUIRED)
 find_package(X11)
+find_package(PkgConfig)
 
 # Check for presence of Python 2.6 or greater.
 foreach(python_cmd python2 python)
@@ -129,10 +130,30 @@ check_include_file(sys/stat.h  HAVE_SYS_STAT_H)
 check_include_file(unistd.h    HAVE_UNISTD_H)
 check_include_file(fcntl.h     HAVE_FCNTL_H)
 
+if(PKG_CONFIG_FOUND)
+	pkg_check_modules(GLAPI glapi)
+	if(GLAPI_FOUND)
+		execute_process(
+			COMMAND ${PKG_CONFIG_EXECUTABLE} --variable=datadir glapi
+			OUTPUT_STRIP_TRAILING_WHITESPACE
+			OUTPUT_VARIABLE glapi_datadir
+			RESULT_VARIABLE glapi_datadir_result)
+	endif(GLAPI_FOUND)
+endif(PKG_CONFIG_FOUND)
+if(glapi_datadir)
+	SET(GLAPI_XML_PATH ${glapi_datadir}/xml/glapi CACHE PATH
+		"Path to the shared GL API XML files" FORCE)
+else(glapi_datadir)
+	SET(GLAPI_XML_PATH NOTFOUND CACHE PATH
+		"Path to the shared GL API XML files")
+endif(glapi_datadir)
+
 configure_file(
 	"${piglit_SOURCE_DIR}/tests/util/config.h.in"
 	"${piglit_SOURCE_DIR}/tests/util/config.h"
 )
+
+include(cmake/piglit_dispatch.cmake)
 
 include_directories(src)
 add_subdirectory(cmake/target_api)
