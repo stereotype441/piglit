@@ -94,6 +94,13 @@ void piglit_dispatch_init(piglit_dispatch_api api,
 
 void piglit_dispatch_default_init();
 
+/* As a temporary measure, redirect glewInit() to
+ * piglit_dispatch_default_init(), so that we don't have to modify
+ * initialization code in old tests that were written before the
+ * piglit-dispatch mechanism.
+ */
+#define glewInit piglit_dispatch_default_init
+
 /* Prevent gl.h from being included, since it will attempt to define
  * the functions we've already defined.
  */
