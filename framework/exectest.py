@@ -50,6 +50,7 @@ class ExecTest(Test):
 			fullenv[e] = str(self.env[e])
 
 		if self.command is not None:
+			print '{0!r}'.format(self.command)
 			proc = subprocess.Popen(
 				self.command,
 				stdout=subprocess.PIPE,
