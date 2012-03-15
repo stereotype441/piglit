@@ -325,7 +325,8 @@ def add_shader_test_dir(group, dirpath, recursive=False):
 	"""Add all shader tests in a directory to the given group."""
 	for filename in os.listdir(dirpath):
 		filepath = path.join(dirpath, filename)
-		print '{0!r}'.format(filepath)
+		if 'vs-inline-notequal' in filepath:
+			print '{0!r}'.format(filepath)
 		if path.isdir(filepath):
 			if not recursive:
 				continue
