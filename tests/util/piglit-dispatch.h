@@ -104,7 +104,12 @@ typedef ptrdiff_t GLintptrARB;
 typedef ptrdiff_t GLsizeiptrARB;
 
 typedef char GLcharARB;
+
+#ifdef __APPLE__
+typedef unsigned long GLhandleARB;
+#else
 typedef unsigned int GLhandleARB;
+#endif
 
 struct _cl_context;
 struct _cl_event;
