@@ -90,7 +90,8 @@ get_core_proc_address(const char *function_name, int gl_10x_version)
 	if (gl_10x_version > 11) {
 		return get_ext_proc_address(function_name);
 	} else {
-		return GetProcAddress(LoadLibraryA("OPENGL32"), function_name);
+		return (piglit_dispatch_function_ptr)
+			GetProcAddress(LoadLibraryA("OPENGL32"), function_name);
 	}
 }
 
