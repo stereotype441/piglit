@@ -77,7 +77,7 @@ default_get_proc_address_failure(const char *function_name)
 static piglit_dispatch_function_ptr
 get_ext_proc_address(const char *function_name)
 {
-	return wglGetProcAddress(function_name);
+	return (piglit_dispatch_function_ptr) wglGetProcAddress(function_name);
 }
 
 /**
