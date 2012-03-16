@@ -228,7 +228,7 @@ test_texture_matrix(void)
 static GLboolean
 test_texture_params(void)
 {
-   GLuint tex[100];
+   GLuint tex[200];
    GLenum err;
    int i;
    int maxUnit;
