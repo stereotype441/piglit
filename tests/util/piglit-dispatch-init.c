@@ -87,11 +87,13 @@ get_ext_proc_address(const char *function_name)
 static piglit_dispatch_function_ptr
 get_core_proc_address(const char *function_name, int gl_10x_version)
 {
-	if (gl_10x_version > 13) {
-		return get_ext_proc_address(function_name);
-	} else {
-		return GetProcAddress(LoadLibraryA("OPENGL32"), function_name);
-	}
+	(void) gl_10x_version;
+	return get_ext_proc_address(function_name);
+//	if (gl_10x_version > 13) {
+//		return get_ext_proc_address(function_name);
+//	} else {
+//		return GetProcAddress(LoadLibraryA("OPENGL32"), function_name);
+//	}
 }
 
 #elif defined(__APPLE__)
