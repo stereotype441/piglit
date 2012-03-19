@@ -22,15 +22,17 @@
 # Note: we're outputting the generated file to a subdirectory of
 # ${CMAKE_SOURCE_DIR} so that we can check it back in to source
 # control.
-set(piglit_glapi_dir ${CMAKE_SOURCE_DIR}/glapi)
+set(piglit_glapi_src_dir ${CMAKE_SOURCE_DIR}/glapi)
 
-set(piglit_glapi_output ${piglit_glapi_dir}/glapi.json)
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/glapi)
+
+set(piglit_glapi_output ${CMAKE_BINARY_DIR}/glapi/glapi.json)
 
 set(piglit_glapi_inputs
-	${piglit_glapi_dir}/parse_glspec.py
-	${piglit_glapi_dir}/gl.tm
-	${piglit_glapi_dir}/gl.spec
-	${piglit_glapi_dir}/enumext.spec
+	${piglit_glapi_src_dir}/parse_glspec.py
+	${piglit_glapi_src_dir}/gl.tm
+	${piglit_glapi_src_dir}/gl.spec
+	${piglit_glapi_src_dir}/enumext.spec
 	)
 
 add_custom_command(
