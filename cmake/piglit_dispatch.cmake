@@ -22,7 +22,9 @@
 # Note: we're outputting the generated files to a subdirectory of
 # ${CMAKE_SOURCE_DIR} so that we can check them back in to source
 # control.
-set(piglit_dispatch_gen_output_dir ${CMAKE_SOURCE_DIR}/tests/util)
+set(piglit_dispatch_gen_output_dir ${CMAKE_BINARY_DIR}/tests/util)
+
+file(MAKE_DIRECTORY ${piglit_dispatch_gen_output_dir})
 
 set(piglit_dispatch_gen_outputs
 	${piglit_dispatch_gen_output_dir}/generated_dispatch.c
