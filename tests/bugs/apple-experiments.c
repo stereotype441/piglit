@@ -16,8 +16,8 @@ void piglit_init(int argc, char **argv)
 	PFNGLATTACHOBJECTARBPROC_LONG glAttachObjectARB_long = (PFNGLATTACHOBJECTARBPROC_LONG) glAttachObjectARB;
 	printf("sizeof(GLuint) == %ld\n", sizeof(GLuint));
 	printf("sizeof(GLhandleARB) == %ld\n", sizeof(GLhandleARB));
-	prog = glCreateProgram();
-	printf("glCreateProgram() => %d\n", prog);
+	prog = glCreateProgramObjectARB();
+	printf("glCreateProgramObjectARB() => %d\n", prog);
 	vshader = glCreateShader(GL_VERTEX_SHADER);
 	printf("glCreateShader(GL_VERTEX_SHADER) => %d\n", vshader);
 	fshader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
