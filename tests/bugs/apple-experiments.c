@@ -9,12 +9,13 @@ void piglit_init(int argc, char **argv)
 {
 	int i;
 	GLuint prog, vshader, fshader;
+	unsigned long fshader2;
 	GLsizei count;
 	GLuint shaders[16];
 	GLhandleARB shadersARB[16];
 	PFNGLATTACHOBJECTARBPROC_LONG glAttachObjectARB_long = (PFNGLATTACHOBJECTARBPROC_LONG) glAttachObjectARB;
-	printf("sizeof(GLuint) == %d\n", sizeof(GLuint));
-	printf("sizeof(GLhandleARB) == %d\n", sizeof(GLhandleARB));
+	printf("sizeof(GLuint) == %ld\n", sizeof(GLuint));
+	printf("sizeof(GLhandleARB) == %ld\n", sizeof(GLhandleARB));
 	prog = glCreateProgram();
 	printf("glCreateProgram() => %d\n", prog);
 	vshader = glCreateShader(GL_VERTEX_SHADER);
@@ -24,8 +25,9 @@ void piglit_init(int argc, char **argv)
 	glAttachShader(prog, vshader);
 	printf("glAttachShader(%d, %d)\n", prog, vshader);
 	//glAttachShader(prog, fshader);
-	glAttachObjectARB(prog, fshader);
-	printf("glAttachShaderARB(%d, %d)\n", prog, fshader);
+	fshader2 = 0x100000000ul | fshader;
+	glAttachObjectARB_long(prog, fshader2);
+	printf("glAttachShaderARB(%d, %ld)\n", prog, fshader2);
 	glGetAttachedShaders(prog, 8, &count, shaders);
 	printf("glGetAttachedShaders(%d, 8, &count, shaders):\n", prog);
 	printf("  count = %d\n", count);
