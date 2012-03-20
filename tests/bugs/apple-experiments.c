@@ -10,6 +10,8 @@ void piglit_init(int argc, char **argv)
 	GLsizei count;
 	GLuint shaders[16];
 	GLhandleARB shadersARB[16];
+	printf("sizeof(GLuint) == %d\n", sizeof(GLuint));
+	printf("sizeof(GLhandleARB) == %d\n", sizeof(GLhandleARB));
 	prog = glCreateProgram();
 	printf("glCreateProgram() => %d\n", prog);
 	vshader = glCreateShader(GL_VERTEX_SHADER);
