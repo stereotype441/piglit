@@ -20,8 +20,8 @@ void piglit_init(int argc, char **argv)
 	printf("glCreateProgram() => %d\n", prog);
 	vshader = glCreateShader(GL_VERTEX_SHADER);
 	printf("glCreateShader(GL_VERTEX_SHADER) => %d\n", vshader);
-	fshader = glCreateShader(GL_FRAGMENT_SHADER);
-	printf("glCreateShader(GL_FRAGMENT_SHADER) => %d\n", fshader);
+	fshader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
+	printf("glCreateShaderObjectARB(GL_FRAGMENT_SHADER) => %d\n", fshader);
 	glAttachShader(prog, vshader);
 	printf("glAttachShader(%d, %d)\n", prog, vshader);
 	//glAttachShader(prog, fshader);
