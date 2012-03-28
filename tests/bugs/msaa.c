@@ -24,8 +24,8 @@ piglit_display(void)
 {
 	float vertices[][2] = {
 		{ -1, 1 },
-		{ 0, 1 },
-		{ -1, 0 }
+		{ 1, 1 },
+		{ -1, -1 }
 	};
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
