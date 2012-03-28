@@ -1,6 +1,8 @@
 #include "piglit-util.h"
 
-int piglit_width = 100, piglit_height = 100;
+#define SIZE 100
+
+int piglit_width = SIZE, piglit_height = SIZE;
 int piglit_window_mode = GLUT_RGBA | GLUT_DOUBLE;
 
 static const char *vert =
@@ -53,7 +55,7 @@ piglit_init(int argc, char **argv)
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
 	glGenRenderbuffers(1, &rb);
 	glBindRenderbuffer(GL_RENDERBUFFER, rb);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA, 100, 100);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA, SIZE, SIZE);
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rb);
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("OMG! Framebuffer not complete!\n");
