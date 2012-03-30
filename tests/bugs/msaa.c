@@ -1,6 +1,6 @@
 #include "piglit-util.h"
 
-#define SIZE 100
+#define SIZE 4
 
 int piglit_width = SIZE, piglit_height = SIZE;
 int piglit_window_mode = GLUT_RGBA | GLUT_DOUBLE;
