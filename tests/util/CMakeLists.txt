@@ -7,12 +7,15 @@ include_directories(
 	${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+link_libraries(m)
+
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 	link_libraries(${X11_X11_LIB})
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 set(UTIL_SOURCES
 	fdo-bitmap.c
+	piglit-print-buffer.c
 	piglit-util.c
 	piglit-util-enum.c
 	shader-load.c
