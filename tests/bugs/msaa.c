@@ -22,8 +22,8 @@ static const char *frag =
 	"  gl_FragColor = gl_Color;\n"
 	"}\n";
 
-enum piglit_result
-piglit_display(void)
+void
+draw_color_pattern(void)
 {
 	float vertices[SIZE2][SIZE2][6][2];
 	float colors[SIZE2][SIZE2][6][4];
@@ -57,7 +57,53 @@ piglit_display(void)
 	glColorPointer(4, GL_FLOAT, sizeof(colors[0][0][0]), &colors);
 	glEnableClientState(GL_COLOR_ARRAY);
        	glDrawArrays(GL_TRIANGLES, 0, 6*SIZE2*SIZE2);
+}
 
+void
+draw_stencil_pattern(void)
+{
+	int i, j, v;
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glEnable(GL_STENCIL_TEST);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_COLOR_ARRAY);
+	for (i = 0; i < SIZE2; ++i) {
+		for (j = 0; j < SIZE2; ++j) {
+			float x0 = (2.0*i-SIZE2)/SIZE2;
+			float x1 = (2.0*(i+1)-SIZE2)/SIZE2;
+			float y0 = (2.0*j-SIZE2)/SIZE2;
+			float y1 = (2.0*(j+1)-SIZE2)/SIZE2;
+			float vertices[6][2];
+			float colors[6][4];
+			vertices[0][0] = x0; vertices[0][1] = y0;
+			vertices[1][0] = x1; vertices[1][1] = y0;
+			vertices[2][0] = x0; vertices[2][1] = y1;
+			vertices[3][0] = x0; vertices[3][1] = y1;
+			vertices[4][0] = x1; vertices[4][1] = y0;
+			vertices[5][0] = x1; vertices[5][1] = y1;
+			for (v = 0; v < 6; ++v) {
+				colors[v][0] = i/15.0;
+				colors[v][1] = j/15.0;
+				colors[v][2] = 0.0;
+				colors[v][3] = 1.0;
+			}
+			glVertexPointer(2, GL_FLOAT, sizeof(vertices[0]), &vertices);
+			glColorPointer(4, GL_FLOAT, sizeof(colors[0]), &colors);
+			glStencilFunc(GL_ALWAYS, 8*j+i, 0xff);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
+	}
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glDisable(GL_STENCIL_TEST);
+}
+
+enum piglit_result
+piglit_display(void)
+{
+	draw_stencil_pattern();
 	piglit_print_readpixels(SIZE, SIZE, GL_RGBA, GL_UNSIGNED_BYTE);
 
 	piglit_present_results();
