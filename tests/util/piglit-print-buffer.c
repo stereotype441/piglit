@@ -81,6 +81,9 @@ piglit_print_readpixels(int width, int height, GLenum format, GLenum type)
 	case GL_RGB:
 		components = 3;
 		break;
+	case GL_RGBA:
+		components = 4;
+		break;
 	default:
 		fprintf(stderr, "not implemented\n");
 		abort();
