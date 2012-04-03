@@ -69,7 +69,7 @@ void
 piglit_init(int argc, char **argv)
 {
 	int vs, fs, prog;
-	GLuint fbo, rb;
+	GLuint fbo, rb_color, rb_stencil;
 
 	piglit_require_GLSL_version(120);
 	vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
@@ -80,10 +80,14 @@ piglit_init(int argc, char **argv)
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-	glGenRenderbuffers(1, &rb);
-	glBindRenderbuffer(GL_RENDERBUFFER, rb);
+	glGenRenderbuffers(1, &rb_color);
+	glBindRenderbuffer(GL_RENDERBUFFER, rb_color);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA, SIZE, SIZE);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rb);
+	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, rb_color);
+	glGenRenderbuffers(1, &rb_stencil);
+	glBindRenderbuffer(GL_RENDERBUFFER, rb_stencil);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_STENCIL_INDEX8, SIZE, SIZE);
+	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rb_stencil);
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("OMG! Framebuffer not complete!\n");
 		piglit_report_result(PIGLIT_FAIL);
