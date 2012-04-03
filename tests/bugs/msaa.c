@@ -1,4 +1,5 @@
 #include "piglit-util.h"
+#include "piglit-print-buffer.h"
 
 #define SIZE 4
 #define SIZE2 (2*SIZE)
