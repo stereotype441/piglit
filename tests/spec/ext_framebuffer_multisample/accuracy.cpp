@@ -137,10 +137,10 @@ DrawProg::set_offset(float x, float y)
 
 DrawProg *draw_prog = NULL;
 
-class Tile
+class TestShape
 {
 public:
-	Tile(int tile_num);
+	TestShape(int tile_num);
 	void draw();
 
 private:
@@ -151,7 +151,7 @@ private:
 	bool rotated;
 };
 
-Tile::Tile(int tile_num)
+TestShape::TestShape(int tile_num)
 	: x_tile(tile_num % NUM_HORIZ_TILES),
 	  y_tile(NUM_VERT_TILES - 1 - tile_num / NUM_HORIZ_TILES),
 	  v0(float(tile_num % (NUM_TOTAL_TILES/2)) / (NUM_TOTAL_TILES/2)),
@@ -161,7 +161,7 @@ Tile::Tile(int tile_num)
 }
 
 void
-Tile::draw()
+TestShape::draw()
 {
 	/* Compute quad coordinates in uv space */
 	float quad[4][2] = {
@@ -187,7 +187,7 @@ void
 draw_pattern()
 {
 	for (int i = 0; i < NUM_TOTAL_TILES; ++i) {
-		Tile(i).draw();
+		TestShape(i).draw();
 	}
 }
 
