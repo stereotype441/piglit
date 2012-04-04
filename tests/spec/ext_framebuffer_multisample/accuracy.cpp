@@ -27,6 +27,7 @@ const int NUM_HORIZ_TILES = 8;
 const int NUM_VERT_TILES = 8;
 const int NUM_TOTAL_TILES = NUM_HORIZ_TILES * NUM_VERT_TILES;
 const int TILE_SIZE = 32;
+const int UPSAMPLE_FACTOR = 8;
 
 int piglit_width = TILE_SIZE * NUM_HORIZ_TILES;
 int piglit_height = TILE_SIZE * NUM_VERT_TILES;
@@ -74,6 +75,7 @@ Fbo::set_viewport()
 }
 
 Fbo *multisample_fbo = NULL;
+Fbo *upsample_fbo = NULL;
 
 class DrawProg
 {
@@ -155,6 +157,7 @@ public:
 	TestShape(int tile_num);
 	void draw(float x_size, float y_size, float x_offset, float y_offset);
 	void draw_tile();
+	void draw_reference();
 
 private:
 	int x_tile;
@@ -215,10 +218,29 @@ TestShape::draw_tile()
 }
 
 void
+TestShape::draw_reference()
+{
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, upsample_fbo->handle);
+	upsample_fbo->set_viewport();
+	draw(2.0, 2.0, -1.0, -1.0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, upsample_fbo->handle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	int x0 = TILE_SIZE * x_tile;
+	int x1 = TILE_SIZE * (x_tile + 1);
+	int y0 = TILE_SIZE * y_tile_neg;
+	int y1 = TILE_SIZE * (y_tile_neg + 1);
+	glBlitFramebuffer(0, 0,
+			  TILE_SIZE * UPSAMPLE_FACTOR,
+			  TILE_SIZE * UPSAMPLE_FACTOR,
+			  x0, y0, x1, y1,
+			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+}
+
+void
 draw_pattern()
 {
 	for (int i = 0; i < NUM_TOTAL_TILES; ++i) {
-		TestShape(i).draw_tile();
+		TestShape(i).draw_reference();
 	}
 }
 
@@ -237,6 +259,9 @@ piglit_init(int argc, char **argv)
 {
 	multisample_fbo = new Fbo(true, /* multisampled */
 				  TILE_SIZE, TILE_SIZE);
+	upsample_fbo = new Fbo(false, /* multisampled */
+			       TILE_SIZE * UPSAMPLE_FACTOR,
+			       TILE_SIZE * UPSAMPLE_FACTOR);
 
 	draw_prog = new DrawProg();
 	draw_prog->use();
