@@ -52,13 +52,38 @@ Fbo::Fbo(bool multisampled, int width, int height)
 	glGenFramebuffers(1, &handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
 
-	GLuint rb;
-	glGenRenderbuffers(1, &rb);
-	glBindRenderbuffer(GL_RENDERBUFFER, rb);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisampled ? 4 : 0,
-					 GL_RGBA, width, height);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				  GL_RENDERBUFFER, rb);
+	if (multisampled) {
+		GLuint rb;
+		glGenRenderbuffers(1, &rb);
+		glBindRenderbuffer(GL_RENDERBUFFER, rb);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4,
+						 GL_RGBA, width, height);
+		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+					  GL_COLOR_ATTACHMENT0,
+					  GL_RENDERBUFFER, rb);
+	} else {
+		GLuint tex;
+		glGenTextures(1, &tex);
+		glBindTexture(GL_TEXTURE_2D, tex);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+				GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+				GL_NEAREST);
+		glTexImage2D(GL_TEXTURE_2D,
+			     0 /* level */,
+			     GL_RGBA /* internalformat */,
+			     width,
+			     height,
+			     0 /* border */,
+			     GL_RGBA /* format */,
+			     GL_BYTE /* type */,
+			     NULL /* data */);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_COLOR_ATTACHMENT0,
+				       GL_TEXTURE_2D,
+				       tex,
+				       0 /* level */);
+	}
 
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("Framebuffer not complete\n");
