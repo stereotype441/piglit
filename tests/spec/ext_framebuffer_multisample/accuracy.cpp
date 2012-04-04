@@ -34,6 +34,80 @@ int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
 
 GLuint fbo;
 
+class DrawProg
+{
+public:
+	DrawProg();
+	void use();
+	void set_rotated(bool rotated);
+	void set_size(float x, float y);
+	void set_offset(float x, float y);
+
+private:
+	GLint prog;
+	GLint rotated_loc;
+	GLint size_loc;
+	GLint offset_loc;
+};
+
+DrawProg::DrawProg()
+{
+	static const char *vert =
+		"#version 120\n"
+		"uniform bool rotated;\n"
+		"uniform vec2 size;\n"
+		"uniform vec2 offset;\n"
+		"void main()\n"
+		"{\n"
+		"  vec2 pos = gl_Vertex.xy;\n"
+		"  if (rotated)\n"
+		"    pos = vec2(pos.y, 1.0 - pos.x);\n"
+		"  pos *= size;\n"
+		"  pos += offset;\n"
+		"  gl_Position = vec4(pos, 0.0, 1.0);\n"
+		"}\n";
+	static const char *frag =
+		"#version 120\n"
+		"void main()\n"
+		"{\n"
+		"  gl_FragColor = vec4(1.0);\n"
+		"}\n";
+
+	piglit_require_GLSL_version(120);
+	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
+	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
+	prog = piglit_link_simple_program(vs, fs);
+	rotated_loc = piglit_GetUniformLocation(prog, "rotated");
+	size_loc = piglit_GetUniformLocation(prog, "size");
+	offset_loc = piglit_GetUniformLocation(prog, "offset");
+}
+
+void
+DrawProg::use()
+{
+	piglit_UseProgram(prog);
+}
+
+void
+DrawProg::set_rotated(bool rotated)
+{
+	piglit_Uniform1i(rotated_loc, rotated ? 1 : 0);
+}
+
+void
+DrawProg::set_size(float x, float y)
+{
+	piglit_Uniform2f(size_loc, x, y);
+}
+
+void
+DrawProg::set_offset(float x, float y)
+{
+	piglit_Uniform2f(offset_loc, x, y);
+}
+
+DrawProg *draw_prog = NULL;
+
 class Tile
 {
 public:
@@ -78,15 +152,13 @@ Tile::draw()
 		}
 	}
 
-	/* Scale down to tile size and apply offset */
-	float x_offset = float(2*x_tile) / NUM_HORIZ_TILES - 1.0;
-	float y_offset = float(2*y_tile) / NUM_VERT_TILES - 1.0;
-	for (int i = 0; i < 4; ++i) {
-		quad[i][0] = x_offset + quad[i][0] * (2.0 / NUM_HORIZ_TILES);
-		quad[i][1] = y_offset + quad[i][1] * (2.0 / NUM_VERT_TILES);
-	}
-
 	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
+
+	draw_prog->use();
+	draw_prog->set_rotated(false);
+	draw_prog->set_size(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES);
+	draw_prog->set_offset(float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
+			      float(2*y_tile) / NUM_VERT_TILES - 1.0);
 	glVertexPointer(2, GL_FLOAT, sizeof(quad[0]), &quad);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
@@ -118,6 +190,9 @@ piglit_display()
 void
 piglit_init(int argc, char **argv)
 {
+	draw_prog = new DrawProg();
+	draw_prog->use();
+
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
