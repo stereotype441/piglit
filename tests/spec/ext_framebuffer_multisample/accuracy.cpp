@@ -141,7 +141,8 @@ class TestShape
 {
 public:
 	TestShape(int tile_num);
-	void draw();
+	void draw(float x_size, float y_size, float x_offset, float y_offset);
+	void draw_tile();
 
 private:
 	int x_tile;
@@ -161,7 +162,7 @@ TestShape::TestShape(int tile_num)
 }
 
 void
-TestShape::draw()
+TestShape::draw(float x_size, float y_size, float x_offset, float y_offset)
 {
 	/* Compute quad coordinates in uv space */
 	float quad[4][2] = {
@@ -175,19 +176,26 @@ TestShape::draw()
 
 	draw_prog->use();
 	draw_prog->set_rotated(rotated);
-	draw_prog->set_size(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES);
-	draw_prog->set_offset(float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
-			      float(2*y_tile) / NUM_VERT_TILES - 1.0);
+	draw_prog->set_size(x_size, y_size);
+	draw_prog->set_offset(x_offset, y_offset);
 	glVertexPointer(2, GL_FLOAT, sizeof(quad[0]), &quad);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 }
 
 void
+TestShape::draw_tile()
+{
+	draw(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES,
+	     float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
+	     float(2*y_tile) / NUM_VERT_TILES - 1.0);
+}
+
+void
 draw_pattern()
 {
 	for (int i = 0; i < NUM_TOTAL_TILES; ++i) {
-		TestShape(i).draw();
+		TestShape(i).draw_tile();
 	}
 }
 
