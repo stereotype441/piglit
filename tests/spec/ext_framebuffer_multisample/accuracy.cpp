@@ -194,6 +194,7 @@ TestShape::draw(float x_size, float y_size, float x_offset, float y_offset)
 	draw_prog->set_offset(x_offset, y_offset);
 	glVertexPointer(2, GL_FLOAT, sizeof(quad[0]), &quad);
 	glEnableClientState(GL_VERTEX_ARRAY);
+	glClear(GL_COLOR_BUFFER_BIT);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 }
 
@@ -202,16 +203,14 @@ TestShape::draw_tile()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->handle);
 	fbo->set_viewport();
-	draw(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES,
-	     float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
-	     float(2*y_tile_neg) / NUM_VERT_TILES - 1.0);
+	draw(2.0, 2.0, -1.0, -1.0);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	int x0 = TILE_SIZE * x_tile;
 	int x1 = TILE_SIZE * (x_tile + 1);
-	int y0 = TILE_SIZE * y_tile;
-	int y1 = TILE_SIZE * (y_tile + 1);
-	glBlitFramebuffer(x0, y0, x1, y1, x0, y0, x1, y1,
+	int y0 = TILE_SIZE * y_tile_neg;
+	int y1 = TILE_SIZE * (y_tile_neg + 1);
+	glBlitFramebuffer(0, 0, TILE_SIZE, TILE_SIZE, x0, y0, x1, y1,
 			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
@@ -237,8 +236,7 @@ void
 piglit_init(int argc, char **argv)
 {
 	fbo = new Fbo(true, /* multisampled */
-		      TILE_SIZE * NUM_HORIZ_TILES,
-		      TILE_SIZE * NUM_VERT_TILES);
+		      TILE_SIZE, TILE_SIZE);
 
 	draw_prog = new DrawProg();
 	draw_prog->use();
