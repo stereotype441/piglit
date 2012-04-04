@@ -121,7 +121,7 @@ private:
 DrawProg::DrawProg()
 {
 	static const char *vert =
-		"#version 120\n"
+		"#version 130\n"
 		"uniform bool rotated;\n"
 		"uniform vec2 size;\n"
 		"uniform vec2 offset;\n"
@@ -135,13 +135,13 @@ DrawProg::DrawProg()
 		"  gl_Position = vec4(pos, 0.0, 1.0);\n"
 		"}\n";
 	static const char *frag =
-		"#version 120\n"
+		"#version 130\n"
 		"void main()\n"
 		"{\n"
 		"  gl_FragColor = vec4(1.0);\n"
 		"}\n";
 
-	piglit_require_GLSL_version(120);
+	piglit_require_GLSL_version(130);
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
 	prog = piglit_link_simple_program(vs, fs);
