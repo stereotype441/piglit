@@ -125,14 +125,15 @@ DrawProg::DrawProg()
 		"uniform bool rotated;\n"
 		"uniform vec2 size;\n"
 		"uniform vec2 offset;\n"
+		"in vec2 pos;\n"
 		"void main()\n"
 		"{\n"
-		"  vec2 pos = gl_Vertex.xy;\n"
+		"  vec2 pos2 = pos;\n"
 		"  if (rotated)\n"
-		"    pos = vec2(pos.y, 1.0 - pos.x);\n"
-		"  pos *= size;\n"
-		"  pos += offset;\n"
-		"  gl_Position = vec4(pos, 0.0, 1.0);\n"
+		"    pos2 = vec2(pos2.y, 1.0 - pos2.x);\n"
+		"  pos2 *= size;\n"
+		"  pos2 += offset;\n"
+		"  gl_Position = vec4(pos2, 0.0, 1.0);\n"
 		"}\n";
 	static const char *frag =
 		"#version 130\n"
@@ -147,6 +148,7 @@ DrawProg::DrawProg()
 	piglit_AttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
 	piglit_AttachShader(prog, fs);
+	piglit_BindAttribLocation(prog, 0, "pos");
 	piglit_LinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
@@ -226,8 +228,9 @@ TestShape::draw(float x_size, float y_size, float x_offset, float y_offset)
 	draw_prog->set_rotated(rotated);
 	draw_prog->set_size(x_size, y_size);
 	draw_prog->set_offset(x_offset, y_offset);
-	glVertexPointer(2, GL_FLOAT, sizeof(quad[0]), &quad);
-	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(quad[0]),
+			      &quad);
 	glClear(GL_COLOR_BUFFER_BIT);
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 }
