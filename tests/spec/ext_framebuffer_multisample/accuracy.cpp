@@ -35,12 +35,12 @@ int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
 class Fbo
 {
 public:
-	Fbo(bool multisampled);
+	Fbo(bool multisampled, int width, int height);
 
 	GLuint handle;
 };
 
-Fbo::Fbo(bool multisampled)
+Fbo::Fbo(bool multisampled, int width, int height)
 {
 	glGenFramebuffers(1, &handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
@@ -49,7 +49,7 @@ Fbo::Fbo(bool multisampled)
 	glGenRenderbuffers(1, &rb);
 	glBindRenderbuffer(GL_RENDERBUFFER, rb);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisampled ? 4 : 0,
-					 GL_RGBA, 256, 256);
+					 GL_RGBA, width, height);
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 				  GL_RENDERBUFFER, rb);
 
@@ -217,7 +217,9 @@ piglit_display()
 void
 piglit_init(int argc, char **argv)
 {
-	fbo = new Fbo(true);
+	fbo = new Fbo(true, /* multisampled */
+		      TILE_SIZE * NUM_HORIZ_TILES,
+		      TILE_SIZE * NUM_VERT_TILES);
 
 	draw_prog = new DrawProg();
 	draw_prog->use();
