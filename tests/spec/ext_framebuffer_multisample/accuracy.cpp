@@ -36,11 +36,17 @@ class Fbo
 {
 public:
 	Fbo(bool multisampled, int width, int height);
+	void set_viewport();
 
 	GLuint handle;
+
+private:
+	int width;
+	int height;
 };
 
 Fbo::Fbo(bool multisampled, int width, int height)
+	: width(width), height(height)
 {
 	glGenFramebuffers(1, &handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
@@ -59,6 +65,12 @@ Fbo::Fbo(bool multisampled, int width, int height)
 	}
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+void
+Fbo::set_viewport()
+{
+	glViewport(0, 0, width, height);
 }
 
 Fbo *fbo = NULL;
@@ -189,6 +201,7 @@ void
 TestShape::draw_tile()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->handle);
+	fbo->set_viewport();
 	draw(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES,
 	     float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
 	     float(2*y_tile_neg) / NUM_VERT_TILES - 1.0);
