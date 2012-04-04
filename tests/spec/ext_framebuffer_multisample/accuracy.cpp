@@ -27,7 +27,7 @@ const int NUM_HORIZ_TILES = 8;
 const int NUM_VERT_TILES = 8;
 const int NUM_TOTAL_TILES = NUM_HORIZ_TILES * NUM_VERT_TILES;
 const int TILE_SIZE = 32;
-const int UPSAMPLE_FACTOR = 8;
+const int UPSAMPLE_FACTOR = 16;
 
 int piglit_width = TILE_SIZE * NUM_HORIZ_TILES;
 int piglit_height = TILE_SIZE * NUM_VERT_TILES;
