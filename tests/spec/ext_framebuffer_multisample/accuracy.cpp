@@ -73,7 +73,7 @@ Fbo::set_viewport()
 	glViewport(0, 0, width, height);
 }
 
-Fbo *fbo = NULL;
+Fbo *multisample_fbo = NULL;
 
 class DrawProg
 {
@@ -201,10 +201,10 @@ TestShape::draw(float x_size, float y_size, float x_offset, float y_offset)
 void
 TestShape::draw_tile()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->handle);
-	fbo->set_viewport();
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, multisample_fbo->handle);
+	multisample_fbo->set_viewport();
 	draw(2.0, 2.0, -1.0, -1.0);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->handle);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisample_fbo->handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	int x0 = TILE_SIZE * x_tile;
 	int x1 = TILE_SIZE * (x_tile + 1);
@@ -235,8 +235,8 @@ piglit_display()
 void
 piglit_init(int argc, char **argv)
 {
-	fbo = new Fbo(true, /* multisampled */
-		      TILE_SIZE, TILE_SIZE);
+	multisample_fbo = new Fbo(true, /* multisampled */
+				  TILE_SIZE, TILE_SIZE);
 
 	draw_prog = new DrawProg();
 	draw_prog->use();
