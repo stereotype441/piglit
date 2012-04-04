@@ -38,7 +38,7 @@ class Tile
 {
 public:
 	Tile(int tile_num);
-	void populate_vertices(float (&vertices)[4][2]);
+	void draw();
 
 private:
 	int x_tile;
@@ -58,7 +58,7 @@ Tile::Tile(int tile_num)
 }
 
 void
-Tile::populate_vertices(float (&vertices)[4][2])
+Tile::draw()
 {
 	/* Compute quad coordinates in uv space */
 	float quad[4][2] = {
@@ -82,37 +82,26 @@ Tile::populate_vertices(float (&vertices)[4][2])
 	float x_offset = float(2*x_tile) / NUM_HORIZ_TILES - 1.0;
 	float y_offset = float(2*y_tile) / NUM_VERT_TILES - 1.0;
 	for (int i = 0; i < 4; ++i) {
-		vertices[i][0] =
-			x_offset + quad[i][0] * (2.0 / NUM_HORIZ_TILES);
-		vertices[i][1] =
-			y_offset + quad[i][1] * (2.0 / NUM_VERT_TILES);
+		quad[i][0] = x_offset + quad[i][0] * (2.0 / NUM_HORIZ_TILES);
+		quad[i][1] = y_offset + quad[i][1] * (2.0 / NUM_VERT_TILES);
 	}
+
+	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
+	glVertexPointer(2, GL_FLOAT, sizeof(quad[0]), &quad);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 }
 
 void
-draw_pattern(void)
+draw_pattern()
 {
-	float vertices[NUM_TOTAL_TILES][4][2];
-	unsigned int indices[NUM_TOTAL_TILES][6];
-
 	for (int i = 0; i < NUM_TOTAL_TILES; ++i) {
-		Tile(i).populate_vertices(vertices[i]);
-		indices[i][0] = 4*i;
-		indices[i][1] = 4*i + 1;
-		indices[i][2] = 4*i + 2;
-		indices[i][3] = 4*i;
-		indices[i][4] = 4*i + 2;
-		indices[i][5] = 4*i + 3;
+		Tile(i).draw();
 	}
-
-	glVertexPointer(2, GL_FLOAT, sizeof(vertices[0][0]), &vertices);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glDrawElements(GL_TRIANGLES, 6*NUM_TOTAL_TILES, GL_UNSIGNED_INT,
-		       indices);
 }
 
 enum piglit_result
-piglit_display(void)
+piglit_display()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	draw_pattern();
