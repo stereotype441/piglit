@@ -107,24 +107,24 @@ class DrawProg
 public:
 	DrawProg();
 	void use();
-	void set_rotated(bool rotated);
+	void set_rotation(float rotation);
 
 private:
 	GLint prog;
-	GLint rotated_loc;
+	GLint rotation_loc;
 };
 
 DrawProg::DrawProg()
 {
 	static const char *vert =
 		"#version 130\n"
-		"uniform bool rotated;\n"
+		"uniform float rotation;\n"
 		"in vec2 pos;\n"
 		"void main()\n"
 		"{\n"
 		"  vec2 pos2 = pos;\n"
-		"  if (rotated)\n"
-		"    pos2 = vec2(pos2.y, -pos2.x);\n"
+		"  pos2 = mat2(cos(rotation), sin(rotation),\n"
+                "              -sin(rotation), cos(rotation)) * pos2;\n"
 		"  gl_Position = vec4(pos2, 0.0, 1.0);\n"
 		"}\n";
 	static const char *frag =
@@ -145,7 +145,7 @@ DrawProg::DrawProg()
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
 	}
-	rotated_loc = piglit_GetUniformLocation(prog, "rotated");
+	rotation_loc = piglit_GetUniformLocation(prog, "rotation");
 }
 
 void
@@ -155,9 +155,9 @@ DrawProg::use()
 }
 
 void
-DrawProg::set_rotated(bool rotated)
+DrawProg::set_rotation(float rotation)
 {
-	piglit_Uniform1i(rotated_loc, rotated ? 1 : 0);
+	piglit_Uniform1f(rotation_loc, rotation);
 }
 
 DrawProg *draw_prog = NULL;
@@ -251,7 +251,7 @@ private:
 	int y_tile_neg;
 	float v0;
 	float v1;
-	bool rotated;
+	float rotation;
 };
 
 TestShape::TestShape(int tile_num)
@@ -260,30 +260,26 @@ TestShape::TestShape(int tile_num)
 	  y_tile_neg(NUM_VERT_TILES - 1 - y_tile),
 	  v0(float(tile_num % (NUM_TOTAL_TILES/2)) / (NUM_TOTAL_TILES/2)),
 	  v1(1.0 - v0),
-	  rotated(tile_num >= NUM_TOTAL_TILES/2)
+	  rotation(M_PI * 2.0 * tile_num / NUM_TOTAL_TILES)
 {
 }
 
 void
 TestShape::draw()
 {
-	/* Compute quad coordinates in uv space */
-	float quad[4][2] = {
-		{ -1, -1 },
-		{ -1, v0*2.0 - 1 },
-		{ 1, v1*2.0 - 1 },
-		{ 1, -1 }
+	float vertices[4][2] = {
+		{ -0.4, -0.8 },
+		{ -0.4,  0.8 },
+		{  0.4, -0.8 }
 	};
 
-	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
-
 	draw_prog->use();
-	draw_prog->set_rotated(rotated);
+	draw_prog->set_rotation(rotation);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(quad[0]),
-			      &quad);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]),
+			      &vertices);
 	glClear(GL_COLOR_BUFFER_BIT);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
+	glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 void
