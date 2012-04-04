@@ -147,6 +147,7 @@ public:
 private:
 	int x_tile;
 	int y_tile;
+	int y_tile_neg;
 	float v0;
 	float v1;
 	bool rotated;
@@ -154,7 +155,8 @@ private:
 
 TestShape::TestShape(int tile_num)
 	: x_tile(tile_num % NUM_HORIZ_TILES),
-	  y_tile(NUM_VERT_TILES - 1 - tile_num / NUM_HORIZ_TILES),
+	  y_tile(tile_num / NUM_HORIZ_TILES),
+	  y_tile_neg(NUM_VERT_TILES - 1 - y_tile),
 	  v0(float(tile_num % (NUM_TOTAL_TILES/2)) / (NUM_TOTAL_TILES/2)),
 	  v1(1.0 - v0),
 	  rotated(tile_num >= NUM_TOTAL_TILES/2)
@@ -186,9 +188,18 @@ TestShape::draw(float x_size, float y_size, float x_offset, float y_offset)
 void
 TestShape::draw_tile()
 {
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->handle);
 	draw(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES,
 	     float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
-	     float(2*y_tile) / NUM_VERT_TILES - 1.0);
+	     float(2*y_tile_neg) / NUM_VERT_TILES - 1.0);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->handle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	int x0 = TILE_SIZE * x_tile;
+	int x1 = TILE_SIZE * (x_tile + 1);
+	int y0 = TILE_SIZE * y_tile;
+	int y1 = TILE_SIZE * (y_tile + 1);
+	glBlitFramebuffer(x0, y0, x1, y1, x0, y0, x1, y1,
+			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void
@@ -202,12 +213,7 @@ draw_pattern()
 enum piglit_result
 piglit_display()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->handle);
 	draw_pattern();
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->handle);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	glBlitFramebuffer(0, 0, 256, 256, 0, 0, piglit_width, piglit_height,
-			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 	piglit_present_results();
 
