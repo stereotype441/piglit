@@ -40,6 +40,7 @@ public:
 	void set_viewport();
 
 	GLuint handle;
+	GLuint tex;
 
 private:
 	int width;
@@ -47,7 +48,7 @@ private:
 };
 
 Fbo::Fbo(bool multisampled, int width, int height)
-	: width(width), height(height)
+	: tex(0), width(width), height(height)
 {
 	glGenFramebuffers(1, &handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
@@ -62,7 +63,6 @@ Fbo::Fbo(bool multisampled, int width, int height)
 					  GL_COLOR_ATTACHMENT0,
 					  GL_RENDERBUFFER, rb);
 	} else {
-		GLuint tex;
 		glGenTextures(1, &tex);
 		glBindTexture(GL_TEXTURE_2D, tex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
@@ -184,6 +184,81 @@ DrawProg::set_offset(float x, float y)
 
 DrawProg *draw_prog = NULL;
 
+class DownsampleProg
+{
+public:
+	DownsampleProg();
+	void use();
+	void set_samp(int texture_num);
+
+private:
+	GLint prog;
+	GLint upsample_factor_loc;
+	GLint samp_loc;
+};
+
+DownsampleProg::DownsampleProg()
+{
+	static const char *vert =
+		"#version 130\n"
+		"in vec2 pos;\n"
+		"in vec2 texCoord;\n"
+		"out vec2 texCoordVarying;\n"
+		"void main()\n"
+		"{\n"
+		"  gl_Position = vec4(pos, 0.0, 1.0);\n"
+		"  texCoordVarying = texCoord;\n"
+		"}\n";
+
+	static const char *frag =
+		"#version 130\n"
+		"uniform sampler2D samp;\n"
+		"uniform int upsample_factor;\n"
+		"in vec2 texCoordVarying;\n"
+		"void main()\n"
+		"{\n"
+		"  vec4 sum = vec4(0.0);\n"
+		"  ivec2 pixel = ivec2(texCoordVarying);\n"
+		"  for (int i = 0; i < upsample_factor; ++i) {\n"
+		"    for (int j = 0; j < upsample_factor; ++j) {\n"
+		"      sum += texelFetch(\n"
+		"          samp, pixel * upsample_factor + ivec2(i, j), 0);\n"
+		"    }\n"
+		"  }\n"
+		"  gl_FragColor = sum / (upsample_factor * upsample_factor);\n"
+		"}\n";
+
+	piglit_require_GLSL_version(130);
+	prog = piglit_CreateProgram();
+	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
+	piglit_AttachShader(prog, vs);
+	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
+	piglit_AttachShader(prog, fs);
+	piglit_BindAttribLocation(prog, 0, "pos");
+	piglit_BindAttribLocation(prog, 1, "texCoord");
+	piglit_LinkProgram(prog);
+	if (!piglit_link_check_status(prog)) {
+		piglit_report_result(PIGLIT_FAIL);
+	}
+	upsample_factor_loc = piglit_GetUniformLocation(prog, "upsample_factor");
+	samp_loc = piglit_GetUniformLocation(prog, "samp");
+}
+
+void
+DownsampleProg::use()
+{
+	piglit_UseProgram(prog);
+	piglit_Uniform1i(upsample_factor_loc, UPSAMPLE_FACTOR);
+}
+
+void
+DownsampleProg::set_samp(int texture_num)
+{
+	piglit_Uniform1i(samp_loc, texture_num);
+}
+
+DownsampleProg *downsample_prog = NULL;
+
 class TestShape
 {
 public:
@@ -257,17 +332,36 @@ TestShape::draw_reference()
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, upsample_fbo->handle);
 	upsample_fbo->set_viewport();
 	draw(2.0, 2.0, -1.0, -1.0);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, upsample_fbo->handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	int x0 = TILE_SIZE * x_tile;
-	int x1 = TILE_SIZE * (x_tile + 1);
-	int y0 = TILE_SIZE * y_tile_neg;
-	int y1 = TILE_SIZE * (y_tile_neg + 1);
-	glBlitFramebuffer(0, 0,
-			  TILE_SIZE * UPSAMPLE_FACTOR,
-			  TILE_SIZE * UPSAMPLE_FACTOR,
-			  x0, y0, x1, y1,
-			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+	glViewport(0, 0, piglit_width, piglit_height);
+	downsample_prog->use();
+	glActiveTexture(GL_TEXTURE0);
+	downsample_prog->set_samp(0);
+	glBindTexture(GL_TEXTURE_2D, upsample_fbo->tex);
+	float x0 = float(x_tile) / NUM_HORIZ_TILES * 2.0 - 1.0;
+	float x1 = float(x_tile + 1) / NUM_HORIZ_TILES * 2.0 - 1.0;
+	float y0 = float(y_tile_neg) / NUM_VERT_TILES * 2.0 - 1.0;
+	float y1 = float(y_tile_neg + 1) / NUM_VERT_TILES * 2.0 - 1.0;
+	float vertices[4][2] = {
+		{ x0, y0 },
+		{ x0, y1 },
+		{ x1, y1 },
+		{ x1, y0 }
+	};
+	float texCoords[4][2] = {
+		{ 0, 0 },
+		{ 0, TILE_SIZE },
+		{ TILE_SIZE, TILE_SIZE },
+		{ TILE_SIZE, 0 }
+	};
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]),
+			      &vertices);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(texCoords[0]),
+			      &texCoords);
+	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 }
 
 void
@@ -297,6 +391,7 @@ piglit_init(int argc, char **argv)
 			       TILE_SIZE * UPSAMPLE_FACTOR,
 			       TILE_SIZE * UPSAMPLE_FACTOR);
 
+	downsample_prog = new DownsampleProg();
 	draw_prog = new DrawProg();
 	draw_prog->use();
 }
