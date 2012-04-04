@@ -142,9 +142,15 @@ DrawProg::DrawProg()
 		"}\n";
 
 	piglit_require_GLSL_version(130);
+	prog = piglit_CreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
+	piglit_AttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
-	prog = piglit_link_simple_program(vs, fs);
+	piglit_AttachShader(prog, fs);
+	piglit_LinkProgram(prog);
+	if (!piglit_link_check_status(prog)) {
+		piglit_report_result(PIGLIT_FAIL);
+	}
 	rotated_loc = piglit_GetUniformLocation(prog, "rotated");
 	size_loc = piglit_GetUniformLocation(prog, "size");
 	offset_loc = piglit_GetUniformLocation(prog, "offset");
