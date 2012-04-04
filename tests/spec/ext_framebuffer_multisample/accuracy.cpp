@@ -29,7 +29,7 @@ const int NUM_TOTAL_TILES = NUM_HORIZ_TILES * NUM_VERT_TILES;
 const int TILE_SIZE = 32;
 const int UPSAMPLE_FACTOR = 16;
 
-int piglit_width = TILE_SIZE * NUM_HORIZ_TILES;
+int piglit_width = TILE_SIZE * NUM_HORIZ_TILES * 2;
 int piglit_height = TILE_SIZE * NUM_VERT_TILES;
 int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
 
@@ -318,8 +318,8 @@ TestShape::draw_tile()
 	draw(2.0, 2.0, -1.0, -1.0);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisample_fbo->handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-	int x0 = TILE_SIZE * x_tile;
-	int x1 = TILE_SIZE * (x_tile + 1);
+	int x0 = TILE_SIZE * (x_tile + NUM_HORIZ_TILES);
+	int x1 = TILE_SIZE * (x_tile + NUM_HORIZ_TILES + 1);
 	int y0 = TILE_SIZE * y_tile_neg;
 	int y1 = TILE_SIZE * (y_tile_neg + 1);
 	glBlitFramebuffer(0, 0, TILE_SIZE, TILE_SIZE, x0, y0, x1, y1,
@@ -338,10 +338,10 @@ TestShape::draw_reference()
 	glActiveTexture(GL_TEXTURE0);
 	downsample_prog->set_samp(0);
 	glBindTexture(GL_TEXTURE_2D, upsample_fbo->tex);
-	float x0 = float(x_tile) / NUM_HORIZ_TILES * 2.0 - 1.0;
-	float x1 = float(x_tile + 1) / NUM_HORIZ_TILES * 2.0 - 1.0;
-	float y0 = float(y_tile_neg) / NUM_VERT_TILES * 2.0 - 1.0;
-	float y1 = float(y_tile_neg + 1) / NUM_VERT_TILES * 2.0 - 1.0;
+	float x0 = float(TILE_SIZE * x_tile) / piglit_width * 2.0 - 1.0;
+	float x1 = float(TILE_SIZE * (x_tile + 1)) / piglit_width * 2.0 - 1.0;
+	float y0 = float(TILE_SIZE * y_tile_neg) / piglit_height * 2.0 - 1.0;
+	float y1 = float(TILE_SIZE * (y_tile_neg + 1)) / piglit_height * 2.0 - 1.0;
 	float vertices[4][2] = {
 		{ x0, y0 },
 		{ x0, y1 },
@@ -369,6 +369,7 @@ draw_pattern()
 {
 	for (int i = 0; i < NUM_TOTAL_TILES; ++i) {
 		TestShape(i).draw_reference();
+		TestShape(i).draw_tile();
 	}
 }
 
