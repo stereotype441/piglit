@@ -345,10 +345,85 @@ draw_pattern()
 	}
 }
 
+class Stat
+{
+public:
+	Stat();
+
+	void record(float error)
+	{
+		++count;
+		sum_squared_error += error * error;
+	}
+
+	void summarize();
+
+private:
+	int count;
+	double sum_squared_error;
+};
+
+Stat::Stat()
+	: count(0), sum_squared_error(0.0)
+{
+}
+
+void
+Stat::summarize()
+{
+	printf("  count = %d\n", count);
+	if (count != 0) {
+		if (sum_squared_error != 0.0) {
+			printf("  RMS error = %f\n",
+			       sqrt(sum_squared_error / count));
+		} else {
+			printf("  Perfect output\n");
+		}
+	}
+}
+
+void
+measure_accuracy()
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+	int width = TILE_SIZE * NUM_HORIZ_TILES;
+	int height = TILE_SIZE * NUM_VERT_TILES;
+
+	float *reference_data = new float[width * height * 4];
+	glReadPixels(0, 0, width, height, GL_RGBA, GL_FLOAT, reference_data);
+
+	float *test_data = new float[width * height * 4];
+	glReadPixels(width, 0, width, height, GL_RGBA, GL_FLOAT, test_data);
+
+	Stat unlit_stats;
+	Stat partially_lit_stats;
+	Stat totally_lit_stats;
+	for (int y = 0; y < height; ++y) {
+		for (int x = 0; x < width; ++x) {
+			float ref = reference_data[y*height + x];
+			float test = test_data[y*height + x];
+			if (ref <= 0.0)
+				unlit_stats.record(test - ref);
+			else if (ref >= 1.0)
+				totally_lit_stats.record(test - ref);
+			else
+				partially_lit_stats.record(test - ref);
+		}
+	}
+
+	printf("Pixels that should be unlit\n");
+	unlit_stats.summarize();
+	printf("Pixels that should be totally lit\n");
+	totally_lit_stats.summarize();
+	printf("Pixels that should be partially lit\n");
+	partially_lit_stats.summarize();
+}
+
 enum piglit_result
 piglit_display()
 {
 	draw_pattern();
+	measure_accuracy();
 
 	piglit_present_results();
 
