@@ -108,14 +108,10 @@ public:
 	DrawProg();
 	void use();
 	void set_rotated(bool rotated);
-	void set_size(float x, float y);
-	void set_offset(float x, float y);
 
 private:
 	GLint prog;
 	GLint rotated_loc;
-	GLint size_loc;
-	GLint offset_loc;
 };
 
 DrawProg::DrawProg()
@@ -123,16 +119,12 @@ DrawProg::DrawProg()
 	static const char *vert =
 		"#version 130\n"
 		"uniform bool rotated;\n"
-		"uniform vec2 size;\n"
-		"uniform vec2 offset;\n"
 		"in vec2 pos;\n"
 		"void main()\n"
 		"{\n"
 		"  vec2 pos2 = pos;\n"
 		"  if (rotated)\n"
-		"    pos2 = vec2(pos2.y, 1.0 - pos2.x);\n"
-		"  pos2 *= size;\n"
-		"  pos2 += offset;\n"
+		"    pos2 = vec2(pos2.y, -pos2.x);\n"
 		"  gl_Position = vec4(pos2, 0.0, 1.0);\n"
 		"}\n";
 	static const char *frag =
@@ -154,8 +146,6 @@ DrawProg::DrawProg()
 		piglit_report_result(PIGLIT_FAIL);
 	}
 	rotated_loc = piglit_GetUniformLocation(prog, "rotated");
-	size_loc = piglit_GetUniformLocation(prog, "size");
-	offset_loc = piglit_GetUniformLocation(prog, "offset");
 }
 
 void
@@ -168,18 +158,6 @@ void
 DrawProg::set_rotated(bool rotated)
 {
 	piglit_Uniform1i(rotated_loc, rotated ? 1 : 0);
-}
-
-void
-DrawProg::set_size(float x, float y)
-{
-	piglit_Uniform2f(size_loc, x, y);
-}
-
-void
-DrawProg::set_offset(float x, float y)
-{
-	piglit_Uniform2f(offset_loc, x, y);
 }
 
 DrawProg *draw_prog = NULL;
@@ -263,7 +241,7 @@ class TestShape
 {
 public:
 	TestShape(int tile_num);
-	void draw(float x_size, float y_size, float x_offset, float y_offset);
+	void draw();
 	void draw_tile();
 	void draw_reference();
 
@@ -287,22 +265,20 @@ TestShape::TestShape(int tile_num)
 }
 
 void
-TestShape::draw(float x_size, float y_size, float x_offset, float y_offset)
+TestShape::draw()
 {
 	/* Compute quad coordinates in uv space */
 	float quad[4][2] = {
-		{ 0, 0 },
-		{ 0, v0 },
-		{ 1, v1 },
-		{ 1, 0 }
+		{ -1, -1 },
+		{ -1, v0*2.0 - 1 },
+		{ 1, v1*2.0 - 1 },
+		{ 1, -1 }
 	};
 
 	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
 
 	draw_prog->use();
 	draw_prog->set_rotated(rotated);
-	draw_prog->set_size(x_size, y_size);
-	draw_prog->set_offset(x_offset, y_offset);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(quad[0]),
 			      &quad);
@@ -315,7 +291,7 @@ TestShape::draw_tile()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, multisample_fbo->handle);
 	multisample_fbo->set_viewport();
-	draw(2.0, 2.0, -1.0, -1.0);
+	draw();
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisample_fbo->handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	int x0 = TILE_SIZE * (x_tile + NUM_HORIZ_TILES);
@@ -331,7 +307,7 @@ TestShape::draw_reference()
 {
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, upsample_fbo->handle);
 	upsample_fbo->set_viewport();
-	draw(2.0, 2.0, -1.0, -1.0);
+	draw();
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glViewport(0, 0, piglit_width, piglit_height);
 	downsample_prog->use();
