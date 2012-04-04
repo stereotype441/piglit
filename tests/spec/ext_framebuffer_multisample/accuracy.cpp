@@ -32,7 +32,36 @@ int piglit_width = TILE_SIZE * NUM_HORIZ_TILES;
 int piglit_height = TILE_SIZE * NUM_VERT_TILES;
 int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
 
-GLuint fbo;
+class Fbo
+{
+public:
+	Fbo(bool multisampled);
+
+	GLuint handle;
+};
+
+Fbo::Fbo(bool multisampled)
+{
+	glGenFramebuffers(1, &handle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
+
+	GLuint rb;
+	glGenRenderbuffers(1, &rb);
+	glBindRenderbuffer(GL_RENDERBUFFER, rb);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisampled ? 4 : 0,
+					 GL_RGBA, 256, 256);
+	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+				  GL_RENDERBUFFER, rb);
+
+	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		printf("Framebuffer not complete\n");
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+}
+
+Fbo *fbo = NULL;
 
 class DrawProg
 {
@@ -142,20 +171,10 @@ Tile::draw()
 		{ 1, 0 }
 	};
 
-	/* Rotate if necessary */
-	if (rotated) {
-		for (int i = 0; i < 4; ++i) {
-			float u = quad[i][0];
-			float v = quad[i][1];
-			quad[i][0] = v;
-			quad[i][1] = 1.0 - u;
-		}
-	}
-
 	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
 
 	draw_prog->use();
-	draw_prog->set_rotated(false);
+	draw_prog->set_rotated(rotated);
 	draw_prog->set_size(2.0 / NUM_HORIZ_TILES, 2.0 / NUM_VERT_TILES);
 	draw_prog->set_offset(float(2*x_tile) / NUM_HORIZ_TILES - 1.0,
 			      float(2*y_tile) / NUM_VERT_TILES - 1.0);
@@ -175,9 +194,9 @@ draw_pattern()
 enum piglit_result
 piglit_display()
 {
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo->handle);
 	draw_pattern();
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo->handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 	glBlitFramebuffer(0, 0, 256, 256, 0, 0, piglit_width, piglit_height,
 			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -190,23 +209,8 @@ piglit_display()
 void
 piglit_init(int argc, char **argv)
 {
+	fbo = new Fbo(true);
+
 	draw_prog = new DrawProg();
 	draw_prog->use();
-
-	glGenFramebuffers(1, &fbo);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-
-	GLuint rb;
-	glGenRenderbuffers(1, &rb);
-	glBindRenderbuffer(GL_RENDERBUFFER, rb);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, GL_RGBA,
-					 256, 256);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-				  GL_RENDERBUFFER, rb);
-
-	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		printf("Framebuffer not complete\n");
-		piglit_report_result(PIGLIT_FAIL);
-	}
 }
