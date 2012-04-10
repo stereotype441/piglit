@@ -166,13 +166,24 @@ DownsampleProg::compile()
 			 SUPERSAMPLE_FACTOR);
 	piglit_Uniform1i(piglit_GetUniformLocation(prog, "samp"), 0);
 
+	/* Set up vertex array object */
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
 	/* Set up vertex input buffer */
 	glGenBuffers(1, &vertex_buf);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
 
-	/* Set up vertex array object */
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
+	/* Set up element input buffer to tesselate a quad into
+	 * triangles
+	 */
+	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
+	GLuint element_buf;
+	glGenBuffers(1, &element_buf);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buf);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+		     GL_STATIC_DRAW);
+
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float),
 			      (void *) 0);
@@ -207,9 +218,7 @@ DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dst
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
 		     GL_STREAM_DRAW);
 
-	/* TODO: move to VAO */
-	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 }
 
 DownsampleProg downsample_prog;
