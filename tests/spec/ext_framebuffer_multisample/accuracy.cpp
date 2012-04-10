@@ -347,15 +347,143 @@ ManifestStencil::run(float x0, float y0, float x1, float y1)
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
 		     GL_STREAM_DRAW);
 
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 	for (int i = 0; i < 8; ++i) {
+		/* TODO: should be able to get rid of the mask=0x07
+		 * kludge by using a scissor to clear just the color
+		 * buffer before we start
+		 */
 		glStencilFunc(GL_EQUAL, i, 0x07);
 		piglit_Uniform4fv(color_loc, 1, colors[i]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 	}
 
 	glDisable(GL_STENCIL_TEST);
+}
+
+class ManifestDepth : public ManifestProgram
+{
+public:
+	virtual void compile();
+	virtual void run(float x0, float y0, float x1, float y1);
+
+private:
+	GLint prog;
+	GLint color_loc;
+	GLint depth_loc;
+	GLuint vertex_buf;
+	GLuint vao;
+};
+
+void
+ManifestDepth::compile()
+{
+	static const char *vert =
+		"#version 130\n"
+		"in vec2 pos;\n"
+		"uniform float depth;\n"
+		"void main()\n"
+		"{\n"
+		"  gl_Position = vec4(pos, depth, 1.0);\n"
+		"}\n";
+
+	static const char *frag =
+		"#version 130\n"
+		"uniform vec4 color;\n"
+		"void main()\n"
+		"{\n"
+		"  gl_FragColor = color;\n"
+		"}\n";
+
+	/* Compile program */
+	piglit_require_GLSL_version(130);
+	prog = piglit_CreateProgram();
+	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
+	piglit_AttachShader(prog, vs);
+	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
+	piglit_AttachShader(prog, fs);
+	piglit_BindAttribLocation(prog, 0, "pos");
+	piglit_LinkProgram(prog);
+	if (!piglit_link_check_status(prog)) {
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	/* Set up uniforms */
+	piglit_UseProgram(prog);
+	color_loc = piglit_GetUniformLocation(prog, "color");
+	depth_loc = piglit_GetUniformLocation(prog, "depth");
+
+	/* Set up vertex array object */
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	/* Set up vertex input buffer */
+	glGenVertexArrays(1, &vertex_buf);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float),
+			      (void *) 0);
+
+	/* Set up element input buffer to tesselate a quad into
+	 * triangles
+	 */
+	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
+	GLuint element_buf;
+	glGenBuffers(1, &element_buf);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buf);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+		     GL_STATIC_DRAW);
+}
+
+void
+ManifestDepth::run(float x0, float y0, float x1, float y1)
+{
+	static float colors[8][4] = {
+		{ 0.0, 0.0, 0.0, 1.0 },
+		{ 0.0, 0.0, 1.0, 1.0 },
+		{ 0.0, 1.0, 0.0, 1.0 },
+		{ 0.0, 1.0, 1.0, 1.0 },
+		{ 1.0, 0.0, 0.0, 1.0 },
+		{ 1.0, 0.0, 1.0, 1.0 },
+		{ 1.0, 1.0, 0.0, 1.0 },
+		{ 1.0, 1.0, 1.0, 1.0 }
+	};
+
+	piglit_UseProgram(prog);
+	glBindVertexArray(vao);
+
+	float vertex_data[4][2] = {
+		{ x0, y0 },
+		{ x0, y1 },
+		{ x1, y1 },
+		{ x1, y0 }
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
+		     GL_STREAM_DRAW);
+
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+	glStencilFunc(GL_EQUAL, 0, 0xff);
+
+	/* Clear the stencil buffer to 0, leaving depth and color
+	 * buffers unchanged.
+	 *
+	 * TODO: we're assuming scissoring works here.
+	 */
+	glClear(GL_STENCIL_BUFFER_BIT);
+
+	for (int i = 0; i < 8; ++i) {
+		piglit_Uniform4fv(color_loc, 1, colors[i]);
+		piglit_Uniform1f(depth_loc, float(7 - 2*i)/8);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
+	}
+
+	glDisable(GL_STENCIL_TEST);
+	glDisable(GL_DEPTH_TEST);
 }
 
 class TilingProjMatrix
@@ -628,7 +756,6 @@ StencilSunburst::draw(const TilingProjMatrix *proj)
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
-	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 	glDisable(GL_STENCIL_TEST);
 }
 
@@ -655,9 +782,15 @@ DepthSunburst::draw(const TilingProjMatrix *proj)
 		 * properly.
 		 */
 		int triangle_to_draw = (i * 3) % num_tris;
+
+		/* Note: with num_tris == 7, this causes us to draw
+		 * triangles at depths of 3/4, 1/2, -1/4, 0, 1/4, 1/2,
+		 * and 3/4.
+		 */
 		piglit_Uniform1f(depth_loc,
-				 float(num_tris - 1 - triangle_to_draw * 2)
-				 / num_tris);
+				 float(num_tris - triangle_to_draw * 2 - 1)
+				 / (num_tris + 1));
+
 		piglit_Uniform1f(rotation_loc,
 				 M_PI * 2.0 * triangle_to_draw / num_tris);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
@@ -783,8 +916,10 @@ Test::draw_test_image()
 						  x_offset + multisample_fbo.width,
 						  y_offset + multisample_fbo.height,
 						  GL_STENCIL_BUFFER_BIT, GL_NEAREST);
-				if (manifest_program)
+				if (manifest_program) {
+					/* TODO: try scissoring */
 					manifest_program->run(-1, -1, 0, 1);
+				}
 			} else {
 				if (manifest_program)
 					manifest_program->run(-1, -1, 1, 1);
@@ -916,7 +1051,7 @@ piglit_init(int argc, char **argv)
 	} else if (strcmp(argv[1], "stencil_resolve") == 0) {
 		test = new Test(new StencilSunburst(), new ManifestStencil(), true);
 	} else if (strcmp(argv[1], "depth_draw") == 0) {
-		test = new Test(new DepthSunburst(), NULL, false);
+		test = new Test(new DepthSunburst(), new ManifestDepth(), false);
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
