@@ -23,13 +23,15 @@
 
 #include "piglit-util.h"
 
-const int pattern_width = 256;
-const int pattern_height = 256;
-const int SUPERSAMPLE_FACTOR = 16;
-
 int piglit_width = 512;
 int piglit_height = 256;
 int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
+
+namespace {
+
+const int pattern_width = 256;
+const int pattern_height = 256;
+const int supersample_factor = 16;
 
 class Fbo
 {
@@ -163,7 +165,7 @@ DownsampleProg::compile()
 	/* Set up uniforms */
 	piglit_UseProgram(prog);
 	piglit_Uniform1i(piglit_GetUniformLocation(prog, "supersample_factor"),
-			 SUPERSAMPLE_FACTOR);
+			 supersample_factor);
 	piglit_Uniform1i(piglit_GetUniformLocation(prog, "samp"), 0);
 
 	/* Set up vertex array object */
@@ -199,8 +201,8 @@ DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dst
 	float x1 = dstX1 * 2.0 / piglit_width - 1.0;
 	float y0 = dstY0 * 2.0 / piglit_height - 1.0;
 	float y1 = dstY1 * 2.0 / piglit_height - 1.0;
-	float w = src_fbo->width / SUPERSAMPLE_FACTOR;
-	float h = src_fbo->height / SUPERSAMPLE_FACTOR;
+	float w = src_fbo->width / supersample_factor;
+	float h = src_fbo->height / supersample_factor;
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, src_fbo->tex);
@@ -264,6 +266,8 @@ public:
 	virtual void compile() = 0;
 	virtual void draw(const TilingProjMatrix *proj) = 0;
 };
+
+TestPattern *test_pattern = NULL;
 
 class Triangles : public TestPattern
 {
@@ -359,15 +363,15 @@ void Triangles::compile()
 			 final_scale);
 	proj_loc = piglit_GetUniformLocation(prog, "proj");
 
+	/* Set up vertex array object */
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
 	/* Set up vertex input buffer */
 	glGenBuffers(1, &vertex_buf);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(pos_within_tri), pos_within_tri,
 		     GL_STATIC_DRAW);
-
-	/* Set up vertex array object */
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, ARRAY_SIZE(pos_within_tri[0]), GL_FLOAT,
 			      GL_FALSE, sizeof(pos_within_tri[0]), (void *) 0);
@@ -385,17 +389,119 @@ void Triangles::draw(const TilingProjMatrix *proj)
 
 Triangles triangles;
 
-void
-piglit_init(int argc, char **argv)
+class Sunburst : public TestPattern
 {
-	/* TODO: choose whether to test small multisample_fbo by command line arg */
-	multisample_fbo.init(true /* multisampled */,
-			     pattern_width / 4, pattern_height / 4);
-	supersample_fbo.init(false /* multisampled */,
-			     1024, 1024);
+public:
+	virtual void compile();
+	virtual void draw(const TilingProjMatrix *proj);
 
-	triangles.compile();
-	downsample_prog.compile();
+private:
+	GLint prog;
+	GLint rotation_loc;
+	GLint proj_loc;
+	GLuint vao;
+	GLuint vertex_buf;
+	int num_tris;
+};
+
+void Sunburst::compile()
+{
+	/* Triangle coords within (-1,-1) to (1,1) rect */
+	static const float pos_within_tri[][2] = {
+		{ -0.3, -0.8 },
+		{  0.0,  1.0 },
+		{  0.3, -0.8 }
+	};
+
+	/* Total number of triangles drawn */
+	num_tris = 7;
+
+	static const char *vert =
+		"#version 130\n"
+		"in vec2 pos_within_tri;\n"
+		"uniform float rotation;\n"
+		"uniform mat4 proj;\n"
+		"\n"
+		"void main()\n"
+		"{\n"
+		"  vec2 pos = pos_within_tri;\n"
+		"  pos = mat2(cos(rotation), sin(rotation),\n"
+		"             -sin(rotation), cos(rotation)) * pos;\n"
+		"  gl_Position = proj * vec4(pos, 0.0, 1.0);\n"
+		"}\n";
+
+	static const char *frag =
+		"#version 130\n"
+		"void main()\n"
+		"{\n"
+		"  gl_FragColor = vec4(1.0);\n"
+		"}\n";
+
+	/* Compile program */
+	piglit_require_GLSL_version(130);
+	piglit_require_extension("GL_ARB_draw_instanced");
+	prog = piglit_CreateProgram();
+	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
+	piglit_AttachShader(prog, vs);
+	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
+	piglit_AttachShader(prog, fs);
+	piglit_BindAttribLocation(prog, 0, "pos_within_tri");
+	piglit_LinkProgram(prog);
+	if (!piglit_link_check_status(prog)) {
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	/* Set up uniforms */
+	piglit_UseProgram(prog);
+	rotation_loc = piglit_GetUniformLocation(prog, "rotation");
+	proj_loc = piglit_GetUniformLocation(prog, "proj");
+
+	/* Set up vertex array object */
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	/* Set up vertex input buffer */
+	glGenBuffers(1, &vertex_buf);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(pos_within_tri), pos_within_tri,
+		     GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, ARRAY_SIZE(pos_within_tri[0]), GL_FLOAT,
+			      GL_FALSE, sizeof(pos_within_tri[0]), (void *) 0);
+}
+
+void
+Sunburst::draw(const TilingProjMatrix *proj)
+{
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	glEnable(GL_STENCIL_TEST);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+	piglit_UseProgram(prog);
+	piglit_UniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glBindVertexArray(vao);
+	for (int i = 0; i < num_tris; ++i) {
+		glStencilFunc(GL_ALWAYS, i+1, 0xff);
+		piglit_Uniform1f(rotation_loc, M_PI * 2.0 * i / num_tris);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glDisable(GL_STENCIL_TEST);
+}
+
+Sunburst sunburst;
+
+void
+print_usage_and_exit(char *prog_name)
+{
+	printf("Usage: %s <test_type>\n"
+	       "  where <test_type> is one of:\n"
+	       "    color: test downsampling of color buffer\n"
+	       "    stencil_draw: test drawing using MSAA stencil buffer\n",
+	       prog_name);
+	piglit_report_result(PIGLIT_FAIL);
 }
 
 void
@@ -433,8 +539,8 @@ draw_test_image(TestPattern *pattern)
 void
 draw_reference_image(TestPattern *pattern)
 {
-	int downsampled_width = supersample_fbo.width / SUPERSAMPLE_FACTOR;
-	int downsampled_height = supersample_fbo.height / SUPERSAMPLE_FACTOR;
+	int downsampled_width = supersample_fbo.width / supersample_factor;
+	int downsampled_height = supersample_fbo.height / supersample_factor;
 	int num_h_tiles = pattern_width / downsampled_width;
 	int num_v_tiles = pattern_height / downsampled_height;
 	for (int h = 0; h < num_h_tiles; ++h) {
@@ -542,11 +648,33 @@ measure_accuracy()
 	// TODO: generate piglit result
 }
 
-enum piglit_result
+extern "C" void
+piglit_init(int argc, char **argv)
+{
+	if (argc != 2)
+		print_usage_and_exit(argv[0]);
+	if (strcmp(argv[1], "color") == 0)
+		test_pattern = &triangles;
+	else if (strcmp(argv[1], "stencil_draw") == 0)
+		test_pattern = &sunburst;
+	else
+		print_usage_and_exit(argv[0]);
+
+	/* TODO: choose whether to test small multisample_fbo by command line arg */
+	multisample_fbo.init(true /* multisampled */,
+			     pattern_width / 4, pattern_height / 4);
+	supersample_fbo.init(false /* multisampled */,
+			     1024, 1024);
+
+	test_pattern->compile();
+	downsample_prog.compile();
+}
+
+extern "C" enum piglit_result
 piglit_display()
 {
-	draw_test_image(&triangles);
-	draw_reference_image(&triangles);
+	draw_test_image(test_pattern);
+	draw_reference_image(test_pattern);
 
 	measure_accuracy();
 
@@ -554,3 +682,5 @@ piglit_display()
 
 	return PIGLIT_PASS;
 }
+
+};
