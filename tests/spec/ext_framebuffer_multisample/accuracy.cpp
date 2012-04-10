@@ -55,6 +55,7 @@ Fbo::init(bool multisampled, int width, int height)
 	glGenFramebuffers(1, &handle);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
 
+	/* Color buffer */
 	if (multisampled) {
 		GLuint rb;
 		glGenRenderbuffers(1, &rb);
@@ -86,6 +87,15 @@ Fbo::init(bool multisampled, int width, int height)
 				       tex,
 				       0 /* level */);
 	}
+
+	/* Stencil buffer */
+	GLuint stencil;
+	glGenRenderbuffers(1, &stencil);
+	glBindRenderbuffer(GL_RENDERBUFFER, stencil);
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisampled ? 4 : 0,
+					 GL_STENCIL_INDEX8, width, height);
+	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+				  GL_RENDERBUFFER, stencil);
 
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("Framebuffer not complete\n");
@@ -175,6 +185,12 @@ DownsampleProg::compile()
 	/* Set up vertex input buffer */
 	glGenBuffers(1, &vertex_buf);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float),
+			      (void *) 0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float),
+			      (void *) (2*sizeof(float)));
 
 	/* Set up element input buffer to tesselate a quad into
 	 * triangles
@@ -185,13 +201,6 @@ DownsampleProg::compile()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buf);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
 		     GL_STATIC_DRAW);
-
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float),
-			      (void *) 0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float),
-			      (void *) (2*sizeof(float)));
 }
 
 void
@@ -224,6 +233,126 @@ DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dst
 }
 
 DownsampleProg downsample_prog;
+
+class ManifestProgram
+{
+public:
+	virtual void compile() = 0;
+	virtual void run(float x0, float y0, float x1, float y1) = 0;
+};
+
+ManifestProgram *manifest_program = NULL;
+
+class ManifestStencil : public ManifestProgram
+{
+public:
+	virtual void compile();
+	virtual void run(float x0, float y0, float x1, float y1);
+
+private:
+	GLint prog;
+	GLint color_loc;
+	GLuint vertex_buf;
+	GLuint vao;
+};
+
+ManifestStencil manifest_stencil;
+
+void
+ManifestStencil::compile()
+{
+	static const char *vert =
+		"#version 130\n"
+		"in vec2 pos;\n"
+		"void main()\n"
+		"{\n"
+		"  gl_Position = vec4(pos, 0.0, 1.0);\n"
+		"}\n";
+
+	static const char *frag =
+		"#version 130\n"
+		"uniform vec4 color;\n"
+		"void main()\n"
+		"{\n"
+		"  gl_FragColor = color;\n"
+		"}\n";
+
+	/* Compile program */
+	piglit_require_GLSL_version(130);
+	prog = piglit_CreateProgram();
+	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
+	piglit_AttachShader(prog, vs);
+	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
+	piglit_AttachShader(prog, fs);
+	piglit_BindAttribLocation(prog, 0, "pos");
+	piglit_LinkProgram(prog);
+	if (!piglit_link_check_status(prog)) {
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	/* Set up uniforms */
+	piglit_UseProgram(prog);
+	color_loc = piglit_GetUniformLocation(prog, "color");
+
+	/* Set up vertex array object */
+	glGenVertexArrays(1, &vao);
+	glBindVertexArray(vao);
+
+	/* Set up vertex input buffer */
+	glGenVertexArrays(1, &vertex_buf);
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float),
+			      (void *) 0);
+
+	/* Set up element input buffer to tesselate a quad into
+	 * triangles
+	 */
+	unsigned int indices[6] = { 0, 1, 2, 0, 2, 3 };
+	GLuint element_buf;
+	glGenBuffers(1, &element_buf);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, element_buf);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+		     GL_STATIC_DRAW);
+}
+
+void
+ManifestStencil::run(float x0, float y0, float x1, float y1)
+{
+	static float colors[8][4] = {
+		{ 0.0, 0.0, 0.0, 1.0 },
+		{ 0.0, 0.0, 1.0, 1.0 },
+		{ 0.0, 1.0, 0.0, 1.0 },
+		{ 0.0, 1.0, 1.0, 1.0 },
+		{ 1.0, 0.0, 0.0, 1.0 },
+		{ 1.0, 0.0, 1.0, 1.0 },
+		{ 1.0, 1.0, 0.0, 1.0 },
+		{ 1.0, 1.0, 1.0, 1.0 }
+	};
+
+	piglit_UseProgram(prog);
+	glBindVertexArray(vao);
+
+	float vertex_data[4][2] = {
+		{ x0, y0 },
+		{ x0, y1 },
+		{ x1, y1 },
+		{ x1, y0 }
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
+		     GL_STREAM_DRAW);
+
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glEnable(GL_STENCIL_TEST);
+	for (int i = 0; i < 8; ++i) {
+		glStencilFunc(GL_EQUAL, i, 0x07);
+		piglit_Uniform4fv(color_loc, 1, colors[i]);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
+	}
+
+	glDisable(GL_STENCIL_TEST);
+}
 
 class TilingProjMatrix
 {
@@ -521,7 +650,11 @@ draw_test_image(TestPattern *pattern)
 					      x_offset,
 					      y_offset);
 			pattern->draw(&proj);
-			// TODO: convert to color buffer if needed
+
+			// TODO: don't convert to color yet if testing downsampling
+			if (manifest_program)
+				manifest_program->run(-1, -1, 1, 1);
+
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisample_fbo.handle);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glViewport(0, 0, piglit_width, piglit_height);
@@ -555,7 +688,10 @@ draw_reference_image(TestPattern *pattern)
 					      x_offset,
 					      y_offset);
 			pattern->draw(&proj);
-			// TODO: convert to color buffer if needed
+
+			if (manifest_program)
+				manifest_program->run(-1, -1, 1, 1);
+
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glViewport(0, 0, piglit_width, piglit_height);
 			downsample_prog.run(&supersample_fbo,
@@ -653,12 +789,14 @@ piglit_init(int argc, char **argv)
 {
 	if (argc != 2)
 		print_usage_and_exit(argv[0]);
-	if (strcmp(argv[1], "color") == 0)
+	if (strcmp(argv[1], "color") == 0) {
 		test_pattern = &triangles;
-	else if (strcmp(argv[1], "stencil_draw") == 0)
+	} else if (strcmp(argv[1], "stencil_draw") == 0) {
 		test_pattern = &sunburst;
-	else
+		manifest_program = &manifest_stencil;
+	} else {
 		print_usage_and_exit(argv[0]);
+	}
 
 	/* TODO: choose whether to test small multisample_fbo by command line arg */
 	multisample_fbo.init(true /* multisampled */,
@@ -668,6 +806,8 @@ piglit_init(int argc, char **argv)
 
 	test_pattern->compile();
 	downsample_prog.compile();
+	if (manifest_program)
+		manifest_program->compile();
 }
 
 extern "C" enum piglit_result
