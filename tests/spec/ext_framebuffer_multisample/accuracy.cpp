@@ -111,9 +111,6 @@ Fbo::set_viewport()
 	glViewport(0, 0, width, height);
 }
 
-Fbo multisample_fbo;
-Fbo supersample_fbo;
-
 class DownsampleProg
 {
 public:
@@ -232,16 +229,12 @@ DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dst
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 }
 
-DownsampleProg downsample_prog;
-
 class ManifestProgram
 {
 public:
 	virtual void compile() = 0;
 	virtual void run(float x0, float y0, float x1, float y1) = 0;
 };
-
-ManifestProgram *manifest_program = NULL;
 
 class ManifestStencil : public ManifestProgram
 {
@@ -255,8 +248,6 @@ private:
 	GLuint vertex_buf;
 	GLuint vao;
 };
-
-ManifestStencil manifest_stencil;
 
 void
 ManifestStencil::compile()
@@ -354,8 +345,6 @@ ManifestStencil::run(float x0, float y0, float x1, float y1)
 	glDisable(GL_STENCIL_TEST);
 }
 
-bool test_resolve = false;
-
 class TilingProjMatrix
 {
 public:
@@ -397,8 +386,6 @@ public:
 	virtual void compile() = 0;
 	virtual void draw(const TilingProjMatrix *proj) = 0;
 };
-
-TestPattern *test_pattern = NULL;
 
 class Triangles : public TestPattern
 {
@@ -518,8 +505,6 @@ void Triangles::draw(const TilingProjMatrix *proj)
 	glDrawArraysInstanced(GL_TRIANGLES, 0, 3, num_tris);
 }
 
-Triangles triangles;
-
 class Sunburst : public TestPattern
 {
 public:
@@ -622,22 +607,90 @@ Sunburst::draw(const TilingProjMatrix *proj)
 	glDisable(GL_STENCIL_TEST);
 }
 
-Sunburst sunburst;
-
-void
-print_usage_and_exit(char *prog_name)
+class Stats
 {
-	printf("Usage: %s <test_type>\n"
-	       "  where <test_type> is one of:\n"
-	       "    color: test downsampling of color buffer\n"
-	       "    stencil_draw: test drawing using MSAA stencil buffer\n"
-	       "    stencil_resolve: test resolve of MSAA stencil buffer\n",
-	       prog_name);
-	piglit_report_result(PIGLIT_FAIL);
+public:
+	Stats();
+
+	void record(float error)
+	{
+		++count;
+		sum_squared_error += error * error;
+	}
+
+	void summarize();
+
+private:
+	int count;
+	double sum_squared_error;
+};
+
+Stats::Stats()
+	: count(0), sum_squared_error(0.0)
+{
 }
 
 void
-draw_test_image(TestPattern *pattern)
+Stats::summarize()
+{
+	printf("  count = %d\n", count);
+	if (count != 0) {
+		if (sum_squared_error != 0.0) {
+			printf("  RMS error = %f\n",
+			       sqrt(sum_squared_error / count));
+		} else {
+			printf("  Perfect output\n");
+		}
+	}
+}
+
+class Test
+{
+public:
+	Test(TestPattern *pattern, ManifestProgram *manifest_program,
+	     bool test_resolve);
+	void init();
+	void run();
+
+private:
+	void draw_test_image();
+	void draw_reference_image();
+	void measure_accuracy();
+
+	TestPattern *pattern;
+	ManifestProgram *manifest_program;
+	bool test_resolve;
+
+	Fbo multisample_fbo;
+	Fbo supersample_fbo;
+	DownsampleProg downsample_prog;
+};
+
+Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
+	   bool test_resolve)
+	: pattern(pattern),
+	  manifest_program(manifest_program),
+	  test_resolve(test_resolve)
+{
+}
+
+void
+Test::init()
+{
+	/* TODO: choose whether to test small multisample_fbo by command line arg */
+	multisample_fbo.init(true /* multisampled */,
+			     pattern_width / 4, pattern_height / 4);
+	supersample_fbo.init(false /* multisampled */,
+			     1024, 1024);
+
+	pattern->compile();
+	downsample_prog.compile();
+	if (manifest_program)
+		manifest_program->compile();
+}
+
+void
+Test::draw_test_image()
 {
 	int num_h_tiles = pattern_width / multisample_fbo.width;
 	int num_v_tiles = pattern_height / multisample_fbo.height;
@@ -688,7 +741,7 @@ draw_test_image(TestPattern *pattern)
 }
 
 void
-draw_reference_image(TestPattern *pattern)
+Test::draw_reference_image()
 {
 	int downsampled_width = supersample_fbo.width / supersample_factor;
 	int downsampled_height = supersample_fbo.height / supersample_factor;
@@ -722,45 +775,8 @@ draw_reference_image(TestPattern *pattern)
 	}
 }
 
-class Stats
-{
-public:
-	Stats();
-
-	void record(float error)
-	{
-		++count;
-		sum_squared_error += error * error;
-	}
-
-	void summarize();
-
-private:
-	int count;
-	double sum_squared_error;
-};
-
-Stats::Stats()
-	: count(0), sum_squared_error(0.0)
-{
-}
-
 void
-Stats::summarize()
-{
-	printf("  count = %d\n", count);
-	if (count != 0) {
-		if (sum_squared_error != 0.0) {
-			printf("  RMS error = %f\n",
-			       sqrt(sum_squared_error / count));
-		} else {
-			printf("  Perfect output\n");
-		}
-	}
-}
-
-void
-measure_accuracy()
+Test::measure_accuracy()
 {
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -802,43 +818,50 @@ measure_accuracy()
 	// TODO: generate piglit result
 }
 
+void
+Test::run()
+{
+	draw_test_image();
+	draw_reference_image();
+	measure_accuracy();
+}
+
+Test *test = NULL;
+
+void
+print_usage_and_exit(char *prog_name)
+{
+	printf("Usage: %s <test_type>\n"
+	       "  where <test_type> is one of:\n"
+	       "    color: test downsampling of color buffer\n"
+	       "    stencil_draw: test drawing using MSAA stencil buffer\n"
+	       "    stencil_resolve: test resolve of MSAA stencil buffer\n",
+	       prog_name);
+	piglit_report_result(PIGLIT_FAIL);
+}
+
 extern "C" void
 piglit_init(int argc, char **argv)
 {
 	if (argc != 2)
 		print_usage_and_exit(argv[0]);
 	if (strcmp(argv[1], "color") == 0) {
-		test_pattern = &triangles;
+		test = new Test(new Triangles(), NULL, false);
 	} else if (strcmp(argv[1], "stencil_draw") == 0) {
-		test_pattern = &sunburst;
-		manifest_program = &manifest_stencil;
+		test = new Test(new Sunburst(), new ManifestStencil(), false);
 	} else if (strcmp(argv[1], "stencil_resolve") == 0) {
-		test_pattern = &sunburst;
-		manifest_program = &manifest_stencil;
-		test_resolve = true;
+		test = new Test(new Sunburst(), new ManifestStencil(), true);
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
 
-	/* TODO: choose whether to test small multisample_fbo by command line arg */
-	multisample_fbo.init(true /* multisampled */,
-			     pattern_width / 4, pattern_height / 4);
-	supersample_fbo.init(false /* multisampled */,
-			     1024, 1024);
-
-	test_pattern->compile();
-	downsample_prog.compile();
-	if (manifest_program)
-		manifest_program->compile();
+	test->init();
 }
 
 extern "C" enum piglit_result
 piglit_display()
 {
-	draw_test_image(test_pattern);
-	draw_reference_image(test_pattern);
-
-	measure_accuracy();
+	test->run();
 
 	piglit_present_results();
 
