@@ -97,6 +97,19 @@ Fbo::init(bool multisampled, int width, int height)
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
 				  GL_RENDERBUFFER, stencil);
 
+	/* Depth buffer */
+	if (!multisampled) { // TODO
+		GLuint depth;
+		glGenRenderbuffers(1, &depth);
+		glBindRenderbuffer(GL_RENDERBUFFER, depth);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 0,
+						 GL_DEPTH_COMPONENT24,
+						 width, height);
+		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+					  GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
+					  depth);
+	}
+
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("Framebuffer not complete\n");
 		piglit_report_result(PIGLIT_FAIL);
@@ -509,15 +522,17 @@ class Sunburst : public TestPattern
 {
 public:
 	virtual void compile();
-	virtual void draw(const TilingProjMatrix *proj);
 
-private:
+protected:
 	GLint prog;
 	GLint rotation_loc;
+	GLint depth_loc;
 	GLint proj_loc;
 	GLuint vao;
-	GLuint vertex_buf;
 	int num_tris;
+
+private:
+	GLuint vertex_buf;
 };
 
 void Sunburst::compile()
@@ -536,6 +551,7 @@ void Sunburst::compile()
 		"#version 130\n"
 		"in vec2 pos_within_tri;\n"
 		"uniform float rotation;\n"
+		"uniform float depth;\n"
 		"uniform mat4 proj;\n"
 		"\n"
 		"void main()\n"
@@ -543,14 +559,15 @@ void Sunburst::compile()
 		"  vec2 pos = pos_within_tri;\n"
 		"  pos = mat2(cos(rotation), sin(rotation),\n"
 		"             -sin(rotation), cos(rotation)) * pos;\n"
-		"  gl_Position = proj * vec4(pos, 0.0, 1.0);\n"
+		"  gl_Position = proj * vec4(pos, depth, 1.0);\n"
 		"}\n";
 
 	static const char *frag =
 		"#version 130\n"
+		"uniform float depth;\n" // TODO
 		"void main()\n"
 		"{\n"
-		"  gl_FragColor = vec4(1.0);\n"
+		"  gl_FragColor = vec4((depth + 1.0) / 2.0);\n" // TODO
 		"}\n";
 
 	/* Compile program */
@@ -570,6 +587,8 @@ void Sunburst::compile()
 	/* Set up uniforms */
 	piglit_UseProgram(prog);
 	rotation_loc = piglit_GetUniformLocation(prog, "rotation");
+	depth_loc = piglit_GetUniformLocation(prog, "depth");
+	piglit_Uniform1f(depth_loc, 0.0);
 	proj_loc = piglit_GetUniformLocation(prog, "proj");
 
 	/* Set up vertex array object */
@@ -586,11 +605,17 @@ void Sunburst::compile()
 			      GL_FALSE, sizeof(pos_within_tri[0]), (void *) 0);
 }
 
-void
-Sunburst::draw(const TilingProjMatrix *proj)
+class StencilSunburst : public Sunburst
 {
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+public:
+	virtual void draw(const TilingProjMatrix *proj);
+};
+
+void
+StencilSunburst::draw(const TilingProjMatrix *proj)
+{
 	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -605,6 +630,40 @@ Sunburst::draw(const TilingProjMatrix *proj)
 
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 	glDisable(GL_STENCIL_TEST);
+}
+
+class DepthSunburst : public Sunburst
+{
+public:
+	virtual void draw(const TilingProjMatrix *proj);
+};
+
+void
+DepthSunburst::draw(const TilingProjMatrix *proj)
+{
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	piglit_UseProgram(prog);
+	piglit_UniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glBindVertexArray(vao);
+	for (int i = 0; i < num_tris; ++i) {
+		/* Draw triangles in a haphazard order so we can
+		 * verify that depth comparisons sort them out
+		 * properly.
+		 */
+		int triangle_to_draw = (i * 3) % num_tris;
+		piglit_Uniform1f(depth_loc,
+				 float(num_tris - 1 - triangle_to_draw * 2)
+				 / num_tris);
+		piglit_Uniform1f(rotation_loc,
+				 M_PI * 2.0 * triangle_to_draw / num_tris);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
+
+	glDisable(GL_DEPTH_TEST);
 }
 
 class Stats
@@ -687,6 +746,11 @@ Test::init()
 	downsample_prog.compile();
 	if (manifest_program)
 		manifest_program->compile();
+
+	/* Only do depth testing in those parts of the test where we
+	 * explicitly want it
+	 */
+	glDisable(GL_DEPTH_TEST);
 }
 
 void
@@ -848,9 +912,11 @@ piglit_init(int argc, char **argv)
 	if (strcmp(argv[1], "color") == 0) {
 		test = new Test(new Triangles(), NULL, false);
 	} else if (strcmp(argv[1], "stencil_draw") == 0) {
-		test = new Test(new Sunburst(), new ManifestStencil(), false);
+		test = new Test(new StencilSunburst(), new ManifestStencil(), false);
 	} else if (strcmp(argv[1], "stencil_resolve") == 0) {
-		test = new Test(new Sunburst(), new ManifestStencil(), true);
+		test = new Test(new StencilSunburst(), new ManifestStencil(), true);
+	} else if (strcmp(argv[1], "depth_draw") == 0) {
+		test = new Test(new DepthSunburst(), NULL, false);
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
