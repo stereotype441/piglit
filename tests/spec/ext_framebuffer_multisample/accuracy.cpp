@@ -25,7 +25,7 @@
 
 int piglit_width = 512;
 int piglit_height = 256;
-int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
+int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_STENCIL;
 
 namespace {
 
@@ -354,6 +354,8 @@ ManifestStencil::run(float x0, float y0, float x1, float y1)
 	glDisable(GL_STENCIL_TEST);
 }
 
+bool test_resolve = false;
+
 class TilingProjMatrix
 {
 public:
@@ -628,7 +630,8 @@ print_usage_and_exit(char *prog_name)
 	printf("Usage: %s <test_type>\n"
 	       "  where <test_type> is one of:\n"
 	       "    color: test downsampling of color buffer\n"
-	       "    stencil_draw: test drawing using MSAA stencil buffer\n",
+	       "    stencil_draw: test drawing using MSAA stencil buffer\n"
+	       "    stencil_resolve: test resolve of MSAA stencil buffer\n",
 	       prog_name);
 	piglit_report_result(PIGLIT_FAIL);
 }
@@ -651,20 +654,35 @@ draw_test_image(TestPattern *pattern)
 					      y_offset);
 			pattern->draw(&proj);
 
-			// TODO: don't convert to color yet if testing downsampling
-			if (manifest_program)
-				manifest_program->run(-1, -1, 1, 1);
+			if (test_resolve) {
+				/* TODO: adapt for non-stencil */
+				glBindFramebuffer(GL_READ_FRAMEBUFFER,
+						  multisample_fbo.handle);
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				glViewport(0, 0, piglit_width, piglit_height);
+				glBlitFramebuffer(0, 0, multisample_fbo.width,
+						  multisample_fbo.height,
+						  x_offset, y_offset,
+						  x_offset + multisample_fbo.width,
+						  y_offset + multisample_fbo.height,
+						  GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+				if (manifest_program)
+					manifest_program->run(-1, -1, 0, 1);
+			} else {
+				if (manifest_program)
+					manifest_program->run(-1, -1, 1, 1);
 
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, multisample_fbo.handle);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glViewport(0, 0, piglit_width, piglit_height);
-			glBlitFramebuffer(0, 0, multisample_fbo.width,
-					  multisample_fbo.height,
-					  x_offset, y_offset,
-					  x_offset + multisample_fbo.width,
-					  y_offset + multisample_fbo.height,
-					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			// TODO: convert to color buffer if needed
+				glBindFramebuffer(GL_READ_FRAMEBUFFER,
+						  multisample_fbo.handle);
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				glViewport(0, 0, piglit_width, piglit_height);
+				glBlitFramebuffer(0, 0, multisample_fbo.width,
+						  multisample_fbo.height,
+						  x_offset, y_offset,
+						  x_offset + multisample_fbo.width,
+						  y_offset + multisample_fbo.height,
+						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			}
 		}
 	}
 }
@@ -794,6 +812,10 @@ piglit_init(int argc, char **argv)
 	} else if (strcmp(argv[1], "stencil_draw") == 0) {
 		test_pattern = &sunburst;
 		manifest_program = &manifest_stencil;
+	} else if (strcmp(argv[1], "stencil_resolve") == 0) {
+		test_pattern = &sunburst;
+		manifest_program = &manifest_stencil;
+		test_resolve = true;
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
