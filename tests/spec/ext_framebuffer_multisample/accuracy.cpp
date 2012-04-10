@@ -453,13 +453,93 @@ draw_reference_image(TestPattern *pattern)
 	}
 }
 
+class Stats
+{
+public:
+	Stats();
+
+	void record(float error)
+	{
+		++count;
+		sum_squared_error += error * error;
+	}
+
+	void summarize();
+
+private:
+	int count;
+	double sum_squared_error;
+};
+
+Stats::Stats()
+	: count(0), sum_squared_error(0.0)
+{
+}
+
+void
+Stats::summarize()
+{
+	printf("  count = %d\n", count);
+	if (count != 0) {
+		if (sum_squared_error != 0.0) {
+			printf("  RMS error = %f\n",
+			       sqrt(sum_squared_error / count));
+		} else {
+			printf("  Perfect output\n");
+		}
+	}
+}
+
+void
+measure_accuracy()
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glViewport(0, 0, piglit_width, piglit_height);
+
+	float *reference_data = new float[pattern_width * pattern_height * 4];
+	glReadPixels(pattern_width, 0, pattern_width, pattern_height, GL_RGBA,
+		     GL_FLOAT, reference_data);
+
+	float *test_data = new float[pattern_width * pattern_height * 4];
+	glReadPixels(0, 0, pattern_width, pattern_height, GL_RGBA,
+		     GL_FLOAT, test_data);
+
+	Stats unlit_stats;
+	Stats partially_lit_stats;
+	Stats totally_lit_stats;
+	for (int y = 0; y < pattern_height; ++y) {
+		for (int x = 0; x < pattern_width; ++x) {
+			for (int c = 0; c < 4; ++c) {
+				int pixel_pos = 4*(y*pattern_width + x) + c;
+				float ref = reference_data[pixel_pos];
+				float test = test_data[pixel_pos];
+				if (ref <= 0.0)
+					unlit_stats.record(test - ref);
+				else if (ref >= 1.0)
+					totally_lit_stats.record(test - ref);
+				else
+					partially_lit_stats.record(test - ref);
+			}
+		}
+	}
+
+	printf("Pixels that should be unlit\n");
+	unlit_stats.summarize();
+	printf("Pixels that should be totally lit\n");
+	totally_lit_stats.summarize();
+	printf("Pixels that should be partially lit\n");
+	partially_lit_stats.summarize();
+	// TODO: generate piglit result
+}
+
 enum piglit_result
 piglit_display()
 {
 	draw_test_image(&triangles);
 	draw_reference_image(&triangles);
 
-	// TODO: measure accuracy.
+	measure_accuracy();
 
 	piglit_present_results();
 
