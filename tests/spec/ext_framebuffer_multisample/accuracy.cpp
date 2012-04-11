@@ -36,7 +36,7 @@ const int supersample_factor = 16;
 class Fbo
 {
 public:
-	void init(bool multisampled, int width, int height);
+	void init(bool multisampled, int width, int height, bool use_depth);
 	void set_viewport();
 
 	int width;
@@ -46,7 +46,7 @@ public:
 };
 
 void
-Fbo::init(bool multisampled, int width, int height)
+Fbo::init(bool multisampled, int width, int height, bool use_depth)
 {
 	this->tex = 0;
 	this->width = width;
@@ -97,12 +97,13 @@ Fbo::init(bool multisampled, int width, int height)
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
 				  GL_RENDERBUFFER, stencil);
 
-	/* Depth buffer */
-	if (!multisampled) { // TODO
+	if (use_depth) {
+		/* Depth buffer */
 		GLuint depth;
 		glGenRenderbuffers(1, &depth);
 		glBindRenderbuffer(GL_RENDERBUFFER, depth);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 0,
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER,
+						 multisampled ? 4 : 0,
 						 GL_DEPTH_COMPONENT24,
 						 width, height);
 		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
@@ -871,9 +872,9 @@ Test::init()
 {
 	/* TODO: choose whether to test small multisample_fbo by command line arg */
 	multisample_fbo.init(true /* multisampled */,
-			     pattern_width / 4, pattern_height / 4);
+			     pattern_width, pattern_height, true);
 	supersample_fbo.init(false /* multisampled */,
-			     1024, 1024);
+			     1024, 1024, true);
 
 	pattern->compile();
 	downsample_prog.compile();
