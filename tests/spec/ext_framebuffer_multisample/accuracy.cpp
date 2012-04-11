@@ -841,7 +841,7 @@ class Test
 {
 public:
 	Test(TestPattern *pattern, ManifestProgram *manifest_program,
-	     bool test_resolve);
+	     bool test_resolve, GLenum blit_type);
 	void init();
 	void run();
 
@@ -853,6 +853,7 @@ private:
 	TestPattern *pattern;
 	ManifestProgram *manifest_program;
 	bool test_resolve;
+	GLenum blit_type;
 
 	Fbo multisample_fbo;
 	Fbo supersample_fbo;
@@ -860,10 +861,11 @@ private:
 };
 
 Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
-	   bool test_resolve)
+	   bool test_resolve, GLenum blit_type)
 	: pattern(pattern),
 	  manifest_program(manifest_program),
-	  test_resolve(test_resolve)
+	  test_resolve(test_resolve),
+	  blit_type(blit_type)
 {
 }
 
@@ -906,7 +908,6 @@ Test::draw_test_image()
 			pattern->draw(&proj);
 
 			if (test_resolve) {
-				/* TODO: adapt for non-stencil */
 				glBindFramebuffer(GL_READ_FRAMEBUFFER,
 						  multisample_fbo.handle);
 				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -916,7 +917,7 @@ Test::draw_test_image()
 						  x_offset, y_offset,
 						  x_offset + multisample_fbo.width,
 						  y_offset + multisample_fbo.height,
-						  GL_STENCIL_BUFFER_BIT, GL_NEAREST);
+						  blit_type, GL_NEAREST);
 				if (manifest_program) {
 					/* TODO: try scissoring */
 					manifest_program->run(-1, -1, 0, 1);
@@ -1035,7 +1036,9 @@ print_usage_and_exit(char *prog_name)
 	       "  where <test_type> is one of:\n"
 	       "    color: test downsampling of color buffer\n"
 	       "    stencil_draw: test drawing using MSAA stencil buffer\n"
-	       "    stencil_resolve: test resolve of MSAA stencil buffer\n",
+	       "    stencil_resolve: test resolve of MSAA stencil buffer\n"
+	       "    depth_draw: test drawing using MSAA depth buffer\n"
+	       "    depth_resolve: test resolve of MSAA depth buffer\n",
 	       prog_name);
 	piglit_report_result(PIGLIT_FAIL);
 }
@@ -1046,13 +1049,15 @@ piglit_init(int argc, char **argv)
 	if (argc != 2)
 		print_usage_and_exit(argv[0]);
 	if (strcmp(argv[1], "color") == 0) {
-		test = new Test(new Triangles(), NULL, false);
+		test = new Test(new Triangles(), NULL, false, 0);
 	} else if (strcmp(argv[1], "stencil_draw") == 0) {
-		test = new Test(new StencilSunburst(), new ManifestStencil(), false);
+		test = new Test(new StencilSunburst(), new ManifestStencil(), false, 0);
 	} else if (strcmp(argv[1], "stencil_resolve") == 0) {
-		test = new Test(new StencilSunburst(), new ManifestStencil(), true);
+		test = new Test(new StencilSunburst(), new ManifestStencil(), true, GL_STENCIL_BUFFER_BIT);
 	} else if (strcmp(argv[1], "depth_draw") == 0) {
-		test = new Test(new DepthSunburst(), new ManifestDepth(), false);
+		test = new Test(new DepthSunburst(), new ManifestDepth(), false, 0);
+	} else if (strcmp(argv[1], "depth_resolve") == 0) {
+		test = new Test(new DepthSunburst(), new ManifestDepth(), true, GL_DEPTH_BUFFER_BIT);
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
