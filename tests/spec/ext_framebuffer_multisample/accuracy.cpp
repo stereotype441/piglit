@@ -874,7 +874,7 @@ Test::init()
 {
 	/* TODO: choose whether to test small multisample_fbo by command line arg */
 	multisample_fbo.init(true /* multisampled */,
-			     pattern_width, pattern_height, true);
+			     pattern_width / 4, pattern_height / 4, true);
 	supersample_fbo.init(false /* multisampled */,
 			     1024, 1024, true);
 
