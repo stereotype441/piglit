@@ -918,10 +918,6 @@ Test::draw_test_image()
 						  x_offset + multisample_fbo.width,
 						  y_offset + multisample_fbo.height,
 						  blit_type, GL_NEAREST);
-				if (manifest_program) {
-					/* TODO: try scissoring */
-					manifest_program->run(-1, -1, 0, 1);
-				}
 			} else {
 				if (manifest_program)
 					manifest_program->run(-1, -1, 1, 1);
@@ -938,6 +934,10 @@ Test::draw_test_image()
 						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}
+	}
+	if (test_resolve && manifest_program) {
+		/* TODO: try scissoring */
+		manifest_program->run(-1, -1, 0, 1);
 	}
 }
 
