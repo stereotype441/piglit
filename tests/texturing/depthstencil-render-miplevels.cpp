@@ -33,9 +33,13 @@ const int max_miplevel = 10;
 
 GLuint image_tex;
 GLuint depth_tex;
+GLuint stencil_tex;
+bool test_depth = false;
+bool test_stencil = false;
+bool detach = false;
 
 GLuint
-create_mipmapped_tex(int dim, GLenum format)
+create_mipmapped_tex(int dim, GLenum format, GLenum type)
 {
 	GLuint tex;
 	glGenTextures(1, &tex);
@@ -46,7 +50,9 @@ create_mipmapped_tex(int dim, GLenum format)
 		glTexImage2D(GL_TEXTURE_2D, level, format,
 			     dim, dim,
 			     0,
-			     format, GL_UNSIGNED_BYTE, NULL);
+			     format, type, NULL);
+		if (!piglit_check_gl_error(GL_NO_ERROR))
+			piglit_report_result(PIGLIT_FAIL);
 	}
 	return tex;
 }
@@ -54,18 +60,73 @@ create_mipmapped_tex(int dim, GLenum format)
 void
 set_up_framebuffer_for_miplevel(int level)
 {
+	if (detach) {
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0,
+				       0);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0,
+				       0);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, 0,
+				       0);
+	}
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
 			       GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
 			       image_tex, level);
-	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-			       GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
-			       depth_tex, level);
+	if (test_depth) {
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+				       depth_tex, level);
+	}
+	if (test_stencil) {
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+				       stencil_tex, level);
+		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+				       GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D,
+				       stencil_tex, level);
+	}
 	GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
 	if (status != GL_FRAMEBUFFER_COMPLETE) {
 		fprintf(stderr, "FBO incomplete at miplevel %d\n",
 			level);
 		piglit_report_result(PIGLIT_FAIL);
 	}
+}
+
+void
+populate_miplevel(int level)
+{
+	GLbitfield clear_mask = 0;
+	if (test_depth) {
+		glClearDepth(double(level + 1) / (max_miplevel + 1));
+		clear_mask |= GL_DEPTH_BUFFER_BIT;
+	}
+	if (test_stencil) {
+		glClearStencil(level + 1);
+		clear_mask |= GL_STENCIL_BUFFER_BIT;
+	}
+	glClear(clear_mask);
+}
+
+bool
+test_miplevel(int level)
+{
+	bool pass = true;
+	int dim = 1 << (max_miplevel - level);
+	if (test_depth) {
+		printf("Probing miplevel %d depth\n", level);
+		pass = piglit_probe_rect_depth(0, 0, dim, dim,
+					       double(level + 1) / (max_miplevel + 1))
+			&& pass;
+	}
+	if (test_stencil) {
+		printf("Probing miplevel %d stencil\n", level);
+		pass = piglit_probe_rect_stencil(0, 0, dim, dim, level + 1)
+			&& pass;
+	}
+	return pass;
 }
 
 extern "C" void
@@ -76,41 +137,59 @@ piglit_init(int argc, char **argv)
 	for (int i = 1; i < argc; ++i) {
 		if (strcmp(argv[i], "workaround") == 0)
 			workaround = true;
+		else if (strcmp(argv[i], "depth") == 0)
+			test_depth = true;
+		else if (strcmp(argv[i], "stencil") == 0)
+			test_stencil = true;
+		else if (strcmp(argv[i], "detach") == 0)
+			detach = true;
 		else {
 			printf("Huh?\n");
 			piglit_report_result(PIGLIT_FAIL);
 		}
 	}
 
+	if (!(test_depth || test_stencil)) {
+		printf("Nothing to test\n");
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
 	bool pass = true;
 
-	image_tex = create_mipmapped_tex(1 << max_miplevel, GL_RGBA);
-	depth_tex = create_mipmapped_tex(1 << max_miplevel,
-						GL_DEPTH_COMPONENT);
+	image_tex = create_mipmapped_tex(1 << max_miplevel, GL_RGBA,
+					 GL_UNSIGNED_BYTE);
+	if (test_depth) {
+		depth_tex = create_mipmapped_tex(1 << max_miplevel,
+						 GL_DEPTH_COMPONENT,
+						 GL_UNSIGNED_BYTE);
+	}
+	if (test_stencil) {
+		stencil_tex = create_mipmapped_tex(1 << max_miplevel,
+						   GL_DEPTH_STENCIL,
+						   GL_UNSIGNED_INT_24_8);
+	}
 
 	GLuint fbo;
 	glGenFramebuffers(1, &fbo);
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
 
-	for (int level = 0; level <= max_miplevel; ++level) {
-		set_up_framebuffer_for_miplevel(level);
-		glClearDepth(double(level) / max_miplevel);
-		glClear(GL_DEPTH_BUFFER_BIT);
-		if (workaround) {
-			pass = piglit_probe_rect_depth(0, 0, 1, 1,
-						       double(level)
-						       / max_miplevel);
+	if (workaround) {
+		for (int level = 0; level <= max_miplevel; ++level) {
+			set_up_framebuffer_for_miplevel(level);
+			populate_miplevel(level);
+			pass = test_miplevel(level) && pass;
 		}
-	}
-
-	for (int level = 0; level <= max_miplevel; ++level) {
-		printf("Probing miplevel %d depth\n", level);
-		set_up_framebuffer_for_miplevel(level);
-		int dim = 1 << (max_miplevel - level);
-		pass = piglit_probe_rect_depth(0, 0, dim, dim,
-					       double(level) / max_miplevel)
-			&& pass;
+	} else {
+		for (int level = 0; level <= max_miplevel; ++level) {
+			printf("Setting up miplevel %d\n", level);
+			set_up_framebuffer_for_miplevel(level);
+			populate_miplevel(level);
+		}
+		for (int level = 0; level <= max_miplevel; ++level) {
+			set_up_framebuffer_for_miplevel(level);
+			pass = test_miplevel(level) && pass;
+		}
 	}
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);
