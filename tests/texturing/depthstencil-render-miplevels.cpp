@@ -71,6 +71,17 @@ set_up_framebuffer_for_miplevel(int level)
 extern "C" void
 piglit_init(int argc, char **argv)
 {
+	bool workaround = false;
+
+	for (int i = 1; i < argc; ++i) {
+		if (strcmp(argv[i], "workaround") == 0)
+			workaround = true;
+		else {
+			printf("Huh?\n");
+			piglit_report_result(PIGLIT_FAIL);
+		}
+	}
+
 	bool pass = true;
 
 	image_tex = create_mipmapped_tex(1 << max_miplevel, GL_RGBA);
@@ -86,6 +97,11 @@ piglit_init(int argc, char **argv)
 		set_up_framebuffer_for_miplevel(level);
 		glClearDepth(double(level) / max_miplevel);
 		glClear(GL_DEPTH_BUFFER_BIT);
+		if (workaround) {
+			pass = piglit_probe_rect_depth(0, 0, 1, 1,
+						       double(level)
+						       / max_miplevel);
+		}
 	}
 
 	for (int level = 0; level <= max_miplevel; ++level) {
