@@ -153,8 +153,17 @@ set_up_framebuffer_for_miplevel(int level)
 		}
 	}
 
+	/* Some implementations don't support certain buffer
+	 * combinations, and that's ok, provided that the
+	 * implementation reports GL_FRAMEBUFFER_UNSUPPORTED.
+	 * However, if the buffer combination was supported at
+	 * miplevel 0, it should be supported at all miplevels.
+	 */
 	GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
-	if (status != GL_FRAMEBUFFER_COMPLETE) {
+	if (status == GL_FRAMEBUFFER_UNSUPPORTED && level == 0) {
+		printf("This buffer combination is unsupported\n");
+		piglit_report_result(PIGLIT_SKIP);
+	} else if (status != GL_FRAMEBUFFER_COMPLETE) {
 		printf("FBO incomplete at miplevel %d\n", level);
 		piglit_report_result(PIGLIT_FAIL);
 	}
