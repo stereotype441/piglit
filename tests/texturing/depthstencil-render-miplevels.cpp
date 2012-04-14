@@ -21,45 +21,65 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * The complete set of parameters to this test are:
+/** \file depthstencil-render-miplevels.cpp
  *
- * attach_depth: Indicates that a depth attachment should be used.
+ * Test that data rendered to color, depth, and stencil textures
+ * always lands at the correct miplevel.
  *
- * attach_stencil: Indicates that a stencil attachment should be used.
+ * This test operates by creating a set of texture buffers, attaching
+ * them to a framebuffer one miplevel at a time, and rendering
+ * different data into each miplevel.  Then it verifies, using
+ * glReadPixels, that the correct data appears at each miplevel.
  *
- * shared_attachment: Only allowed if attach_depth and attach_stencil
- * are both true.  Indicates that the same texture should be attached
- * to both depth and stencil attachments (as opposed to two separate
- * textures).
+ * This is useful in diagnosing bugs such as:
  *
- * attach_together: Only allowed if shared_attachment is true.
- * Indicates that the shared attachment should be performed using a
- * single call to glFramebufferTexture2D(GL_DEPTH_STENCIL_ATTACHMENT)
- * rather than two independent calls to
- * glFramebufferTexture2D(GL_DEPTH_ATTACHMENT) and
- * glFramebufferTexture2D(GL_STENCIL_ATTACHMENT).
+ * - Incorrect miplevels being attached to the framebuffer
  *
- * attach_stencil_first: Only allowed if attach_depth and
- * attach_stencil are both true, and attach_together is false.
- * Indicates that the stencil attachment should be made first, then
- * the depth attachment (as opposed to the opposite order).
+ * - Miplevels being laid out incorrectly in memory (e.g. in an
+ *   overlapping fashion)
  *
- * depth_attachment_lacks_stencil: Only allowed if attach_depth is
- * true and shared_attachment is false.  Indicates that the buffer
- * attached to the depth attachment point should use the
- * GL_DEPTH_COMPONENT format (rather than the GL_DEPTH_STENCIL
- * format).
+ * Usage: depthstencil-render-miplevels <buffer_combination> [options]
  *
- * detach_between_miplevels: Indicates that all framebuffer
- * attachments should be detached when switching from one miplevel to
- * the next.
+ *  buffer_combination:          buffer attachments (other than color->RGBA):
+ *  color                        None
+ *  stencil                      stencil->DEPTH_STENCIL
+ *  depth_x                      depth->DEPTH_STENCIL
+ *  depth                        depth->DEPTH_COMPONENT
+ *  depth_x_and_stencil          depth->DEPTH_STENCIL, stencil->DEPTH_STENCIL
+ *  stencil_and_depth_x          (as above, but stencil attached first)
+ *  depth_and_stencil            depth->DEPTH_COMPONENT, stencil->DEPTH_STENCIL
+ *  stencil_and_depth            (as above, but stencil attached first)
+ *  depth_stencil_shared         depth->DEPTH_STENCIL<-stencil
+ *  stencil_depth_shared         (as above, but stencil attached first)
+ *  depth_stencil_single_binding depth_stencil->DEPTH_STENCIL
  *
- * sequential: Indicates that each miplevel should be verified right
- * after populating it (rather than waiting until all miplevels are
- * populated before verifying any of them).  If the implementation has
- * bugs causing various miplevels to overlap each other, this may work
- * around those bugs.
+ * Note: the buffer attachments are diagrammed above as
+ * "attachment_point->BUFFER_TYPE".  So, for example:
+ *
+ * - "depth->DEPTH_COMPONENT, stencil->DEPTH_STENCIL" means there is a
+ *   texture of type GL_DEPTH_COMPONENT attached to
+ *   GL_DEPTH_ATTACHMENT, and a separate texture of type
+ *   GL_DEPTH_STENCIL attached to GL_STENCIL_ATTACHMENT.
+ *
+ * - "depth->DEPTH_STENCIL<-stencil" means there is a single texture
+ *   of type GL_DEPTH_STENCIL attached to both GL_DEPTH_ATTACHMENT and
+ *   GL_STENCIL_ATTACHMENT.
+ *
+ * - "depth_stencil->DEPTH_STENCIL" means there is a single texture of
+ *   type GL_DEPTH_STENCIL attached to the attachment point
+ *   GL_DEPTH_STENCIL_ATTACHMENT.
+ *
+ * Available options:
+ *
+ * - detach_between_miplevels: causes all textures to be detached from
+ *   the framebuffer when switching from one miplevel to the next, so
+ *   that the textures for each miplevel get bound to an empty
+ *   framebuffer.
+ *
+ * - sequential: causes the result of rending each miplevel to be
+ *   tested before moving on to the next miplevel.  If this option is
+ *   not specified, then all miplevels are rendered before any
+ *   miplevels are tested.
  */
 
 #include "piglit-util.h"
@@ -225,19 +245,19 @@ test_miplevel(int level)
 void
 print_usage_and_exit(char *prog_name)
 {
-	printf("Usage: %s <test_type> [options]\n"
-	       "  where <test_type> is one of:\n"
-	       "    color\n"
-	       "    stencil\n"
-	       "    depth_x\n"
-	       "    depth\n"
-	       "    depth_x_and_stencil\n"
-	       "    depth_and_stencil\n"
-	       "    stencil_and_depth_x\n"
-	       "    stencil_and_depth\n"
-	       "    depth_stencil_shared\n"
-	       "    stencil_depth_shared\n"
-	       "    depth_stencil_single_binding\n"
+	printf("Usage: %s <buffer_combination> [options]\n"
+	       "    buffer_combination:          buffer attachments (other than color->RGBA):\n"
+	       "    color                        None\n"
+	       "    stencil                      stencil->DEPTH_STENCIL\n"
+	       "    depth_x                      depth->DEPTH_STENCIL\n"
+	       "    depth                        depth->DEPTH_COMPONENT\n"
+	       "    depth_x_and_stencil          depth->DEPTH_STENCIL, stencil->DEPTH_STENCIL\n"
+	       "    stencil_and_depth_x          (as above, but stencil attached first)\n"
+	       "    depth_and_stencil            depth->DEPTH_COMPONENT, stencil->DEPTH_STENCIL\n"
+	       "    stencil_and_depth            (as above, but stencil attached first)\n"
+	       "    depth_stencil_shared         depth->DEPTH_STENCIL<-stencil\n"
+	       "    stencil_depth_shared         (as above, but stencil attached first)\n"
+	       "    depth_stencil_single_binding depth/stencil->DEPTH_STENCIL\n"
 	       "Available options:\n"
 	       "    detach_between_miplevels\n"
 	       "    sequential\n", prog_name);
