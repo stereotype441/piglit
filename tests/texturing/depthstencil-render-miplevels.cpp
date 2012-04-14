@@ -111,8 +111,10 @@ bool sequential = false;
 
 /* Create a mipmapped texture with the given dimensions and internal format. */
 GLuint
-create_mipmapped_tex(int dim, GLenum format)
+create_mipmapped_tex(int dim, GLenum internal_format)
 {
+	GLenum format = internal_format == GL_DEPTH_COMPONENT16
+		? GL_DEPTH_COMPONENT : internal_format;
 	GLenum type = format == GL_DEPTH_STENCIL
 		? GL_UNSIGNED_INT_24_8 : GL_UNSIGNED_BYTE;
 	GLuint tex;
@@ -121,7 +123,7 @@ create_mipmapped_tex(int dim, GLenum format)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	for (int level = 0; dim > 0; ++level, dim /= 2) {
-		glTexImage2D(GL_TEXTURE_2D, level, format,
+		glTexImage2D(GL_TEXTURE_2D, level, internal_format,
 			     dim, dim,
 			     0,
 			     format, type, NULL);
