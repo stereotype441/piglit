@@ -49,10 +49,7 @@
  *  depth_x_and_stencil          depth->DEPTH_STENCIL, stencil->DEPTH_STENCIL
  *  stencil_and_depth_x          (as above, but stencil attached first)
  *  depth_and_stencil            depth->DEPTH_COMPONENT, stencil->DEPTH_STENCIL
- *  d16_and_stencil              depth->DEPTH_COMPONENT16,
- *                                 stencil->DEPTH_STENCIL
  *  stencil_and_depth            (as above, but stencil attached first)
- *  stencil_and_d16              (as above, but stencil attached first)
  *  depth_stencil_shared         depth->DEPTH_STENCIL<-stencil
  *  stencil_depth_shared         (as above, but stencil attached first)
  *  depth_stencil_single_binding depth_stencil->DEPTH_STENCIL
@@ -297,11 +294,6 @@ piglit_init(int argc, char **argv)
 		attach_depth = true;
 		attach_stencil = true;
 		depth_attachment_lacks_stencil = true;
-	} else if (strcmp(argv[1], "d16_and_stencil") == 0) {
-		attach_depth = true;
-		attach_stencil = true;
-		depth_attachment_lacks_stencil = true;
-		depth_attachment_16bit = true;
 	} else if (strcmp(argv[1], "stencil_and_depth_x") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
@@ -311,12 +303,6 @@ piglit_init(int argc, char **argv)
 		attach_stencil = true;
 		attach_stencil_first = true;
 		depth_attachment_lacks_stencil = true;
-	} else if (strcmp(argv[1], "stencil_and_d16") == 0) {
-		attach_depth = true;
-		attach_stencil = true;
-		attach_stencil_first = true;
-		depth_attachment_lacks_stencil = true;
-		depth_attachment_16bit = true;
 	} else if (strcmp(argv[1], "depth_stencil_shared") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
