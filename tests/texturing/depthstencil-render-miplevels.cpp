@@ -358,7 +358,6 @@ piglit_init(int argc, char **argv)
 		}
 	} else {
 		for (int level = 0; level <= max_miplevel; ++level) {
-			printf("Setting up miplevel %d\n", level);
 			set_up_framebuffer_for_miplevel(level);
 			populate_miplevel(level);
 		}
