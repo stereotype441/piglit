@@ -106,9 +106,16 @@ bool depth_attachment_16bit = false;
 bool detach_between_miplevels = false;
 bool sequential = false;
 
+int
+compute_dim(int level)
+{
+	// return 1 << (max_miplevel - level);
+	return (1 << (max_miplevel - level)) + 1;
+}
+
 /* Create a mipmapped texture with the given dimensions and internal format. */
 GLuint
-create_mipmapped_tex(int dim, GLenum internal_format)
+create_mipmapped_tex(GLenum internal_format)
 {
 	GLenum format = internal_format == GL_DEPTH_COMPONENT16
 		? GL_DEPTH_COMPONENT : internal_format;
@@ -119,7 +126,8 @@ create_mipmapped_tex(int dim, GLenum internal_format)
 	glBindTexture(GL_TEXTURE_2D, tex);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	for (int level = 0; dim > 0; ++level, dim /= 2) {
+	for (int level = 0; level <= max_miplevel; ++level) {
+		int dim = compute_dim(level);
 		glTexImage2D(GL_TEXTURE_2D, level, internal_format,
 			     dim, dim,
 			     0,
@@ -222,7 +230,7 @@ bool
 test_miplevel(int level)
 {
 	bool pass = true;
-	int dim = 1 << (max_miplevel - level);
+	int dim = compute_dim(level);
 	float float_value = float(level + 1) / (max_miplevel + 1);
 	float expected_color[] = {
 		float_value, float_value, float_value, float_value
@@ -332,18 +340,15 @@ piglit_init(int argc, char **argv)
 
 	bool pass = true;
 
-	color_tex = create_mipmapped_tex(1 << max_miplevel, GL_RGBA);
+	color_tex = create_mipmapped_tex(GL_RGBA);
 
 	if (attach_depth) {
 		if (depth_attachment_16bit) {
-			depth_tex = create_mipmapped_tex(1 << max_miplevel,
-							 GL_DEPTH_COMPONENT16);
+			depth_tex = create_mipmapped_tex(GL_DEPTH_COMPONENT16);
 		} else if (depth_attachment_lacks_stencil) {
-			depth_tex = create_mipmapped_tex(1 << max_miplevel,
-							 GL_DEPTH_COMPONENT);
+			depth_tex = create_mipmapped_tex(GL_DEPTH_COMPONENT);
 		} else {
-			depth_tex = create_mipmapped_tex(1 << max_miplevel,
-							 GL_DEPTH_STENCIL);
+			depth_tex = create_mipmapped_tex(GL_DEPTH_STENCIL);
 		}
 	}
 
@@ -351,8 +356,7 @@ piglit_init(int argc, char **argv)
 		if (shared_attachment) {
 			stencil_tex = depth_tex;
 		} else {
-			stencil_tex = create_mipmapped_tex(1 << max_miplevel,
-							   GL_DEPTH_STENCIL);
+			stencil_tex = create_mipmapped_tex(GL_DEPTH_STENCIL);
 		}
 	}
 
