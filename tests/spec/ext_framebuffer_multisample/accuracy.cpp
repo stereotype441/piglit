@@ -936,8 +936,14 @@ Test::draw_test_image()
 		}
 	}
 	if (test_resolve && manifest_program) {
-		/* TODO: try scissoring */
-		manifest_program->run(-1, -1, 0, 1);
+		/* Use a scissor to ensure that we don't affect the
+		 * reference image.
+		 */
+		glEnable(GL_SCISSOR_TEST);
+		glScissor(0, 0, pattern_width, pattern_height);
+
+		manifest_program->run(-1, -1, 1, 1);
+		glDisable(GL_SCISSOR_TEST);
 	}
 }
 
