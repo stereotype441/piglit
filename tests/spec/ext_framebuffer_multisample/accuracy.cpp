@@ -689,10 +689,9 @@ void Sunburst::compile()
 
 	static const char *frag =
 		"#version 130\n"
-		"uniform float depth;\n" // TODO
 		"void main()\n"
 		"{\n"
-		"  gl_FragColor = vec4((depth + 1.0) / 2.0);\n" // TODO
+		"  gl_FragColor = vec4(0.0);\n"
 		"}\n";
 
 	/* Compile program */
