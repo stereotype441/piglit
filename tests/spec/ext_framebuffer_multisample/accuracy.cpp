@@ -36,7 +36,7 @@ const int supersample_factor = 16;
 class Fbo
 {
 public:
-	void init(bool multisampled, int width, int height, bool use_depth);
+	void init(int num_samples, int width, int height, bool use_depth);
 	void set_viewport();
 
 	int width;
@@ -46,7 +46,7 @@ public:
 };
 
 void
-Fbo::init(bool multisampled, int width, int height, bool use_depth)
+Fbo::init(int num_samples, int width, int height, bool use_depth)
 {
 	this->tex = 0;
 	this->width = width;
@@ -56,11 +56,11 @@ Fbo::init(bool multisampled, int width, int height, bool use_depth)
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, handle);
 
 	/* Color buffer */
-	if (multisampled) {
+	if (num_samples != 0) {
 		GLuint rb;
 		glGenRenderbuffers(1, &rb);
 		glBindRenderbuffer(GL_RENDERBUFFER, rb);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4,
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
 						 GL_RGBA, width, height);
 		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
 					  GL_COLOR_ATTACHMENT0,
@@ -92,7 +92,7 @@ Fbo::init(bool multisampled, int width, int height, bool use_depth)
 	GLuint stencil;
 	glGenRenderbuffers(1, &stencil);
 	glBindRenderbuffer(GL_RENDERBUFFER, stencil);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisampled ? 4 : 0,
+	glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
 					 GL_STENCIL_INDEX8, width, height);
 	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
 				  GL_RENDERBUFFER, stencil);
@@ -103,7 +103,7 @@ Fbo::init(bool multisampled, int width, int height, bool use_depth)
 		glGenRenderbuffers(1, &depth);
 		glBindRenderbuffer(GL_RENDERBUFFER, depth);
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER,
-						 multisampled ? 4 : 0,
+						 num_samples,
 						 GL_DEPTH_COMPONENT24,
 						 width, height);
 		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
@@ -837,7 +837,7 @@ class Test
 public:
 	Test(TestPattern *pattern, ManifestProgram *manifest_program,
 	     bool test_resolve, GLenum blit_type);
-	void init(bool small);
+	void init(int num_samples, bool small);
 	void run();
 
 private:
@@ -865,12 +865,12 @@ Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
 }
 
 void
-Test::init(bool small)
+Test::init(int num_samples, bool small)
 {
-	multisample_fbo.init(true /* multisampled */,
+	multisample_fbo.init(num_samples,
 			     small ? 16 : pattern_width,
 			     small ? 16 : pattern_height, true);
-	supersample_fbo.init(false /* multisampled */,
+	supersample_fbo.init(0 /* num_samples */,
 			     1024, 1024, true);
 
 	pattern->compile();
@@ -1033,7 +1033,7 @@ Test *test = NULL;
 void
 print_usage_and_exit(char *prog_name)
 {
-	printf("Usage: %s <test_type> [options]\n"
+	printf("Usage: %s <num_samples> <test_type> [options]\n"
 	       "  where <test_type> is one of:\n"
 	       "    color: test downsampling of color buffer\n"
 	       "    stencil_draw: test drawing using MSAA stencil buffer\n"
@@ -1049,23 +1049,30 @@ print_usage_and_exit(char *prog_name)
 extern "C" void
 piglit_init(int argc, char **argv)
 {
-	if (argc < 2)
+	if (argc < 3)
 		print_usage_and_exit(argv[0]);
-	if (strcmp(argv[1], "color") == 0) {
+	int num_samples;
+	{
+		char *endptr = NULL;
+		num_samples = strtol(argv[1], &endptr, 0);
+		if (endptr != argv[1] + strlen(argv[1]))
+			print_usage_and_exit(argv[0]);
+	}
+	if (strcmp(argv[2], "color") == 0) {
 		test = new Test(new Triangles(), NULL, false, 0);
-	} else if (strcmp(argv[1], "stencil_draw") == 0) {
+	} else if (strcmp(argv[2], "stencil_draw") == 0) {
 		test = new Test(new StencilSunburst(), new ManifestStencil(), false, 0);
-	} else if (strcmp(argv[1], "stencil_resolve") == 0) {
+	} else if (strcmp(argv[2], "stencil_resolve") == 0) {
 		test = new Test(new StencilSunburst(), new ManifestStencil(), true, GL_STENCIL_BUFFER_BIT);
-	} else if (strcmp(argv[1], "depth_draw") == 0) {
+	} else if (strcmp(argv[2], "depth_draw") == 0) {
 		test = new Test(new DepthSunburst(), new ManifestDepth(), false, 0);
-	} else if (strcmp(argv[1], "depth_resolve") == 0) {
+	} else if (strcmp(argv[2], "depth_resolve") == 0) {
 		test = new Test(new DepthSunburst(), new ManifestDepth(), true, GL_DEPTH_BUFFER_BIT);
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
 	bool small = false;
-	for (int i = 2; i < argc; ++i) {
+	for (int i = 3; i < argc; ++i) {
 		if (strcmp(argv[i], "small") == 0) {
 			small = true;
 		} else {
@@ -1073,7 +1080,7 @@ piglit_init(int argc, char **argv)
 		}
 	}
 
-	test->init(small);
+	test->init(num_samples, small);
 }
 
 extern "C" enum piglit_result
