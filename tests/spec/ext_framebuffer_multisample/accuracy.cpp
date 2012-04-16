@@ -1080,6 +1080,12 @@ piglit_init(int argc, char **argv)
 		}
 	}
 
+	/* Skip the test if num_samples > GL_MAX_SAMPLES */
+	GLint max_samples;
+	glGetIntegerv(GL_MAX_SAMPLES, &max_samples);
+	if (num_samples > max_samples)
+		piglit_report_result(PIGLIT_SKIP);
+
 	test->init(num_samples, small);
 }
 
