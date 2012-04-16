@@ -552,7 +552,7 @@ void Triangles::compile()
 
 	static const char *vert =
 		"#version 130\n"
-		"#extension GL_ARB_draw_instanced: require\n"
+		"#extension GL_EXT_draw_instanced: require\n"
 		"in vec2 pos_within_tri;\n"
 		"uniform float tri_scale;\n"
 		"uniform float rotation_delta;\n"
