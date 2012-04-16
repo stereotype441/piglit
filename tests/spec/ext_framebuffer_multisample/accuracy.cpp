@@ -247,14 +247,14 @@ class ManifestProgram
 {
 public:
 	virtual void compile() = 0;
-	virtual void run(float x0, float y0, float x1, float y1) = 0;
+	virtual void run() = 0;
 };
 
 class ManifestStencil : public ManifestProgram
 {
 public:
 	virtual void compile();
-	virtual void run(float x0, float y0, float x1, float y1);
+	virtual void run();
 
 private:
 	GLint prog;
@@ -304,10 +304,18 @@ ManifestStencil::compile()
 	glBindVertexArray(vao);
 
 	/* Set up vertex input buffer */
+	float vertex_data[4][2] = {
+		{ -1, -1 },
+		{ -1,  1 },
+		{  1,  1 },
+		{  1, -1 }
+	};
 	glGenVertexArrays(1, &vertex_buf);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
+		     GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float),
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_data[0]),
 			      (void *) 0);
 
 	/* Set up element input buffer to tesselate a quad into
@@ -322,7 +330,7 @@ ManifestStencil::compile()
 }
 
 void
-ManifestStencil::run(float x0, float y0, float x1, float y1)
+ManifestStencil::run()
 {
 	static float colors[8][4] = {
 		{ 0.0, 0.0, 0.0, 1.0 },
@@ -337,16 +345,6 @@ ManifestStencil::run(float x0, float y0, float x1, float y1)
 
 	piglit_UseProgram(prog);
 	glBindVertexArray(vao);
-
-	float vertex_data[4][2] = {
-		{ x0, y0 },
-		{ x0, y1 },
-		{ x1, y1 },
-		{ x1, y0 }
-	};
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
-		     GL_STREAM_DRAW);
 
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -367,7 +365,7 @@ class ManifestDepth : public ManifestProgram
 {
 public:
 	virtual void compile();
-	virtual void run(float x0, float y0, float x1, float y1);
+	virtual void run();
 
 private:
 	GLint prog;
@@ -420,10 +418,18 @@ ManifestDepth::compile()
 	glBindVertexArray(vao);
 
 	/* Set up vertex input buffer */
+	float vertex_data[4][2] = {
+		{ -1, -1 },
+		{ -1,  1 },
+		{  1,  1 },
+		{  1, -1 }
+	};
 	glGenVertexArrays(1, &vertex_buf);
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
+		     GL_STATIC_DRAW);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2*sizeof(float),
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_data[0]),
 			      (void *) 0);
 
 	/* Set up element input buffer to tesselate a quad into
@@ -438,7 +444,7 @@ ManifestDepth::compile()
 }
 
 void
-ManifestDepth::run(float x0, float y0, float x1, float y1)
+ManifestDepth::run()
 {
 	static float colors[8][4] = {
 		{ 0.0, 0.0, 0.0, 1.0 },
@@ -453,16 +459,6 @@ ManifestDepth::run(float x0, float y0, float x1, float y1)
 
 	piglit_UseProgram(prog);
 	glBindVertexArray(vao);
-
-	float vertex_data[4][2] = {
-		{ x0, y0 },
-		{ x0, y1 },
-		{ x1, y1 },
-		{ x1, y0 }
-	};
-	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
-		     GL_STREAM_DRAW);
 
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -920,7 +916,7 @@ Test::draw_test_image()
 						  blit_type, GL_NEAREST);
 			} else {
 				if (manifest_program)
-					manifest_program->run(-1, -1, 1, 1);
+					manifest_program->run();
 
 				glBindFramebuffer(GL_READ_FRAMEBUFFER,
 						  multisample_fbo.handle);
@@ -942,7 +938,7 @@ Test::draw_test_image()
 		glEnable(GL_SCISSOR_TEST);
 		glScissor(0, 0, pattern_width, pattern_height);
 
-		manifest_program->run(-1, -1, 1, 1);
+		manifest_program->run();
 		glDisable(GL_SCISSOR_TEST);
 	}
 }
@@ -968,7 +964,7 @@ Test::draw_reference_image()
 			pattern->draw(&proj);
 
 			if (manifest_program)
-				manifest_program->run(-1, -1, 1, 1);
+				manifest_program->run();
 
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glViewport(0, 0, piglit_width, piglit_height);
