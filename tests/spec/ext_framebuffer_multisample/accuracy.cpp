@@ -837,7 +837,7 @@ class Test
 public:
 	Test(TestPattern *pattern, ManifestProgram *manifest_program,
 	     bool test_resolve, GLenum blit_type);
-	void init();
+	void init(bool small);
 	void run();
 
 private:
@@ -865,11 +865,11 @@ Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
 }
 
 void
-Test::init()
+Test::init(bool small)
 {
-	/* TODO: choose whether to test small multisample_fbo by command line arg */
 	multisample_fbo.init(true /* multisampled */,
-			     pattern_width / 4, pattern_height / 4, true);
+			     small ? 16 : pattern_width,
+			     small ? 16 : pattern_height, true);
 	supersample_fbo.init(false /* multisampled */,
 			     1024, 1024, true);
 
@@ -1033,13 +1033,15 @@ Test *test = NULL;
 void
 print_usage_and_exit(char *prog_name)
 {
-	printf("Usage: %s <test_type>\n"
+	printf("Usage: %s <test_type> [options]\n"
 	       "  where <test_type> is one of:\n"
 	       "    color: test downsampling of color buffer\n"
 	       "    stencil_draw: test drawing using MSAA stencil buffer\n"
 	       "    stencil_resolve: test resolve of MSAA stencil buffer\n"
 	       "    depth_draw: test drawing using MSAA depth buffer\n"
-	       "    depth_resolve: test resolve of MSAA depth buffer\n",
+	       "    depth_resolve: test resolve of MSAA depth buffer\n"
+	       "Available options:\n"
+	       "    small: use a very small (16x16) MSAA buffer\n",
 	       prog_name);
 	piglit_report_result(PIGLIT_FAIL);
 }
@@ -1047,7 +1049,7 @@ print_usage_and_exit(char *prog_name)
 extern "C" void
 piglit_init(int argc, char **argv)
 {
-	if (argc != 2)
+	if (argc < 2)
 		print_usage_and_exit(argv[0]);
 	if (strcmp(argv[1], "color") == 0) {
 		test = new Test(new Triangles(), NULL, false, 0);
@@ -1062,8 +1064,16 @@ piglit_init(int argc, char **argv)
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
+	bool small = false;
+	for (int i = 2; i < argc; ++i) {
+		if (strcmp(argv[i], "small") == 0) {
+			small = true;
+		} else {
+			print_usage_and_exit(argv[0]);
+		}
+	}
 
-	test->init();
+	test->init(small);
 }
 
 extern "C" enum piglit_result
