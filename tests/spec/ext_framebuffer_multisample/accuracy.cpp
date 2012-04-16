@@ -468,8 +468,6 @@ ManifestDepth::run()
 
 	/* Clear the stencil buffer to 0, leaving depth and color
 	 * buffers unchanged.
-	 *
-	 * TODO: we're assuming scissoring works here.
 	 */
 	glClear(GL_STENCIL_BUFFER_BIT);
 
