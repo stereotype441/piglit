@@ -348,12 +348,14 @@ ManifestStencil::run()
 
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	/* Clear the color buffer to 0, in case the stencil buffer
+	 * contains any values outside the range 0..7
+	 */
+	glClear(GL_COLOR_BUFFER_BIT);
+
 	for (int i = 0; i < 8; ++i) {
-		/* TODO: should be able to get rid of the mask=0x07
-		 * kludge by using a scissor to clear just the color
-		 * buffer before we start
-		 */
-		glStencilFunc(GL_EQUAL, i, 0x07);
+		glStencilFunc(GL_EQUAL, i, 0xff);
 		piglit_Uniform4fv(color_loc, 1, colors[i]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 	}
