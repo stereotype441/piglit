@@ -36,7 +36,7 @@ const int supersample_factor = 16;
 class Fbo
 {
 public:
-	void init(int num_samples, int width, int height, bool use_depth);
+	void init(int num_samples, int width, int height);
 	void set_viewport();
 
 	int width;
@@ -46,7 +46,7 @@ public:
 };
 
 void
-Fbo::init(int num_samples, int width, int height, bool use_depth)
+Fbo::init(int num_samples, int width, int height)
 {
 	this->tex = 0;
 	this->width = width;
@@ -88,28 +88,15 @@ Fbo::init(int num_samples, int width, int height, bool use_depth)
 				       0 /* level */);
 	}
 
-	/* Stencil buffer */
-	GLuint stencil;
-	glGenRenderbuffers(1, &stencil);
-	glBindRenderbuffer(GL_RENDERBUFFER, stencil);
+	/* Depth/stencil buffer */
+	GLuint depth_stencil;
+	glGenRenderbuffers(1, &depth_stencil);
+	glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil);
 	glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
-					 GL_STENCIL_INDEX8, width, height);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
-				  GL_RENDERBUFFER, stencil);
-
-	if (use_depth) {
-		/* Depth buffer */
-		GLuint depth;
-		glGenRenderbuffers(1, &depth);
-		glBindRenderbuffer(GL_RENDERBUFFER, depth);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER,
-						 num_samples,
-						 GL_DEPTH_COMPONENT24,
-						 width, height);
-		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
-					  GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER,
-					  depth);
-	}
+					 GL_DEPTH_STENCIL, width, height);
+	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+				  GL_DEPTH_STENCIL_ATTACHMENT,
+				  GL_RENDERBUFFER, depth_stencil);
 
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("Framebuffer not complete\n");
@@ -869,9 +856,9 @@ Test::init(int num_samples, bool small)
 {
 	multisample_fbo.init(num_samples,
 			     small ? 16 : pattern_width,
-			     small ? 16 : pattern_height, true);
+			     small ? 16 : pattern_height);
 	supersample_fbo.init(0 /* num_samples */,
-			     1024, 1024, true);
+			     1024, 1024);
 
 	pattern->compile();
 	downsample_prog.compile();
