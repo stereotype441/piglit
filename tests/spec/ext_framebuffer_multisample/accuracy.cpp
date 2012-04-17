@@ -557,6 +557,7 @@ private:
 	GLuint vertex_buf;
 	GLuint vao;
 	GLint proj_loc;
+	GLint tri_num_loc;
 	int num_tris;
 };
 
@@ -586,22 +587,22 @@ void Triangles::compile()
 
 	static const char *vert =
 		"#version 130\n"
-		"#extension GL_EXT_draw_instanced: require\n"
 		"in vec2 pos_within_tri;\n"
 		"uniform float tri_scale;\n"
 		"uniform float rotation_delta;\n"
 		"uniform int tris_across;\n"
 		"uniform float final_scale;\n"
 		"uniform mat4 proj;\n"
+		"uniform int tri_num;\n"
 		"\n"
 		"void main()\n"
 		"{\n"
 		"  vec2 pos = tri_scale * pos_within_tri;\n"
-		"  float rotation = rotation_delta * gl_InstanceID;\n"
+		"  float rotation = rotation_delta * tri_num;\n"
 		"  pos = mat2(cos(rotation), sin(rotation),\n"
 		"             -sin(rotation), cos(rotation)) * pos;\n"
-		"  int i = gl_InstanceID % tris_across;\n"
-		"  int j = tris_across - 1 - gl_InstanceID / tris_across;\n"
+		"  int i = tri_num % tris_across;\n"
+		"  int j = tris_across - 1 - tri_num / tris_across;\n"
 		"  pos += (vec2(i, j) * 2.0 + 1.0) / tris_across - 1.0;\n"
 		"  pos *= final_scale;\n"
 		"  gl_Position = proj * vec4(pos, 0.0, 1.0);\n"
@@ -616,7 +617,6 @@ void Triangles::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	piglit_require_extension("GL_ARB_draw_instanced");
 	prog = piglit_CreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	piglit_AttachShader(prog, vs);
@@ -639,6 +639,7 @@ void Triangles::compile()
 	piglit_Uniform1f(piglit_GetUniformLocation(prog, "final_scale"),
 			 final_scale);
 	proj_loc = piglit_GetUniformLocation(prog, "proj");
+	tri_num_loc = piglit_GetUniformLocation(prog, "tri_num");
 
 	/* Set up vertex array object */
 	glGenVertexArrays(1, &vao);
@@ -661,7 +662,10 @@ void Triangles::draw(const TilingProjMatrix *proj)
 	piglit_UseProgram(prog);
 	piglit_UniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
 	glBindVertexArray(vao);
-	glDrawArraysInstanced(GL_TRIANGLES, 0, 3, num_tris);
+	for (int tri_num = 0; tri_num < num_tris; ++tri_num) {
+		piglit_Uniform1i(tri_num_loc, tri_num);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+	}
 }
 
 class Sunburst : public TestPattern
@@ -717,7 +721,6 @@ void Sunburst::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	piglit_require_extension("GL_ARB_draw_instanced");
 	prog = piglit_CreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	piglit_AttachShader(prog, vs);
