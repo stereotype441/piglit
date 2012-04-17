@@ -22,6 +22,7 @@
  */
 
 #include "piglit-util.h"
+#include <math.h>
 
 int piglit_width = 512;
 int piglit_height = 256;
@@ -832,6 +833,10 @@ public:
 
 	void summarize();
 
+	bool is_perfect();
+
+	bool is_better_than(double rms_error_threshold);
+
 private:
 	int count;
 	double sum_squared_error;
@@ -856,18 +861,30 @@ Stats::summarize()
 	}
 }
 
+bool
+Stats::is_perfect()
+{
+	return sum_squared_error == 0.0;
+}
+
+bool
+Stats::is_better_than(double rms_error_threshold)
+{
+	return sqrt(sum_squared_error / count) < rms_error_threshold;
+}
+
 class Test
 {
 public:
 	Test(TestPattern *pattern, ManifestProgram *manifest_program,
 	     bool test_resolve, GLenum blit_type);
 	void init(int num_samples, bool small, bool combine_depth_stencil);
-	void run();
+	piglit_result run();
 
 private:
 	void draw_test_image();
 	void draw_reference_image();
-	void measure_accuracy();
+	piglit_result measure_accuracy();
 
 	TestPattern *pattern;
 	ManifestProgram *manifest_program;
@@ -878,6 +895,7 @@ private:
 	Fbo singlesample_fbo;
 	Fbo supersample_fbo;
 	DownsampleProg downsample_prog;
+	int num_samples;
 };
 
 Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
@@ -892,6 +910,8 @@ Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
 void
 Test::init(int num_samples, bool small, bool combine_depth_stencil)
 {
+	this->num_samples = num_samples;
+
 	multisample_fbo.init(num_samples,
 			     small ? 16 : pattern_width,
 			     small ? 16 : pattern_height,
@@ -1018,9 +1038,11 @@ Test::draw_reference_image()
 	}
 }
 
-void
+piglit_result
 Test::measure_accuracy()
 {
+	bool pass = true;
+
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 			glViewport(0, 0, piglit_width, piglit_height);
@@ -1054,19 +1076,34 @@ Test::measure_accuracy()
 
 	printf("Pixels that should be unlit\n");
 	unlit_stats.summarize();
+	pass = unlit_stats.is_perfect() && pass;
 	printf("Pixels that should be totally lit\n");
 	totally_lit_stats.summarize();
+	pass = totally_lit_stats.is_perfect() && pass;
 	printf("Pixels that should be partially lit\n");
 	partially_lit_stats.summarize();
-	// TODO: generate piglit result
+
+	/* Empirically, the RMS error for no oversampling is about
+	 * 0.25, and each additional factor of 2 overampling reduces
+	 * the error by a factor of about 0.6.  Leaving some room for
+	 * variation, we'll set the error threshold to 0.333 * 0.6 ^
+	 * log2(num_samples).
+	 */
+	int effective_num_samples = num_samples == 0 ? 1 : num_samples;
+	double error_threshold =
+		0.333 * pow(0.6, log(effective_num_samples) / log(2.0));
+	printf("The error threshold for this test is %f\n", error_threshold);
+	pass = partially_lit_stats.is_better_than(error_threshold) && pass;
+	// TODO: deal with sRGB.
+	return pass ? PIGLIT_PASS : PIGLIT_FAIL;
 }
 
-void
+piglit_result
 Test::run()
 {
 	draw_test_image();
 	draw_reference_image();
-	measure_accuracy();
+	return measure_accuracy();
 }
 
 Test *test = NULL;
@@ -1134,14 +1171,14 @@ piglit_init(int argc, char **argv)
 	test->init(num_samples, small, combine_depth_stencil);
 }
 
-extern "C" enum piglit_result
+extern "C" piglit_result
 piglit_display()
 {
-	test->run();
+	piglit_result result = test->run();
 
 	piglit_present_results();
 
-	return PIGLIT_PASS;
+	return result;
 }
 
 };
