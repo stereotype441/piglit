@@ -151,7 +151,7 @@ class DownsampleProg
 {
 public:
 	void compile();
-	void run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dstY1);
+	void run(const Fbo *src_fbo, int dest_width, int dest_height);
 
 private:
 	GLint prog;
@@ -236,14 +236,10 @@ DownsampleProg::compile()
 }
 
 void
-DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dstY1)
+DownsampleProg::run(const Fbo *src_fbo, int dest_width, int dest_height)
 {
-	float x0 = -1;
-	float x1 = 1;
-	float y0 = -1;
-	float y1 = 1;
-	float w = src_fbo->width / supersample_factor;
-	float h = src_fbo->height / supersample_factor;
+	float w = dest_width;
+	float h = dest_height;
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, src_fbo->tex);
@@ -252,10 +248,10 @@ DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dst
 	glBindVertexArray(vao);
 
 	float vertex_data[4][4] = {
-		{ x0, y0, 0, 0 },
-		{ x0, y1, 0, h },
-		{ x1, y1, w, h },
-		{ x1, y0, w, 0 }
+		{ -1, -1, 0, 0 },
+		{ -1,  1, 0, h },
+		{  1,  1, w, h },
+		{  1, -1, w, 0 }
 	};
 	glBindBuffer(GL_ARRAY_BUFFER, vertex_buf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_data), vertex_data,
@@ -953,8 +949,7 @@ Test::downsample_color(Fbo *src_fbo, Fbo *dest_fbo,
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_fbo->handle);
 	dest_fbo->set_viewport();
-	downsample_prog.run(src_fbo,
-			    0, 0, downsampled_width, downsampled_height);
+	downsample_prog.run(src_fbo, dest_fbo->width, dest_fbo->height);
 }
 
 void
