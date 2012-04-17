@@ -944,63 +944,37 @@ Test::draw_test_image()
 					      y_offset);
 			pattern->draw(&proj);
 
-			if (test_resolve) {
-				glBindFramebuffer(GL_READ_FRAMEBUFFER,
-						  multisample_fbo.handle);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
-						  singlesample_fbo.handle);
-				singlesample_fbo.set_viewport();
-				glBlitFramebuffer(0, 0, multisample_fbo.width,
-						  multisample_fbo.height,
-						  0, 0, singlesample_fbo.width,
-						  singlesample_fbo.height,
-						  blit_type, GL_NEAREST);
-				glBindFramebuffer(GL_READ_FRAMEBUFFER,
-						  singlesample_fbo.handle);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-				glViewport(0, 0, piglit_width, piglit_height);
-				glBlitFramebuffer(0, 0, singlesample_fbo.width,
-						  singlesample_fbo.height,
-						  x_offset, y_offset,
-						  x_offset + singlesample_fbo.width,
-						  y_offset + singlesample_fbo.height,
-						  blit_type, GL_NEAREST);
-			} else {
-				if (manifest_program)
-					manifest_program->run();
+			if (manifest_program && !test_resolve)
+				manifest_program->run();
 
-				glBindFramebuffer(GL_READ_FRAMEBUFFER,
-						  multisample_fbo.handle);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
-						  singlesample_fbo.handle);
-				singlesample_fbo.set_viewport();
-				glBlitFramebuffer(0, 0, multisample_fbo.width,
-						  multisample_fbo.height,
-						  0, 0, singlesample_fbo.width,
-						  singlesample_fbo.height,
-						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-				glBindFramebuffer(GL_READ_FRAMEBUFFER,
-						  singlesample_fbo.handle);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-				glViewport(0, 0, piglit_width, piglit_height);
-				glBlitFramebuffer(0, 0, singlesample_fbo.width,
-						  singlesample_fbo.height,
-						  x_offset, y_offset,
-						  x_offset + singlesample_fbo.width,
-						  y_offset + singlesample_fbo.height,
-						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-			}
+			glBindFramebuffer(GL_READ_FRAMEBUFFER,
+					  multisample_fbo.handle);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
+					  singlesample_fbo.handle);
+			singlesample_fbo.set_viewport();
+
+			glBlitFramebuffer(0, 0, multisample_fbo.width,
+					  multisample_fbo.height,
+					  0, 0, singlesample_fbo.width,
+					  singlesample_fbo.height,
+					  test_resolve ? blit_type
+					  : GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+			if (manifest_program && test_resolve)
+				manifest_program->run();
+
+			glBindFramebuffer(GL_READ_FRAMEBUFFER,
+					  singlesample_fbo.handle);
+			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+			glViewport(0, 0, piglit_width, piglit_height);
+
+			glBlitFramebuffer(0, 0, singlesample_fbo.width,
+					  singlesample_fbo.height,
+					  x_offset, y_offset,
+					  x_offset + singlesample_fbo.width,
+					  y_offset + singlesample_fbo.height,
+					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		}
-	}
-	if (test_resolve && manifest_program) {
-		/* Use a scissor to ensure that we don't affect the
-		 * reference image.
-		 */
-		glEnable(GL_SCISSOR_TEST);
-		glScissor(0, 0, pattern_width, pattern_height);
-
-		manifest_program->run();
-		glDisable(GL_SCISSOR_TEST);
 	}
 }
 
