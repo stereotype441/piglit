@@ -974,9 +974,8 @@ Test::draw_test_image()
 				singlesample_fbo.set_viewport();
 				glBlitFramebuffer(0, 0, multisample_fbo.width,
 						  multisample_fbo.height,
-						  x_offset, y_offset,
-						  x_offset + multisample_fbo.width,
-						  y_offset + multisample_fbo.height,
+						  0, 0, singlesample_fbo.width,
+						  singlesample_fbo.height,
 						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 				glBindFramebuffer(GL_READ_FRAMEBUFFER,
 						  singlesample_fbo.handle);
