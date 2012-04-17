@@ -498,41 +498,6 @@ ManifestDepth::run()
 	glDisable(GL_DEPTH_TEST);
 }
 
-class TilingProjMatrix
-{
-public:
-	TilingProjMatrix(int tile_width, int tile_height,
-			 int x_offset, int y_offset);
-
-	float values[4][4];
-};
-
-TilingProjMatrix::TilingProjMatrix(int tile_width, int tile_height,
-				   int x_offset, int y_offset)
-{
-	/* Need a projection matrix such that:
-	 * xc = ((xe + 1) * pattern_width/2 - x_offset) * 2/tile_width - 1
-	 * yc = ((ye + 1) * pattern_height/2 - y_offset) * 2/tile_height - 1
-	 * zc = ze
-	 * wc = we = 1.0
-	 *
-	 * Therefore
-	 * xc = pattern_width / tile_width * xe
-	 *    + pattern_width / tile_width - x_offset * 2 / tile_width - 1
-	 * yc = pattern_height / tile_height * ye
-	 *    + pattern_height / tile_height - y_offset * 2 / tile_height - 1
-	 * zc = ze
-	 * wc = we = 1.0
-	 */
-	memset(values, 0, sizeof(values));
-	values[0][0] = float(pattern_width) / tile_width;
-	values[0][3] = values[0][0] - x_offset * 2.0 / tile_width - 1.0;
-	values[1][1] = float(pattern_height) / tile_height;
-	values[1][3] = values[1][1] - y_offset * 2.0 / tile_height - 1.0;
-	values[2][2] = 1.0;
-	values[3][3] = 1.0;
-}
-
 class TestPattern
 {
 public:
@@ -877,6 +842,7 @@ private:
 	void downsample_color(Fbo *src_fbo, Fbo *dest_fbo,
 			      int downsampled_width, int downsampled_height);
 	void show(Fbo *src_fbo, int x_offset, int y_offset);
+	void draw_pattern(int x_offset, int y_offset, int width, int height);
 
 	TestPattern *pattern;
 	ManifestProgram *manifest_program;
@@ -966,6 +932,37 @@ Test::show(Fbo *src_fbo, int x_offset, int y_offset)
 }
 
 void
+Test::draw_pattern(int x_offset, int y_offset, int width, int height)
+{
+	/* Need a projection matrix such that:
+	 * xc = ((xe + 1) * pattern_width/2 - x_offset) * 2/width - 1
+	 * yc = ((ye + 1) * pattern_height/2 - y_offset) * 2/height - 1
+	 * zc = ze
+	 * wc = we = 1.0
+	 *
+	 * Therefore
+	 * xc = pattern_width / width * xe
+	 *    + pattern_width / width - x_offset * 2 / width - 1
+	 * yc = pattern_height / height * ye
+	 *    + pattern_height / height - y_offset * 2 / height - 1
+	 * zc = ze
+	 * wc = we = 1.0
+	 */
+	float x_scale = float(pattern_width) / width;
+	float x_delta = x_scale - x_offset * 2.0 / width - 1.0;
+	float y_scale = float(pattern_height) / height;
+	float y_delta = y_scale - y_offset * 2.0 / height - 1.0;
+	float proj[4][4] = {
+		{ x_scale, 0, 0, x_delta },
+		{ 0, y_scale, 0, y_delta },
+		{ 0, 0, 1, 0 },
+		{ 0, 0, 0, 1 }
+	};
+
+	pattern->draw(proj);
+}
+
+void
 Test::draw_test_image()
 {
 	int num_h_tiles = pattern_width / multisample_fbo.width;
@@ -977,11 +974,9 @@ Test::draw_test_image()
 			multisample_fbo.set_viewport();
 			int x_offset = h * multisample_fbo.width;
 			int y_offset = v * multisample_fbo.height;
-			TilingProjMatrix proj(multisample_fbo.width,
-					      multisample_fbo.height,
-					      x_offset,
-					      y_offset);
-			pattern->draw(proj.values);
+			draw_pattern(x_offset, y_offset,
+				     multisample_fbo.width,
+				     multisample_fbo.height);
 
 			if (test_resolve) {
 				resolve(&multisample_fbo, &resolve_fbo,
@@ -1014,11 +1009,8 @@ Test::draw_reference_image()
 			supersample_fbo.set_viewport();
 			int x_offset = h * downsampled_width;
 			int y_offset = v * downsampled_height;
-			TilingProjMatrix proj(downsampled_width,
-					      downsampled_height,
-					      x_offset,
-					      y_offset);
-			pattern->draw(proj.values);
+			draw_pattern(x_offset, y_offset,
+				     downsampled_width, downsampled_height);
 
 			if (manifest_program)
 				manifest_program->run();
