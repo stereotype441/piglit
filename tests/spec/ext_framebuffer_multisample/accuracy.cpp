@@ -537,14 +537,14 @@ class TestPattern
 {
 public:
 	virtual void compile() = 0;
-	virtual void draw(const TilingProjMatrix *proj) = 0;
+	virtual void draw(float (*proj)[4]) = 0;
 };
 
 class Triangles : public TestPattern
 {
 public:
 	virtual void compile();
-	virtual void draw(const TilingProjMatrix *proj);
+	virtual void draw(float (*proj)[4]);
 
 private:
 	GLint prog;
@@ -645,12 +645,12 @@ void Triangles::compile()
 			      GL_FALSE, sizeof(pos_within_tri[0]), (void *) 0);
 }
 
-void Triangles::draw(const TilingProjMatrix *proj)
+void Triangles::draw(float (*proj)[4])
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glUseProgram(prog);
-	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj[0][0]);
 	glBindVertexArray(vao);
 	for (int tri_num = 0; tri_num < num_tris; ++tri_num) {
 		glUniform1i(tri_num_loc, tri_num);
@@ -745,11 +745,11 @@ void Sunburst::compile()
 class StencilSunburst : public Sunburst
 {
 public:
-	virtual void draw(const TilingProjMatrix *proj);
+	virtual void draw(float (*proj)[4]);
 };
 
 void
-StencilSunburst::draw(const TilingProjMatrix *proj)
+StencilSunburst::draw(float (*proj)[4])
 {
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -757,7 +757,7 @@ StencilSunburst::draw(const TilingProjMatrix *proj)
 	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	glUseProgram(prog);
-	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj[0][0]);
 	glBindVertexArray(vao);
 	for (int i = 0; i < num_tris; ++i) {
 		glStencilFunc(GL_ALWAYS, i+1, 0xff);
@@ -771,11 +771,11 @@ StencilSunburst::draw(const TilingProjMatrix *proj)
 class DepthSunburst : public Sunburst
 {
 public:
-	virtual void draw(const TilingProjMatrix *proj);
+	virtual void draw(float (*proj)[4]);
 };
 
 void
-DepthSunburst::draw(const TilingProjMatrix *proj)
+DepthSunburst::draw(float (*proj)[4])
 {
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
@@ -783,7 +783,7 @@ DepthSunburst::draw(const TilingProjMatrix *proj)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	glUseProgram(prog);
-	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj[0][0]);
 	glBindVertexArray(vao);
 	for (int i = 0; i < num_tris; ++i) {
 		/* Draw triangles in a haphazard order so we can
@@ -981,7 +981,7 @@ Test::draw_test_image()
 					      multisample_fbo.height,
 					      x_offset,
 					      y_offset);
-			pattern->draw(&proj);
+			pattern->draw(proj.values);
 
 			if (test_resolve) {
 				resolve(&multisample_fbo, &resolve_fbo,
@@ -1018,7 +1018,7 @@ Test::draw_reference_image()
 					      downsampled_height,
 					      x_offset,
 					      y_offset);
-			pattern->draw(&proj);
+			pattern->draw(proj.values);
 
 			if (manifest_program)
 				manifest_program->run();
