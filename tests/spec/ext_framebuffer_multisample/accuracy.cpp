@@ -21,6 +21,86 @@
  * IN THE SOFTWARE.
  */
 
+/**
+ * \file accuracy.cpp
+ *
+ * Verify the accuracy of multisample antialiasing.
+ *
+ * This test operates by rendering a scene consisting of triangles
+ * that aren't perfectly aligned to pixel coordinates.  Every triangle
+ * in the scene is rendered using a solid color whose color components
+ * are all 0.0 or 1.0.  The scene is renederd in two ways:
+ *
+ * - At normal resoluation, using MSAA.
+ *
+ * - At very high resolution ("supersampled" by a factor of 16 in both
+ *   X and Y dimensions), without MSAA.
+ *
+ * Then, the supersampled image is scaled down to match the resolution
+ * of the MSAA image, using a fragment shader to manually blend each
+ * block of 16x16 pixels down to 1 pixel.  This produces a reference
+ * image, which is then compared to the MSAA image to measure the
+ * error introduced by MSAA.
+ *
+ * (Note: the supersampled image is actually larger than the maximum
+ * texture size that GL 3.0 requires all implementations to support
+ * (1024x1024), so it is actually done in 1024x1024 tiles that are
+ * then stitched together to form the reference image).
+ *
+ * In the piglit window, the MSAA image appears on the left; the
+ * reference image is on the right.
+ *
+ * For each color component of each pixel, if the reference image has
+ * a value of exactly 0.0 or 1.0, that pixel is presumed to be
+ * completely covered by a triangle, so the test verifies that the
+ * corresponding pixel in the MSAA image is exactly 0.0 or 1.0.  Where
+ * the reference image has a value between 0.0 and 1.0, the test
+ * computes the RMS error between the reference image and the MSAA
+ * image.  This gives an estimate of how accurate MSAA rendering is
+ * when using the color buffer.
+ *
+ * In addition to the above test (the "color" test), this test can
+ * also verify the proper behavior of the stencil MSAA buffer.  This
+ * can be done in two ways:
+ *
+ * - "stencil_draw" test: after drawing the scene, we clear the MSAA
+ *   color buffer and run a "manifest" pass which uses stencil
+ *   operations to make a visual representation of the contents of the
+ *   stencil buffer show up in the color buffer.  The rest of the test
+ *   operates as usual.  This allows us to verify that drawing
+ *   operations that use the stencil buffer operate correctly in MSAA
+ *   mode.
+ *
+ * - "stencil_resolve" test: same as above, except that we blit the
+ *   MSAA stencil buffer to a single-sampled FBO before running the
+ *   "manifest" pass.  This allows us to verify that the
+ *   implementation properly downsamples the MSAA stencil buffer.
+ *
+ * There are similar variants "depth_draw" and "depth_resolve" for
+ * testing the MSAA depth buffer.
+ *
+ * Note that when downsampling the MSAA color buffer, implementations
+ * are expected to average the values of each of the color samples;
+ * but when downsampling the stencil and depth buffers, they are
+ * expected to just choose one representative sample (this is because
+ * an intermediate stencil or depth value would not be meaningful).
+ * Therefore, the pass threshold is relaxed for the "stencil_resolve"
+ * and "depth_resolve" tests.
+ *
+ * The test also accepts the following flags:
+ *
+ * - "small": Causes the MSAA image to be renedered in extremely tiny
+ *   (16x16) tiles that are then stitched together.  This verifies
+ *   that MSAA works properly on very small buffers (a critical corner
+ *   case on i965).
+ *
+ * - "depthstencil": Causes the framebuffers to use a combined
+ *   depth/stencil buffer (as opposed to separate depth and stencil
+ *   buffers).  On some implementations (e.g. the nVidia proprietary
+ *   driver for Linux) this is necessary for framebuffer completeness.
+ *   On others (e.g. i965), this is an important corner case to test.
+ */
+
 #include "piglit-util.h"
 #include <math.h>
 
@@ -34,6 +114,14 @@ const int pattern_width = 256;
 const int pattern_height = 256;
 const int supersample_factor = 16;
 
+/**
+ * Data structure representing one of the framebuffer objects used in
+ * the test.
+ *
+ * For the supersampled framebuffer object we use a texture as the
+ * backing store for the color buffer so that we can use a fragment
+ * shader to blend down to the reference image.
+ */
 class Fbo
 {
 public:
@@ -44,13 +132,18 @@ public:
 	int width;
 	int height;
 	GLuint handle;
-	GLuint tex;
+
+	/**
+	 * If this Fbo is not multisampled, the texture that is the
+	 * backing store for the color buffer.
+	 */
+	GLuint color_tex;
 };
 
 void
 Fbo::init(int num_samples, int width, int height, bool combine_depth_stencil)
 {
-	this->tex = 0;
+	this->color_tex = 0;
 	this->width = width;
 	this->height = height;
 
@@ -68,8 +161,8 @@ Fbo::init(int num_samples, int width, int height, bool combine_depth_stencil)
 					  GL_COLOR_ATTACHMENT0,
 					  GL_RENDERBUFFER, rb);
 	} else {
-		glGenTextures(1, &tex);
-		glBindTexture(GL_TEXTURE_2D, tex);
+		glGenTextures(1, &color_tex);
+		glBindTexture(GL_TEXTURE_2D, color_tex);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
 				GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
@@ -86,7 +179,7 @@ Fbo::init(int num_samples, int width, int height, bool combine_depth_stencil)
 		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
 				       GL_COLOR_ATTACHMENT0,
 				       GL_TEXTURE_2D,
-				       tex,
+				       color_tex,
 				       0 /* level */);
 	}
 
@@ -147,6 +240,10 @@ Fbo::set_viewport()
 	glViewport(0, 0, width, height);
 }
 
+/**
+ * Fragment shader program we apply to supersampled color buffer to
+ * produce the reference image.
+ */
 class DownsampleProg
 {
 public:
@@ -242,7 +339,7 @@ DownsampleProg::run(const Fbo *src_fbo, int dest_width, int dest_height)
 	float h = dest_height;
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, src_fbo->tex);
+	glBindTexture(GL_TEXTURE_2D, src_fbo->color_tex);
 
 	glUseProgram(prog);
 	glBindVertexArray(vao);
@@ -260,6 +357,12 @@ DownsampleProg::run(const Fbo *src_fbo, int dest_width, int dest_height)
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 }
 
+/**
+ * There are two programs used to "manifest" an auxiliary buffer,
+ * turning it into visible colors: one for manifesting the stencil
+ * buffer, and one for manifesting the depth buffer.  This is the base
+ * class that they both derive from.
+ */
 class ManifestProgram
 {
 public:
@@ -267,6 +370,14 @@ public:
 	virtual void run() = 0;
 };
 
+/**
+ * Program we use to manifest the stencil buffer.
+ *
+ * This program operates by repeatedly drawing over the entire buffer
+ * using the stencil function "EQUAL", and a different color each
+ * time.  This causes stencil values from 0 to 7 to manifest as colors
+ * (black, blue, green, cyan, red, magenta, yellow, white).
+ */
 class ManifestStencil : public ManifestProgram
 {
 public:
@@ -379,6 +490,17 @@ ManifestStencil::run()
 	glDisable(GL_STENCIL_TEST);
 }
 
+/**
+ * Program we use to manifest the depth buffer.
+ *
+ * This program operates by repeatedly drawing over the entire buffer
+ * at decreasing depth values with depth test enabled; the stencil
+ * function is configured to "EQUAL" with a stencil op of "INCR", so
+ * that after a sample passes the depth test, its stencil value will
+ * be incremented and it will fail the stencil test on later draws.
+ * As a result, depth values from back to front will manifest as
+ * colors (black, blue, green, cyan, red, magenta, yellow, white).
+ */
 class ManifestDepth : public ManifestProgram
 {
 public:
@@ -498,13 +620,32 @@ ManifestDepth::run()
 	glDisable(GL_DEPTH_TEST);
 }
 
+/**
+ * There are three programs used to draw a test pattern, depending on
+ * whether we are testing the color buffer, the depth buffer, or the
+ * stencil buffer.  This is the base class that they all derive from.
+ */
 class TestPattern
 {
 public:
 	virtual void compile() = 0;
+
+	/**
+	 * Draw the test pattern, applying the given projection matrix
+	 * to vertex coordinates.  The projection matrix is in
+	 * row-major order.
+	 */
 	virtual void draw(float (*proj)[4]) = 0;
 };
 
+/**
+ * Program we use to draw a test pattern into the color buffer.
+ *
+ * This program draws a sequence of small triangles, each rotated at a
+ * different angle.  This ensures that the image will have a large
+ * number of edges at different angles, so that we'll thoroughly
+ * exercise antialiasing.
+ */
 class Triangles : public TestPattern
 {
 public:
@@ -623,6 +764,18 @@ void Triangles::draw(float (*proj)[4])
 	}
 }
 
+/**
+ * Program we use to draw a test pattern into the depth and stencil
+ * buffers.
+ *
+ * This program draws a "sunburst" pattern consisting of 7 overlapping
+ * triangles, each at a different angle.  This ensures that the
+ * triangles overlap in a complex way, with the edges between them
+ * covering a a large number of different angles, so that we'll
+ * thoroughly exercise antialiasing.
+ *
+ * This program is further specialized into depth and stencil variants.
+ */
 class Sunburst : public TestPattern
 {
 public:
@@ -707,6 +860,13 @@ void Sunburst::compile()
 			      GL_FALSE, sizeof(pos_within_tri[0]), (void *) 0);
 }
 
+/**
+ * Program we use to draw a test pattern into the stencil buffer.
+ *
+ * The triangles in this sunburst are drawn back-to-front, using no
+ * depth testing.  Each triangle is drawn using a different stencil
+ * value.
+ */
 class StencilSunburst : public Sunburst
 {
 public:
@@ -733,6 +893,14 @@ StencilSunburst::draw(float (*proj)[4])
 	glDisable(GL_STENCIL_TEST);
 }
 
+/**
+ * Program we use to draw a test pattern into the depth buffer.
+ *
+ * The triangles in this sunburst are drawn at a series of different
+ * depth values, with depth testing enabled.  They are drawn in an
+ * arbitrary non-consecutive order, to verify that depth testing
+ * properly sorts the surfaces into front-to-back order.
+ */
 class DepthSunburst : public Sunburst
 {
 public:
@@ -773,6 +941,13 @@ DepthSunburst::draw(float (*proj)[4])
 	glDisable(GL_DEPTH_TEST);
 }
 
+/**
+ * Data structure for keeping track of statistics on pixel accuracy.
+ *
+ * We keep track of the number of pixels tested, and the sum of the
+ * squared error, so that we can summarize the RMS error at the
+ * conclusion of the test.
+ */
 class Stats
 {
 public:
@@ -826,11 +1001,15 @@ Stats::is_better_than(double rms_error_threshold)
 	return sqrt(sum_squared_error / count) < rms_error_threshold;
 }
 
+/**
+ * This data structure wraps up all the data we need to keep track of
+ * to run the test.
+ */
 class Test
 {
 public:
 	Test(TestPattern *pattern, ManifestProgram *manifest_program,
-	     bool test_resolve, GLenum blit_type);
+	     bool test_resolve, GLbitfield blit_type);
 	void init(int num_samples, bool small, bool combine_depth_stencil);
 	piglit_result run();
 
@@ -838,27 +1017,65 @@ private:
 	void draw_test_image();
 	void draw_reference_image();
 	piglit_result measure_accuracy();
-	void resolve(Fbo *src_fbo, Fbo *dest_fbo, GLbitfield which_buffers);
-	void downsample_color(Fbo *src_fbo, Fbo *dest_fbo,
-			      int downsampled_width, int downsampled_height);
+	void resolve(GLbitfield which_buffers);
+	void downsample_color(int downsampled_width, int downsampled_height);
 	void show(Fbo *src_fbo, int x_offset, int y_offset);
 	void draw_pattern(int x_offset, int y_offset, int width, int height);
 
+	/** The test pattern to draw. */
 	TestPattern *pattern;
-	ManifestProgram *manifest_program;
-	bool test_resolve;
-	GLenum blit_type;
 
+	/**
+	 * The program to use to manifest depth or stencil into color,
+	 * or NULL if we're just testing color rendering.
+	 */
+	ManifestProgram *manifest_program;
+
+	/**
+	 * True if we are testing the resolve pass, so we should
+	 * downsample before manifesting; false if we should manifest
+	 * before downsampling.
+	 */
+	bool test_resolve;
+
+	/**
+	 * The buffer under test--this should be compatible with the
+	 * "mask" argument of
+	 * glBlitFramebuffer--i.e. GL_COLOR_BUFFER_BIT,
+	 * GL_STENCIL_BUFFER_BIT, or GL_DEPTH_BUFFER_BIT.
+	 */
+	GLbitfield blit_type;
+
+	/**
+	 * Fbo that we perform MSAA rendering into.
+	 */
 	Fbo multisample_fbo;
+
+	/**
+	 * Single-sampled fbo that we blit into to force the
+	 * implementation to resolve MSAA buffers.
+	 */
 	Fbo resolve_fbo;
+
+	/**
+	 * Large fbo that we perform high-resolution ("supersampled")
+	 * rendering into.
+	 */
 	Fbo supersample_fbo;
+
+	/**
+	 * Normal-sized fbo that we manually downsample the
+	 * supersampled render result into, to create the reference
+	 * image.
+	 */
 	Fbo downsample_fbo;
+
 	DownsampleProg downsample_prog;
 	int num_samples;
 };
 
 Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
-	   bool test_resolve, GLenum blit_type)
+	   bool test_resolve, GLbitfield blit_type)
 	: pattern(pattern),
 	  manifest_program(manifest_program),
 	  test_resolve(test_resolve),
@@ -897,27 +1114,40 @@ Test::init(int num_samples, bool small, bool combine_depth_stencil)
 	glDisable(GL_DEPTH_TEST);
 }
 
+/**
+ * Blit the data from multisample_fbo to resolve_fbo, forcing the
+ * implementation to do an MSAA resolve.
+ */
 void
-Test::resolve(Fbo *src_fbo, Fbo *dest_fbo, GLbitfield which_buffers)
+Test::resolve(GLbitfield which_buffers)
 {
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fbo->handle);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_fbo->handle);
-	dest_fbo->set_viewport();
-	glBlitFramebuffer(0, 0, src_fbo->width, src_fbo->height,
-			  0, 0, dest_fbo->width, dest_fbo->height,
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, multisample_fbo.handle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolve_fbo.handle);
+	resolve_fbo.set_viewport();
+	glBlitFramebuffer(0, 0, multisample_fbo.width, multisample_fbo.height,
+			  0, 0, resolve_fbo.width, resolve_fbo.height,
 			  which_buffers, GL_NEAREST);
 }
 
+/**
+ * Use downsample_prog to blend 16x16 blocks of samples in
+ * supersample_fbo, to produce a reference image in downsample_fbo.
+ */
 void
-Test::downsample_color(Fbo *src_fbo, Fbo *dest_fbo,
-		       int downsampled_width, int downsampled_height)
+Test::downsample_color(int downsampled_width, int downsampled_height)
 {
 
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_fbo->handle);
-	dest_fbo->set_viewport();
-	downsample_prog.run(src_fbo, dest_fbo->width, dest_fbo->height);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, downsample_fbo.handle);
+	downsample_fbo.set_viewport();
+	downsample_prog.run(&supersample_fbo,
+			    downsample_fbo.width, downsample_fbo.height);
 }
 
+/**
+ * Blit the color data from src_fbo to the given location in the
+ * windowsystem buffer, so that the user can see it and we can read it
+ * using glReadPixels.
+ */
 void
 Test::show(Fbo *src_fbo, int x_offset, int y_offset)
 {
@@ -931,6 +1161,11 @@ Test::show(Fbo *src_fbo, int x_offset, int y_offset)
 			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
+/**
+ * Draw a portion of the test pattern by setting up an appropriate
+ * projection matrix to map that portion of the test pattern to the
+ * full FBO.
+ */
 void
 Test::draw_pattern(int x_offset, int y_offset, int width, int height)
 {
@@ -962,6 +1197,10 @@ Test::draw_pattern(int x_offset, int y_offset, int width, int height)
 	pattern->draw(proj);
 }
 
+/**
+ * Draw the entire test image, rendering it a piece at a time if
+ * multisample_fbo is very small.
+ */
 void
 Test::draw_test_image()
 {
@@ -979,15 +1218,13 @@ Test::draw_test_image()
 				     multisample_fbo.height);
 
 			if (test_resolve) {
-				resolve(&multisample_fbo, &resolve_fbo,
-					blit_type);
+				resolve(blit_type);
 				if (manifest_program)
 					manifest_program->run();
 			} else {
 				if (manifest_program)
 					manifest_program->run();
-				resolve(&multisample_fbo, &resolve_fbo,
-					GL_COLOR_BUFFER_BIT);
+				resolve(GL_COLOR_BUFFER_BIT);
 			}
 
 			show(&resolve_fbo, x_offset, y_offset);
@@ -995,6 +1232,9 @@ Test::draw_test_image()
 	}
 }
 
+/**
+ * Draw the entire test image, rendering it a piece at a time.
+ */
 void
 Test::draw_reference_image()
 {
@@ -1015,14 +1255,20 @@ Test::draw_reference_image()
 			if (manifest_program)
 				manifest_program->run();
 
-			downsample_color(&supersample_fbo, &downsample_fbo,
-					 downsampled_width, downsampled_height);
+			downsample_color(downsampled_width, downsampled_height);
 			show(&downsample_fbo,
 			     pattern_width + x_offset, y_offset);
 		}
 	}
 }
 
+/**
+ * Measure the accuracy of MSAA downsampling.  Pixels that are fully
+ * on or off in the reference image are required to be fully on or off
+ * in the test image.  Pixels that are not fully on or off in the
+ * reference image may be at any grayscale level; we mesaure the RMS
+ * error between the reference image and the test image.
+ */
 piglit_result
 Test::measure_accuracy()
 {
