@@ -1083,15 +1083,25 @@ Test::measure_accuracy()
 	printf("Pixels that should be partially lit\n");
 	partially_lit_stats.summarize();
 
-	/* Empirically, the RMS error for no oversampling is about
-	 * 0.25, and each additional factor of 2 overampling reduces
-	 * the error by a factor of about 0.6.  Leaving some room for
-	 * variation, we'll set the error threshold to 0.333 * 0.6 ^
-	 * log2(num_samples).
-	 */
-	int effective_num_samples = num_samples == 0 ? 1 : num_samples;
-	double error_threshold =
-		0.333 * pow(0.6, log(effective_num_samples) / log(2.0));
+	double error_threshold;
+	if (test_resolve) {
+		/* For depth and stencil resolves, the implementation
+		 * typically just picks one of the N multisamples, so
+		 * we have to allow for a generous amount of error.
+		 */
+		error_threshold = 0.4;
+	} else {
+		/* Empirically, the RMS error for no oversampling is
+		 * about 0.25, and each additional factor of 2
+		 * overampling reduces the error by a factor of about
+		 * 0.6.  Leaving some room for variation, we'll set
+		 * the error threshold to 0.333 * 0.6 ^
+		 * log2(num_samples).
+		 */
+		int effective_num_samples = num_samples == 0 ? 1 : num_samples;
+		error_threshold = 0.333 *
+			pow(0.6, log(effective_num_samples) / log(2.0));
+	}
 	printf("The error threshold for this test is %f\n", error_threshold);
 	pass = partially_lit_stats.is_better_than(error_threshold) && pass;
 	// TODO: deal with sRGB.
