@@ -36,7 +36,8 @@ const int supersample_factor = 16;
 class Fbo
 {
 public:
-	void init(int num_samples, int width, int height);
+	void init(int num_samples, int width, int height,
+		  bool combine_depth_stencil);
 	void set_viewport();
 
 	int width;
@@ -46,7 +47,7 @@ public:
 };
 
 void
-Fbo::init(int num_samples, int width, int height)
+Fbo::init(int num_samples, int width, int height, bool combine_depth_stencil)
 {
 	this->tex = 0;
 	this->width = width;
@@ -88,19 +89,52 @@ Fbo::init(int num_samples, int width, int height)
 				       0 /* level */);
 	}
 
-	/* Depth/stencil buffer */
-	GLuint depth_stencil;
-	glGenRenderbuffers(1, &depth_stencil);
-	glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil);
-	glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
-					 GL_DEPTH_STENCIL, width, height);
-	glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
-				  GL_DEPTH_STENCIL_ATTACHMENT,
-				  GL_RENDERBUFFER, depth_stencil);
+	/* Depth/stencil buffer(s) */
+	if (combine_depth_stencil) {
+		GLuint depth_stencil;
+		glGenRenderbuffers(1, &depth_stencil);
+		glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
+						 GL_DEPTH_STENCIL, width,
+						 height);
+		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+					  GL_DEPTH_STENCIL_ATTACHMENT,
+					  GL_RENDERBUFFER, depth_stencil);
+	} else {
+		GLuint stencil;
+		glGenRenderbuffers(1, &stencil);
+		glBindRenderbuffer(GL_RENDERBUFFER, stencil);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
+						 GL_STENCIL_INDEX8,
+						 width, height);
+		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+					  GL_STENCIL_ATTACHMENT,
+					  GL_RENDERBUFFER, stencil);
+
+		GLuint depth;
+		glGenRenderbuffers(1, &depth);
+		glBindRenderbuffer(GL_RENDERBUFFER, depth);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, num_samples,
+						 GL_DEPTH_COMPONENT24,
+						 width, height);
+		glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER,
+					  GL_DEPTH_ATTACHMENT,
+					  GL_RENDERBUFFER, depth);
+	}
 
 	if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
 		printf("Framebuffer not complete\n");
-		piglit_report_result(PIGLIT_FAIL);
+		if (!combine_depth_stencil) {
+			/* Some implementations do not support
+			 * separate depth and stencil attachments, so
+			 * don't consider it an error if we fail to
+			 * make a complete framebuffer using separate
+			 * depth and stencil attachments.
+			 */
+			piglit_report_result(PIGLIT_SKIP);
+		} else {
+			piglit_report_result(PIGLIT_FAIL);
+		}
 	}
 
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
@@ -824,7 +858,7 @@ class Test
 public:
 	Test(TestPattern *pattern, ManifestProgram *manifest_program,
 	     bool test_resolve, GLenum blit_type);
-	void init(int num_samples, bool small);
+	void init(int num_samples, bool small, bool combine_depth_stencil);
 	void run();
 
 private:
@@ -853,16 +887,18 @@ Test::Test(TestPattern *pattern, ManifestProgram *manifest_program,
 }
 
 void
-Test::init(int num_samples, bool small)
+Test::init(int num_samples, bool small, bool combine_depth_stencil)
 {
 	multisample_fbo.init(num_samples,
 			     small ? 16 : pattern_width,
-			     small ? 16 : pattern_height);
+			     small ? 16 : pattern_height,
+			     combine_depth_stencil);
 	singlesample_fbo.init(0,
-			     small ? 16 : pattern_width,
-			     small ? 16 : pattern_height);
+			      small ? 16 : pattern_width,
+			      small ? 16 : pattern_height,
+			      combine_depth_stencil);
 	supersample_fbo.init(0 /* num_samples */,
-			     1024, 1024);
+			     1024, 1024, combine_depth_stencil);
 
 	pattern->compile();
 	downsample_prog.compile();
@@ -1043,7 +1079,8 @@ print_usage_and_exit(char *prog_name)
 	       "    depth_draw: test drawing using MSAA depth buffer\n"
 	       "    depth_resolve: test resolve of MSAA depth buffer\n"
 	       "Available options:\n"
-	       "    small: use a very small (16x16) MSAA buffer\n",
+	       "    small: use a very small (16x16) MSAA buffer\n"
+	       "    depthstencil: use a combined depth/stencil buffer\n",
 	       prog_name);
 	piglit_report_result(PIGLIT_FAIL);
 }
@@ -1074,9 +1111,12 @@ piglit_init(int argc, char **argv)
 		print_usage_and_exit(argv[0]);
 	}
 	bool small = false;
+	bool combine_depth_stencil = false;
 	for (int i = 3; i < argc; ++i) {
 		if (strcmp(argv[i], "small") == 0) {
 			small = true;
+		} else if (strcmp(argv[i], "depthstencil") == 0) {
+			combine_depth_stencil = true;
 		} else {
 			print_usage_and_exit(argv[0]);
 		}
@@ -1088,7 +1128,7 @@ piglit_init(int argc, char **argv)
 	if (num_samples > max_samples)
 		piglit_report_result(PIGLIT_SKIP);
 
-	test->init(num_samples, small);
+	test->init(num_samples, small, combine_depth_stencil);
 }
 
 extern "C" enum piglit_result
