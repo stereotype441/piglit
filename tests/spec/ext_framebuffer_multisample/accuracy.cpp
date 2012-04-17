@@ -193,23 +193,23 @@ DownsampleProg::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	prog = piglit_CreateProgram();
+	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
-	piglit_AttachShader(prog, vs);
+	glAttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
-	piglit_AttachShader(prog, fs);
-	piglit_BindAttribLocation(prog, 0, "pos");
-	piglit_BindAttribLocation(prog, 1, "texCoord");
-	piglit_LinkProgram(prog);
+	glAttachShader(prog, fs);
+	glBindAttribLocation(prog, 0, "pos");
+	glBindAttribLocation(prog, 1, "texCoord");
+	glLinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	/* Set up uniforms */
-	piglit_UseProgram(prog);
-	piglit_Uniform1i(piglit_GetUniformLocation(prog, "supersample_factor"),
-			 supersample_factor);
-	piglit_Uniform1i(piglit_GetUniformLocation(prog, "samp"), 0);
+	glUseProgram(prog);
+	glUniform1i(glGetUniformLocation(prog, "supersample_factor"),
+		    supersample_factor);
+	glUniform1i(glGetUniformLocation(prog, "samp"), 0);
 
 	/* Set up vertex array object */
 	glGenVertexArrays(1, &vao);
@@ -249,7 +249,7 @@ DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dst
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, src_fbo->tex);
 
-	piglit_UseProgram(prog);
+	glUseProgram(prog);
 	glBindVertexArray(vao);
 
 	float vertex_data[4][4] = {
@@ -306,20 +306,20 @@ ManifestStencil::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	prog = piglit_CreateProgram();
+	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
-	piglit_AttachShader(prog, vs);
+	glAttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
-	piglit_AttachShader(prog, fs);
-	piglit_BindAttribLocation(prog, 0, "pos");
-	piglit_LinkProgram(prog);
+	glAttachShader(prog, fs);
+	glBindAttribLocation(prog, 0, "pos");
+	glLinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	/* Set up uniforms */
-	piglit_UseProgram(prog);
-	color_loc = piglit_GetUniformLocation(prog, "color");
+	glUseProgram(prog);
+	color_loc = glGetUniformLocation(prog, "color");
 
 	/* Set up vertex array object */
 	glGenVertexArrays(1, &vao);
@@ -365,7 +365,7 @@ ManifestStencil::run()
 		{ 1.0, 1.0, 1.0, 1.0 }
 	};
 
-	piglit_UseProgram(prog);
+	glUseProgram(prog);
 	glBindVertexArray(vao);
 
 	glEnable(GL_STENCIL_TEST);
@@ -378,7 +378,7 @@ ManifestStencil::run()
 
 	for (int i = 0; i < 8; ++i) {
 		glStencilFunc(GL_EQUAL, i, 0xff);
-		piglit_Uniform4fv(color_loc, 1, colors[i]);
+		glUniform4fv(color_loc, 1, colors[i]);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 	}
 
@@ -421,21 +421,21 @@ ManifestDepth::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	prog = piglit_CreateProgram();
+	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
-	piglit_AttachShader(prog, vs);
+	glAttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
-	piglit_AttachShader(prog, fs);
-	piglit_BindAttribLocation(prog, 0, "pos");
-	piglit_LinkProgram(prog);
+	glAttachShader(prog, fs);
+	glBindAttribLocation(prog, 0, "pos");
+	glLinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	/* Set up uniforms */
-	piglit_UseProgram(prog);
-	color_loc = piglit_GetUniformLocation(prog, "color");
-	depth_loc = piglit_GetUniformLocation(prog, "depth");
+	glUseProgram(prog);
+	color_loc = glGetUniformLocation(prog, "color");
+	depth_loc = glGetUniformLocation(prog, "depth");
 
 	/* Set up vertex array object */
 	glGenVertexArrays(1, &vao);
@@ -481,7 +481,7 @@ ManifestDepth::run()
 		{ 1.0, 1.0, 1.0, 1.0 }
 	};
 
-	piglit_UseProgram(prog);
+	glUseProgram(prog);
 	glBindVertexArray(vao);
 
 	glEnable(GL_DEPTH_TEST);
@@ -496,8 +496,8 @@ ManifestDepth::run()
 	glClear(GL_STENCIL_BUFFER_BIT);
 
 	for (int i = 0; i < 8; ++i) {
-		piglit_Uniform4fv(color_loc, 1, colors[i]);
-		piglit_Uniform1f(depth_loc, float(7 - 2*i)/8);
+		glUniform4fv(color_loc, 1, colors[i]);
+		glUniform1f(depth_loc, float(7 - 2*i)/8);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void *) 0);
 	}
 
@@ -618,29 +618,26 @@ void Triangles::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	prog = piglit_CreateProgram();
+	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
-	piglit_AttachShader(prog, vs);
+	glAttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
-	piglit_AttachShader(prog, fs);
-	piglit_BindAttribLocation(prog, 0, "pos_within_tri");
-	piglit_LinkProgram(prog);
+	glAttachShader(prog, fs);
+	glBindAttribLocation(prog, 0, "pos_within_tri");
+	glLinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	/* Set up uniforms */
-	piglit_UseProgram(prog);
-	piglit_Uniform1f(piglit_GetUniformLocation(prog, "tri_scale"),
-			 tri_scale);
-	piglit_Uniform1f(piglit_GetUniformLocation(prog, "rotation_delta"),
-			 rotation_delta);
-	piglit_Uniform1i(piglit_GetUniformLocation(prog, "tris_across"),
-			 tris_across);
-	piglit_Uniform1f(piglit_GetUniformLocation(prog, "final_scale"),
-			 final_scale);
-	proj_loc = piglit_GetUniformLocation(prog, "proj");
-	tri_num_loc = piglit_GetUniformLocation(prog, "tri_num");
+	glUseProgram(prog);
+	glUniform1f(glGetUniformLocation(prog, "tri_scale"), tri_scale);
+	glUniform1f(glGetUniformLocation(prog, "rotation_delta"),
+		    rotation_delta);
+	glUniform1i(glGetUniformLocation(prog, "tris_across"), tris_across);
+	glUniform1f(glGetUniformLocation(prog, "final_scale"), final_scale);
+	proj_loc = glGetUniformLocation(prog, "proj");
+	tri_num_loc = glGetUniformLocation(prog, "tri_num");
 
 	/* Set up vertex array object */
 	glGenVertexArrays(1, &vao);
@@ -660,11 +657,11 @@ void Triangles::draw(const TilingProjMatrix *proj)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	piglit_UseProgram(prog);
-	piglit_UniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glUseProgram(prog);
+	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
 	glBindVertexArray(vao);
 	for (int tri_num = 0; tri_num < num_tris; ++tri_num) {
-		piglit_Uniform1i(tri_num_loc, tri_num);
+		glUniform1i(tri_num_loc, tri_num);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 }
@@ -722,23 +719,23 @@ void Sunburst::compile()
 
 	/* Compile program */
 	piglit_require_GLSL_version(130);
-	prog = piglit_CreateProgram();
+	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
-	piglit_AttachShader(prog, vs);
+	glAttachShader(prog, vs);
 	GLint fs = piglit_compile_shader_text(GL_FRAGMENT_SHADER, frag);
-	piglit_AttachShader(prog, fs);
-	piglit_BindAttribLocation(prog, 0, "pos_within_tri");
-	piglit_LinkProgram(prog);
+	glAttachShader(prog, fs);
+	glBindAttribLocation(prog, 0, "pos_within_tri");
+	glLinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	/* Set up uniforms */
-	piglit_UseProgram(prog);
-	rotation_loc = piglit_GetUniformLocation(prog, "rotation");
-	depth_loc = piglit_GetUniformLocation(prog, "depth");
-	piglit_Uniform1f(depth_loc, 0.0);
-	proj_loc = piglit_GetUniformLocation(prog, "proj");
+	glUseProgram(prog);
+	rotation_loc = glGetUniformLocation(prog, "rotation");
+	depth_loc = glGetUniformLocation(prog, "depth");
+	glUniform1f(depth_loc, 0.0);
+	proj_loc = glGetUniformLocation(prog, "proj");
 
 	/* Set up vertex array object */
 	glGenVertexArrays(1, &vao);
@@ -768,12 +765,12 @@ StencilSunburst::draw(const TilingProjMatrix *proj)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	piglit_UseProgram(prog);
-	piglit_UniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glUseProgram(prog);
+	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
 	glBindVertexArray(vao);
 	for (int i = 0; i < num_tris; ++i) {
 		glStencilFunc(GL_ALWAYS, i+1, 0xff);
-		piglit_Uniform1f(rotation_loc, M_PI * 2.0 * i / num_tris);
+		glUniform1f(rotation_loc, M_PI * 2.0 * i / num_tris);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
@@ -794,8 +791,8 @@ DepthSunburst::draw(const TilingProjMatrix *proj)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	piglit_UseProgram(prog);
-	piglit_UniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
+	glUseProgram(prog);
+	glUniformMatrix4fv(proj_loc, 1, GL_TRUE, &proj->values[0][0]);
 	glBindVertexArray(vao);
 	for (int i = 0; i < num_tris; ++i) {
 		/* Draw triangles in a haphazard order so we can
@@ -808,12 +805,12 @@ DepthSunburst::draw(const TilingProjMatrix *proj)
 		 * triangles at depths of 3/4, 1/2, -1/4, 0, 1/4, 1/2,
 		 * and 3/4.
 		 */
-		piglit_Uniform1f(depth_loc,
-				 float(num_tris - triangle_to_draw * 2 - 1)
-				 / (num_tris + 1));
+		glUniform1f(depth_loc,
+			    float(num_tris - triangle_to_draw * 2 - 1)
+			    / (num_tris + 1));
 
-		piglit_Uniform1f(rotation_loc,
-				 M_PI * 2.0 * triangle_to_draw / num_tris);
+		glUniform1f(rotation_loc,
+			    M_PI * 2.0 * triangle_to_draw / num_tris);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
 	}
 
