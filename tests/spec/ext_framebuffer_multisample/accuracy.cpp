@@ -192,7 +192,6 @@ DownsampleProg::compile()
 		"}\n";
 
 	/* Compile program */
-	piglit_require_GLSL_version(130);
 	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	glAttachShader(prog, vs);
@@ -305,7 +304,6 @@ ManifestStencil::compile()
 		"}\n";
 
 	/* Compile program */
-	piglit_require_GLSL_version(130);
 	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	glAttachShader(prog, vs);
@@ -420,7 +418,6 @@ ManifestDepth::compile()
 		"}\n";
 
 	/* Compile program */
-	piglit_require_GLSL_version(130);
 	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	glAttachShader(prog, vs);
@@ -617,7 +614,6 @@ void Triangles::compile()
 		"}\n";
 
 	/* Compile program */
-	piglit_require_GLSL_version(130);
 	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	glAttachShader(prog, vs);
@@ -718,7 +714,6 @@ void Sunburst::compile()
 		"}\n";
 
 	/* Compile program */
-	piglit_require_GLSL_version(130);
 	prog = glCreateProgram();
 	GLint vs = piglit_compile_shader_text(GL_VERTEX_SHADER, vert);
 	glAttachShader(prog, vs);
@@ -1169,6 +1164,7 @@ piglit_init(int argc, char **argv)
 	}
 
 	piglit_require_gl_version(30);
+	piglit_require_GLSL_version(130);
 
 	/* Skip the test if num_samples > GL_MAX_SAMPLES */
 	GLint max_samples;
