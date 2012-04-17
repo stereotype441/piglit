@@ -26,7 +26,7 @@
 
 int piglit_width = 512;
 int piglit_height = 256;
-int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE | GLUT_STENCIL;
+int piglit_window_mode = GLUT_RGBA | GLUT_ALPHA | GLUT_DOUBLE;
 
 namespace {
 
