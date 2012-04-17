@@ -838,6 +838,7 @@ private:
 	GLenum blit_type;
 
 	Fbo multisample_fbo;
+	Fbo singlesample_fbo;
 	Fbo supersample_fbo;
 	DownsampleProg downsample_prog;
 };
@@ -855,6 +856,9 @@ void
 Test::init(int num_samples, bool small)
 {
 	multisample_fbo.init(num_samples,
+			     small ? 16 : pattern_width,
+			     small ? 16 : pattern_height);
+	singlesample_fbo.init(0,
 			     small ? 16 : pattern_width,
 			     small ? 16 : pattern_height);
 	supersample_fbo.init(0 /* num_samples */,
@@ -906,13 +910,24 @@ Test::draw_test_image()
 
 				glBindFramebuffer(GL_READ_FRAMEBUFFER,
 						  multisample_fbo.handle);
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-				glViewport(0, 0, piglit_width, piglit_height);
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
+						  singlesample_fbo.handle);
+				singlesample_fbo.set_viewport();
 				glBlitFramebuffer(0, 0, multisample_fbo.width,
 						  multisample_fbo.height,
 						  x_offset, y_offset,
 						  x_offset + multisample_fbo.width,
 						  y_offset + multisample_fbo.height,
+						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+				glBindFramebuffer(GL_READ_FRAMEBUFFER,
+						  singlesample_fbo.handle);
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+				glViewport(0, 0, piglit_width, piglit_height);
+				glBlitFramebuffer(0, 0, singlesample_fbo.width,
+						  singlesample_fbo.height,
+						  x_offset, y_offset,
+						  x_offset + singlesample_fbo.width,
+						  y_offset + singlesample_fbo.height,
 						  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 			}
 		}
