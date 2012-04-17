@@ -1171,6 +1171,8 @@ piglit_init(int argc, char **argv)
 		}
 	}
 
+	piglit_require_gl_version(30);
+
 	/* Skip the test if num_samples > GL_MAX_SAMPLES */
 	GLint max_samples;
 	glGetIntegerv(GL_MAX_SAMPLES, &max_samples);
