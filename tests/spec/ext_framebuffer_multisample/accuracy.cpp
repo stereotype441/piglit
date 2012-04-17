@@ -238,10 +238,10 @@ DownsampleProg::compile()
 void
 DownsampleProg::run(const Fbo *src_fbo, int dstX0, int dstY0, int dstX1, int dstY1)
 {
-	float x0 = dstX0 * 2.0 / piglit_width - 1.0;
-	float x1 = dstX1 * 2.0 / piglit_width - 1.0;
-	float y0 = dstY0 * 2.0 / piglit_height - 1.0;
-	float y1 = dstY1 * 2.0 / piglit_height - 1.0;
+	float x0 = -1;
+	float x1 = 1;
+	float y0 = -1;
+	float y1 = 1;
 	float w = src_fbo->width / supersample_factor;
 	float h = src_fbo->height / supersample_factor;
 
@@ -877,6 +877,10 @@ private:
 	void draw_test_image();
 	void draw_reference_image();
 	piglit_result measure_accuracy();
+	void resolve(Fbo *src_fbo, Fbo *dest_fbo, GLbitfield which_buffers);
+	void downsample_color(Fbo *src_fbo, Fbo *dest_fbo,
+			      int downsampled_width, int downsampled_height);
+	void show(Fbo *src_fbo, int x_offset, int y_offset);
 
 	TestPattern *pattern;
 	ManifestProgram *manifest_program;
@@ -884,8 +888,9 @@ private:
 	GLenum blit_type;
 
 	Fbo multisample_fbo;
-	Fbo singlesample_fbo;
+	Fbo resolve_fbo;
 	Fbo supersample_fbo;
+	Fbo downsample_fbo;
 	DownsampleProg downsample_prog;
 	int num_samples;
 };
@@ -908,12 +913,16 @@ Test::init(int num_samples, bool small, bool combine_depth_stencil)
 			     small ? 16 : pattern_width,
 			     small ? 16 : pattern_height,
 			     combine_depth_stencil);
-	singlesample_fbo.init(0,
-			      small ? 16 : pattern_width,
-			      small ? 16 : pattern_height,
-			      combine_depth_stencil);
+	resolve_fbo.init(0,
+			 small ? 16 : pattern_width,
+			 small ? 16 : pattern_height,
+			 combine_depth_stencil);
 	supersample_fbo.init(0 /* num_samples */,
 			     1024, 1024, combine_depth_stencil);
+	downsample_fbo.init(0 /* num_samples */,
+			    1024 / supersample_factor,
+			    1024 / supersample_factor,
+			    combine_depth_stencil);
 
 	pattern->compile();
 	downsample_prog.compile();
@@ -924,6 +933,41 @@ Test::init(int num_samples, bool small, bool combine_depth_stencil)
 	 * explicitly want it
 	 */
 	glDisable(GL_DEPTH_TEST);
+}
+
+void
+Test::resolve(Fbo *src_fbo, Fbo *dest_fbo, GLbitfield which_buffers)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fbo->handle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_fbo->handle);
+	dest_fbo->set_viewport();
+	glBlitFramebuffer(0, 0, src_fbo->width, src_fbo->height,
+			  0, 0, dest_fbo->width, dest_fbo->height,
+			  which_buffers, GL_NEAREST);
+}
+
+void
+Test::downsample_color(Fbo *src_fbo, Fbo *dest_fbo,
+		       int downsampled_width, int downsampled_height)
+{
+
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_fbo->handle);
+	dest_fbo->set_viewport();
+	downsample_prog.run(src_fbo,
+			    0, 0, downsampled_width, downsampled_height);
+}
+
+void
+Test::show(Fbo *src_fbo, int x_offset, int y_offset)
+{
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, src_fbo->handle);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	glViewport(0, 0, piglit_width, piglit_height);
+	glBlitFramebuffer(0, 0, src_fbo->width, src_fbo->height,
+			  x_offset, y_offset,
+			  x_offset + src_fbo->width,
+			  y_offset + src_fbo->height,
+			  GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }
 
 void
@@ -944,36 +988,19 @@ Test::draw_test_image()
 					      y_offset);
 			pattern->draw(&proj);
 
-			if (manifest_program && !test_resolve)
-				manifest_program->run();
+			if (test_resolve) {
+				resolve(&multisample_fbo, &resolve_fbo,
+					blit_type);
+				if (manifest_program)
+					manifest_program->run();
+			} else {
+				if (manifest_program)
+					manifest_program->run();
+				resolve(&multisample_fbo, &resolve_fbo,
+					GL_COLOR_BUFFER_BIT);
+			}
 
-			glBindFramebuffer(GL_READ_FRAMEBUFFER,
-					  multisample_fbo.handle);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER,
-					  singlesample_fbo.handle);
-			singlesample_fbo.set_viewport();
-
-			glBlitFramebuffer(0, 0, multisample_fbo.width,
-					  multisample_fbo.height,
-					  0, 0, singlesample_fbo.width,
-					  singlesample_fbo.height,
-					  test_resolve ? blit_type
-					  : GL_COLOR_BUFFER_BIT, GL_NEAREST);
-
-			if (manifest_program && test_resolve)
-				manifest_program->run();
-
-			glBindFramebuffer(GL_READ_FRAMEBUFFER,
-					  singlesample_fbo.handle);
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glViewport(0, 0, piglit_width, piglit_height);
-
-			glBlitFramebuffer(0, 0, singlesample_fbo.width,
-					  singlesample_fbo.height,
-					  x_offset, y_offset,
-					  x_offset + singlesample_fbo.width,
-					  y_offset + singlesample_fbo.height,
-					  GL_COLOR_BUFFER_BIT, GL_NEAREST);
+			show(&resolve_fbo, x_offset, y_offset);
 		}
 	}
 }
@@ -1001,14 +1028,10 @@ Test::draw_reference_image()
 			if (manifest_program)
 				manifest_program->run();
 
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-			glViewport(0, 0, piglit_width, piglit_height);
-			downsample_prog.run(&supersample_fbo,
-					    x_offset + pattern_width,
-					    y_offset,
-					    x_offset + pattern_width
-					    + downsampled_width,
-					    y_offset + downsampled_height);
+			downsample_color(&supersample_fbo, &downsample_fbo,
+					 downsampled_width, downsampled_height);
+			show(&downsample_fbo,
+			     pattern_width + x_offset, y_offset);
 		}
 	}
 }
