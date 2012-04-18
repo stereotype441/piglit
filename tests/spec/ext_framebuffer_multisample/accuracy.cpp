@@ -54,10 +54,10 @@
  * a value of exactly 0.0 or 1.0, that pixel is presumed to be
  * completely covered by a triangle, so the test verifies that the
  * corresponding pixel in the MSAA image is exactly 0.0 or 1.0.  Where
- * the reference image has a value between 0.0 and 1.0, the test
- * computes the RMS error between the reference image and the MSAA
- * image.  This gives an estimate of how accurate MSAA rendering is
- * when using the color buffer.
+ * the reference image has a value between 0.0 and 1.0, we know there
+ * is a triangle boundary that MSAA should smooth out, so the test
+ * estimates the accuracy of MSAA rendering by computing the RMS error
+ * between the reference image and the MSAA image for these pixels.
  *
  * In addition to the above test (the "color" test), this test can
  * also verify the proper behavior of the stencil MSAA buffer.  This
@@ -80,7 +80,7 @@
  * testing the MSAA depth buffer.
  *
  * Note that when downsampling the MSAA color buffer, implementations
- * are expected to average the values of each of the color samples;
+ * are expected to blend the values of each of the color samples;
  * but when downsampling the stencil and depth buffers, they are
  * expected to just choose one representative sample (this is because
  * an intermediate stencil or depth value would not be meaningful).
@@ -241,8 +241,10 @@ Fbo::set_viewport()
 }
 
 /**
- * Fragment shader program we apply to supersampled color buffer to
- * produce the reference image.
+ * Fragment shader program we apply to the supersampled color buffer
+ * to produce the reference image.  This program manually blends each
+ * 16x16 block of samples in the supersampled color buffer down to a
+ * single sample in the downsampled buffer.
  */
 class DownsampleProg
 {
