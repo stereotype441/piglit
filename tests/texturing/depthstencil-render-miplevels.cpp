@@ -91,8 +91,6 @@ int piglit_window_mode = GLUT_RGBA;
 
 namespace {
 
-const int max_miplevel = 10;
-
 GLuint color_tex;
 GLuint depth_tex;
 GLuint stencil_tex;
@@ -105,13 +103,8 @@ bool depth_attachment_lacks_stencil = false;
 bool depth_attachment_16bit = false;
 bool detach_between_miplevels = false;
 bool sequential = false;
-
-int
-compute_dim(int level)
-{
-	// return 1 << (max_miplevel - level);
-	return (1 << (max_miplevel - level)) + 1;
-}
+int miplevel0_size;
+int max_miplevel;
 
 /* Create a mipmapped texture with the given dimensions and internal format. */
 GLuint
@@ -127,7 +120,7 @@ create_mipmapped_tex(GLenum internal_format)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	for (int level = 0; level <= max_miplevel; ++level) {
-		int dim = compute_dim(level);
+		int dim = miplevel0_size >> level;
 		glTexImage2D(GL_TEXTURE_2D, level, internal_format,
 			     dim, dim,
 			     0,
@@ -230,7 +223,7 @@ bool
 test_miplevel(int level)
 {
 	bool pass = true;
-	int dim = compute_dim(level);
+	int dim = miplevel0_size >> level;
 	float float_value = float(level + 1) / (max_miplevel + 1);
 	float expected_color[] = {
 		float_value, float_value, float_value, float_value
@@ -257,7 +250,7 @@ test_miplevel(int level)
 void
 print_usage_and_exit(char *prog_name)
 {
-	printf("Usage: %s <buffer_combination> [options]\n"
+	printf("Usage: %s <texture_size> <buffer_combination> [options]\n"
 	       "    buffer_combination:          buffer attachments (other than color->RGBA):\n"
 	       "    color                        None\n"
 	       "    stencil                      stencil->DEPTH_STENCIL\n"
@@ -279,48 +272,63 @@ print_usage_and_exit(char *prog_name)
 extern "C" void
 piglit_init(int argc, char **argv)
 {
-	if (argc < 2) {
+	if (argc < 3) {
 		print_usage_and_exit(argv[0]);
 	}
-	if (strcmp(argv[1], "color") == 0) {
+
+	/* argv[1]: texture size */
+	{
+		char *endptr = NULL;
+		miplevel0_size = strtol(argv[1], &endptr, 0);
+		if (endptr != argv[1] + strlen(argv[1]))
+			print_usage_and_exit(argv[0]);
+
+		/* Now figure out the appropriate value of max_miplevel for this size. */
+		max_miplevel = 0;
+		while ((miplevel0_size >> (max_miplevel + 1)) > 0)
+			++max_miplevel;
+	}
+
+	/* argv[2]: buffer combination */
+	if (strcmp(argv[2], "color") == 0) {
 		/* Use default values of all parameters */
-	} else if (strcmp(argv[1], "stencil") == 0) {
+	} else if (strcmp(argv[2], "stencil") == 0) {
 		attach_stencil = true;
-	} else if (strcmp(argv[1], "depth_x") == 0) {
+	} else if (strcmp(argv[2], "depth_x") == 0) {
 		attach_depth = true;
-	} else if (strcmp(argv[1], "depth") == 0) {
+	} else if (strcmp(argv[2], "depth") == 0) {
 		attach_depth = true;
 		depth_attachment_lacks_stencil = true;
-	} else if (strcmp(argv[1], "d16") == 0) {
+	} else if (strcmp(argv[2], "d16") == 0) {
 		attach_depth = true;
 		depth_attachment_lacks_stencil = true;
 		depth_attachment_16bit = true;
-	} else if (strcmp(argv[1], "depth_x_and_stencil") == 0) {
+	} else if (strcmp(argv[2], "depth_x_and_stencil") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
-	} else if (strcmp(argv[1], "depth_and_stencil") == 0) {
+	} else if (strcmp(argv[2], "depth_and_stencil") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
 		depth_attachment_lacks_stencil = true;
-	} else if (strcmp(argv[1], "stencil_and_depth_x") == 0) {
+	} else if (strcmp(argv[2], "stencil_and_depth_x") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
 		attach_stencil_first = true;
-	} else if (strcmp(argv[1], "stencil_and_depth") == 0) {
+	} else if (strcmp(argv[2], "stencil_and_depth") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
 		attach_stencil_first = true;
 		depth_attachment_lacks_stencil = true;
-	} else if (strcmp(argv[1], "depth_stencil_shared") == 0) {
+	} else if (strcmp(argv[2], "depth_stencil_shared") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
 		shared_attachment = true;
-	} else if (strcmp(argv[1], "stencil_depth_shared") == 0) {
+	} else if (strcmp(argv[2], "stencil_depth_shared") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
 		shared_attachment = true;
 		attach_stencil_first = true;
-	} else if (strcmp(argv[1], "depth_stencil_single_binding") == 0) {
+	} else if (strcmp(argv[2], "depth_stencil_single_binding") == 0) {
 		attach_depth = true;
 		attach_stencil = true;
 		shared_attachment = true;
@@ -328,7 +336,9 @@ piglit_init(int argc, char **argv)
 	} else {
 		print_usage_and_exit(argv[0]);
 	}
-	for (int i = 2; i < argc; ++i) {
+
+	/* Remaining args: options */
+	for (int i = 3; i < argc; ++i) {
 		if (strcmp(argv[i], "detach_between_miplevels") == 0) {
 			detach_between_miplevels = true;
 		} else if (strcmp(argv[i], "sequential") == 0) {
