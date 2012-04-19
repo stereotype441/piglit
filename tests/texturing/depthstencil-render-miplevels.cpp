@@ -117,8 +117,6 @@ create_mipmapped_tex(GLenum internal_format)
 	GLuint tex;
 	glGenTextures(1, &tex);
 	glBindTexture(GL_TEXTURE_2D, tex);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	for (int level = 0; level <= max_miplevel; ++level) {
 		int dim = miplevel0_size >> level;
 		glTexImage2D(GL_TEXTURE_2D, level, internal_format,
