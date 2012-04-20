@@ -1290,15 +1290,15 @@ ext_framebuffer_multisample['renderbufferstorage-samples'] = concurrent_test('ex
 ext_framebuffer_multisample['renderbuffer-samples'] = concurrent_test('ext_framebuffer_multisample-renderbuffer-samples')
 ext_framebuffer_multisample['samples'] = concurrent_test('ext_framebuffer_multisample-samples')
 
-for num_samples in (2, 4, 8, 16, 32):
-        for test_type in ('color', 'stencil_draw', 'stencil_resolve',
-                          'depth_draw', 'depth_resolve'):
-                for options in power_set(('small', 'depthstencil')):
-                        test_name = ' '.join(['accuracy', str(num_samples), test_type]
-                                             + options)
-                        executable = 'ext_framebuffer_multisample-{0} -auto'.format(
-                                test_name)
-                        ext_framebuffer_multisample[test_name] = PlainExecTest(executable)
+#for num_samples in (2, 4, 8, 16, 32):
+#        for test_type in ('color', 'stencil_draw', 'stencil_resolve',
+#                          'depth_draw', 'depth_resolve'):
+#                for options in power_set(('small', 'depthstencil')):
+#                        test_name = ' '.join(['accuracy', str(num_samples), test_type]
+#                                             + options)
+#                        executable = 'ext_framebuffer_multisample-{0} -auto'.format(
+#                                test_name)
+#                        ext_framebuffer_multisample[test_name] = PlainExecTest(executable)
 
 ext_framebuffer_object = Group()
 spec['EXT_framebuffer_object'] = ext_framebuffer_object
