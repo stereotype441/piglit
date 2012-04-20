@@ -723,16 +723,17 @@ add_plain_test(texturing, 'texture-packed-formats')
 add_plain_test(texturing, 'texture-rg')
 add_plain_test(texturing, 'tex-srgb')
 
-for test_type in ('color', 'stencil', 'depth_x', 'depth', 'd16',
-                  'depth_x_and_stencil', 'depth_and_stencil',
-                  'stencil_and_depth_x', 'stencil_and_depth',
-                  'depth_stencil_shared', 'stencil_depth_shared',
-                  'depth_stencil_single_binding'):
-        for suffix in ('', ' detach_between_miplevels', ' sequential',
-                       ' sequential detach_between_miplevels'):
-                test_name = 'depthstencil-render-miplevels {0}{1}'.format(
-                        test_type, suffix)
-                texturing[test_name] = PlainExecTest(test_name + ' -auto')
+for texture_size in (146, 292, 585, 1024):
+        for test_type in ('color', 'stencil', 'depth_x', 'depth', 'd16',
+                          'depth_x_and_stencil', 'depth_and_stencil',
+                          'stencil_and_depth_x', 'stencil_and_depth',
+                          'depth_stencil_shared', 'stencil_depth_shared',
+                          'depth_stencil_single_binding'):
+                for suffix in ('', ' detach_between_miplevels', ' sequential',
+                               ' sequential detach_between_miplevels'):
+                        test_name = 'depthstencil-render-miplevels {0} {1}{2}'.format(
+                                texture_size, test_type, suffix)
+                        texturing[test_name] = PlainExecTest(test_name + ' -auto')
 
 def texwrap_test(args):
 	test = PlainExecTest(args + ['-fbo'])
