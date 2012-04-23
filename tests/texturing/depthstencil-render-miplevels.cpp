@@ -99,7 +99,9 @@ bool detach_between_miplevels = false;
 int miplevel0_size;
 int max_miplevel;
 
-/* Create a mipmapped texture with the given dimensions and internal format. */
+/**
+ * Create a mipmapped texture with the given dimensions and internal format.
+ */
 GLuint
 create_mipmapped_tex(GLenum internal_format)
 {
@@ -122,7 +124,9 @@ create_mipmapped_tex(GLenum internal_format)
 	return tex;
 }
 
-/* Attach the proper miplevel of each texture to the framebuffer */
+/**
+ * Attach the proper miplevel of each texture to the framebuffer
+ */
 void
 set_up_framebuffer_for_miplevel(int level)
 {
@@ -185,7 +189,8 @@ set_up_framebuffer_for_miplevel(int level)
 	}
 }
 
-/* Using glClear, set the contents of the depth and stencil buffers
+/**
+ * Using glClear, set the contents of the depth and stencil buffers
  * (if present) to a value that is unique to this miplevel.
  */
 void
@@ -206,7 +211,8 @@ populate_miplevel(int level)
 	glClear(clear_mask);
 }
 
-/* Test that every pixel in the depth and stencil buffers (if present)
+/**
+ * Test that every pixel in the depth and stencil buffers (if present)
  * is equal to the value set by populate_miplevel.
  */
 bool
