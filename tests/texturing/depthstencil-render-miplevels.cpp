@@ -23,7 +23,7 @@
 
 /** \file depthstencil-render-miplevels.cpp
  *
- * Test that data rendered to color, depth, and stencil textures
+ * Test that data rendered to depth and stencil textures
  * always lands at the correct miplevel.
  *
  * This test operates by creating a set of texture buffers, attaching
@@ -40,8 +40,7 @@
  *
  * Usage: depthstencil-render-miplevels <buffer_combination> [options]
  *
- *  buffer_combination:          buffer attachments (other than color->RGBA):
- *  color                        None
+ *  buffer_combination:          buffer attachments:
  *  stencil                      stencil->DEPTH_STENCIL
  *  depth_x                      depth->DEPTH_STENCIL
  *  depth                        depth->DEPTH_COMPONENT
@@ -192,16 +191,15 @@ set_up_framebuffer_for_miplevel(int level)
 	}
 }
 
-/* Using glClear, set the contents of the color, depth, and stencil
- * buffers (if present) to a value that is unique to this miplevel.
+/* Using glClear, set the contents of the depth and stencil buffers
+ * (if present) to a value that is unique to this miplevel.
  */
 void
 populate_miplevel(int level)
 {
 	float float_value = float(level + 1) / (max_miplevel + 1);
-	GLbitfield clear_mask = GL_COLOR_BUFFER_BIT;
+	GLbitfield clear_mask = 0;
 
-	glClearColor(float_value, float_value, float_value, float_value);
 	if (attach_depth) {
 		glClearDepth(float_value);
 		clear_mask |= GL_DEPTH_BUFFER_BIT;
@@ -214,8 +212,8 @@ populate_miplevel(int level)
 	glClear(clear_mask);
 }
 
-/* Test that every pixel in the color, depth, and stencil buffers (if
- * present) is equal to the value set by populate_miplevel.
+/* Test that every pixel in the depth and stencil buffers (if present)
+ * is equal to the value set by populate_miplevel.
  */
 bool
 test_miplevel(int level)
@@ -223,12 +221,6 @@ test_miplevel(int level)
 	bool pass = true;
 	int dim = miplevel0_size >> level;
 	float float_value = float(level + 1) / (max_miplevel + 1);
-	float expected_color[] = {
-		float_value, float_value, float_value, float_value
-	};
-
-	printf("Probing miplevel %d color\n", level);
-	pass = piglit_probe_rect_rgba(0, 0, dim, dim, expected_color) && pass;
 
 	if (attach_depth) {
 		printf("Probing miplevel %d depth\n", level);
@@ -249,8 +241,7 @@ void
 print_usage_and_exit(char *prog_name)
 {
 	printf("Usage: %s <texture_size> <buffer_combination> [options]\n"
-	       "    buffer_combination:          buffer attachments (other than color->RGBA):\n"
-	       "    color                        None\n"
+	       "    buffer_combination:          buffer attachments:\n"
 	       "    stencil                      stencil->DEPTH_STENCIL\n"
 	       "    depth_x                      depth->DEPTH_STENCIL\n"
 	       "    depth                        depth->DEPTH_COMPONENT\n"
@@ -288,9 +279,7 @@ piglit_init(int argc, char **argv)
 	}
 
 	/* argv[2]: buffer combination */
-	if (strcmp(argv[2], "color") == 0) {
-		/* Use default values of all parameters */
-	} else if (strcmp(argv[2], "stencil") == 0) {
+	if (strcmp(argv[2], "stencil") == 0) {
 		attach_stencil = true;
 	} else if (strcmp(argv[2], "depth_x") == 0) {
 		attach_depth = true;

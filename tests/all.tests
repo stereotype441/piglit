@@ -732,7 +732,7 @@ add_plain_test(texturing, 'tex-srgb')
 # However, existing i965 driver bugs cause GPU hangs for sizes 146,
 # 292, and 585.  So, as a temporary measure, just test a size of 1024.
 for texture_size in (1024,):
-        for test_type in ('color', 'stencil', 'depth_x', 'depth', 'd16',
+        for test_type in ('stencil', 'depth_x', 'depth', 'd16',
                           'depth_x_and_stencil', 'depth_and_stencil',
                           'stencil_and_depth_x', 'stencil_and_depth',
                           'depth_stencil_shared', 'stencil_depth_shared',
