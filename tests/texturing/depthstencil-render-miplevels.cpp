@@ -75,11 +75,6 @@
  *   the framebuffer when switching from one miplevel to the next, so
  *   that the textures for each miplevel get bound to an empty
  *   framebuffer.
- *
- * - sequential: causes the result of rending each miplevel to be
- *   tested before moving on to the next miplevel.  If this option is
- *   not specified, then all miplevels are rendered before any
- *   miplevels are tested.
  */
 
 #include "piglit-util.h"
@@ -101,7 +96,6 @@ bool attach_stencil_first = false;
 bool depth_attachment_lacks_stencil = false;
 bool depth_attachment_16bit = false;
 bool detach_between_miplevels = false;
-bool sequential = false;
 int miplevel0_size;
 int max_miplevel;
 
@@ -253,8 +247,7 @@ print_usage_and_exit(char *prog_name)
 	       "    stencil_depth_shared         (as above, but stencil attached first)\n"
 	       "    depth_stencil_single_binding depth/stencil->DEPTH_STENCIL\n"
 	       "Available options:\n"
-	       "    detach_between_miplevels\n"
-	       "    sequential\n", prog_name);
+	       "    detach_between_miplevels\n", prog_name);
 	piglit_report_result(PIGLIT_FAIL);
 }
 
@@ -328,8 +321,6 @@ piglit_init(int argc, char **argv)
 	for (int i = 3; i < argc; ++i) {
 		if (strcmp(argv[i], "detach_between_miplevels") == 0) {
 			detach_between_miplevels = true;
-		} else if (strcmp(argv[i], "sequential") == 0) {
-			sequential = true;
 		} else {
 			print_usage_and_exit(argv[0]);
 		}
@@ -362,21 +353,13 @@ piglit_init(int argc, char **argv)
 	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo);
 	glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
 
-	if (sequential) {
-		for (int level = 0; level <= max_miplevel; ++level) {
-			set_up_framebuffer_for_miplevel(level);
-			populate_miplevel(level);
-			pass = test_miplevel(level) && pass;
-		}
-	} else {
-		for (int level = 0; level <= max_miplevel; ++level) {
-			set_up_framebuffer_for_miplevel(level);
-			populate_miplevel(level);
-		}
-		for (int level = 0; level <= max_miplevel; ++level) {
-			set_up_framebuffer_for_miplevel(level);
-			pass = test_miplevel(level) && pass;
-		}
+	for (int level = 0; level <= max_miplevel; ++level) {
+		set_up_framebuffer_for_miplevel(level);
+		populate_miplevel(level);
+	}
+	for (int level = 0; level <= max_miplevel; ++level) {
+		set_up_framebuffer_for_miplevel(level);
+		pass = test_miplevel(level) && pass;
 	}
 
 	piglit_report_result(pass ? PIGLIT_PASS : PIGLIT_FAIL);

@@ -737,8 +737,7 @@ for texture_size in (1024,):
                           'stencil_and_depth_x', 'stencil_and_depth',
                           'depth_stencil_shared', 'stencil_depth_shared',
                           'depth_stencil_single_binding'):
-                for suffix in ('', ' detach_between_miplevels', ' sequential',
-                               ' sequential detach_between_miplevels'):
+                for suffix in ('', ' detach_between_miplevels'):
                         test_name = 'depthstencil-render-miplevels {0} {1}{2}'.format(
                                 texture_size, test_type, suffix)
                         texturing[test_name] = PlainExecTest(test_name + ' -auto')
