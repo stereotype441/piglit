@@ -38,7 +38,7 @@
  * - Miplevels being laid out incorrectly in memory (e.g. in an
  *   overlapping fashion)
  *
- * Usage: depthstencil-render-miplevels <buffer_combination> [options]
+ * Usage: depthstencil-render-miplevels <texture_size> <buffer_combination>
  *
  *  buffer_combination:          buffer attachments:
  *  stencil                      stencil->DEPTH_STENCIL
@@ -68,13 +68,6 @@
  * - "depth_stencil->DEPTH_STENCIL" means there is a single texture of
  *   type GL_DEPTH_STENCIL attached to the attachment point
  *   GL_DEPTH_STENCIL_ATTACHMENT.
- *
- * Available options:
- *
- * - detach_between_miplevels: causes all textures to be detached from
- *   the framebuffer when switching from one miplevel to the next, so
- *   that the textures for each miplevel get bound to an empty
- *   framebuffer.
  */
 
 #include "piglit-util.h"
@@ -95,7 +88,6 @@ bool attach_together = false;
 bool attach_stencil_first = false;
 bool depth_attachment_lacks_stencil = false;
 bool depth_attachment_16bit = false;
-bool detach_between_miplevels = false;
 int miplevel0_size;
 int max_miplevel;
 
@@ -130,20 +122,6 @@ create_mipmapped_tex(GLenum internal_format)
 void
 set_up_framebuffer_for_miplevel(int level)
 {
-	if (detach_between_miplevels) {
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-				       GL_COLOR_ATTACHMENT0,
-				       GL_TEXTURE_2D, 0, 0);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-				       GL_DEPTH_ATTACHMENT,
-				       GL_TEXTURE_2D, 0, 0);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-				       GL_STENCIL_ATTACHMENT,
-				       GL_TEXTURE_2D, 0, 0);
-		glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-				       GL_DEPTH_STENCIL_ATTACHMENT,
-				       GL_TEXTURE_2D, 0, 0);
-	}
 	glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
 			       GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
 			       color_tex, level);
@@ -240,7 +218,7 @@ test_miplevel(int level)
 void
 print_usage_and_exit(char *prog_name)
 {
-	printf("Usage: %s <texture_size> <buffer_combination> [options]\n"
+	printf("Usage: %s <texture_size> <buffer_combination>\n"
 	       "    buffer_combination:          buffer attachments:\n"
 	       "    stencil                      stencil->DEPTH_STENCIL\n"
 	       "    depth_x                      depth->DEPTH_STENCIL\n"
@@ -251,16 +229,15 @@ print_usage_and_exit(char *prog_name)
 	       "    stencil_and_depth            (as above, but stencil attached first)\n"
 	       "    depth_stencil_shared         depth->DEPTH_STENCIL<-stencil\n"
 	       "    stencil_depth_shared         (as above, but stencil attached first)\n"
-	       "    depth_stencil_single_binding depth/stencil->DEPTH_STENCIL\n"
-	       "Available options:\n"
-	       "    detach_between_miplevels\n", prog_name);
+	       "    depth_stencil_single_binding depth/stencil->DEPTH_STENCIL\n",
+	       prog_name);
 	piglit_report_result(PIGLIT_FAIL);
 }
 
 extern "C" void
 piglit_init(int argc, char **argv)
 {
-	if (argc < 3) {
+	if (argc != 3) {
 		print_usage_and_exit(argv[0]);
 	}
 
@@ -321,15 +298,6 @@ piglit_init(int argc, char **argv)
 		attach_together = true;
 	} else {
 		print_usage_and_exit(argv[0]);
-	}
-
-	/* Remaining args: options */
-	for (int i = 3; i < argc; ++i) {
-		if (strcmp(argv[i], "detach_between_miplevels") == 0) {
-			detach_between_miplevels = true;
-		} else {
-			print_usage_and_exit(argv[0]);
-		}
 	}
 
 	bool pass = true;
