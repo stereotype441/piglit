@@ -724,7 +724,14 @@ add_plain_test(texturing, 'texture-packed-formats')
 add_plain_test(texturing, 'texture-rg')
 add_plain_test(texturing, 'tex-srgb')
 
-for texture_size in (146, 292, 585, 1024):
+# Note: for a reasonably thorough test we should be testing a variety
+# of texture sizes, some of which are not powers of two.  For i965, a
+# particularly mean set of test sizes would be (146, 292, 585, 1024),
+# since this exercises all possible combinations of buffer alignments.
+#
+# However, existing i965 driver bugs cause GPU hangs for sizes 146,
+# 292, and 585.  So, as a temporary measure, just test a size of 1024.
+for texture_size in (1024,):
         for test_type in ('color', 'stencil', 'depth_x', 'depth', 'd16',
                           'depth_x_and_stencil', 'depth_and_stencil',
                           'stencil_and_depth_x', 'stencil_and_depth',
