@@ -115,6 +115,7 @@ public:
 
 private:
 	GLint prog;
+	GLint count;
 	GLint color_loc;
 	GLuint vertex_buf;
 	GLuint vao;
@@ -184,6 +185,157 @@ private:
 	GLint proj_loc;
 	GLint tri_num_loc;
 	int num_tris;
+};
+
+/**
+ * Program we use to draw a test pattern into the color buffer.
+ *
+ * This program draws a sequence of points with varied sizes. This ensures
+ * antialiasing works well with all point sizes.
+ */
+class Points : public TestPattern
+{
+public:
+	virtual void compile();
+	virtual void draw(float (*proj)[4]);
+
+private:
+	GLint prog;
+	GLuint vao;
+	GLint proj_loc;
+	GLint depth_loc;
+	GLint point_num_loc;
+	GLuint vertex_buf;
+	int num_points;
+};
+
+/**
+ * Program we use to draw a test pattern into the depth and stencil
+ * buffers.
+ *
+ * This program draws a "spiral" pattern consisting of 45 points,
+ * each with a different size.
+ * This program is further specialized into depth and stencil variants.
+ */
+class Spiral : public TestPattern
+{
+public:
+	virtual void compile();
+
+protected:
+	GLint prog;
+	GLint rotation_loc;
+	GLint depth_loc;
+	GLint length_loc;
+	GLint proj_loc;
+	GLuint vao;
+	int num_points;
+	int num_circles;
+
+private:
+	GLuint vertex_buf;
+};
+
+/**
+ * Program we use to draw a test pattern into the stencil buffer.
+ *
+ * The points in this spiral are drawn back-to-front, using no
+ * depth testing.  Each point is drawn using a stencil
+ * value between 0 to 7.
+ */
+class StencilSpiral : public Spiral
+{
+public:
+	virtual void draw(float (*proj)[4]);
+};
+
+/**
+ * Program we use to draw a test pattern into the depth buffer.
+ *
+ * The points in this spiral are drawn at a series of different
+ * depth values, with depth testing enabled.  They are drawn in an
+ * arbitrary non-consecutive order, to verify that depth testing
+ * properly sorts the surfaces into front-to-back order.
+ */
+class DepthSpiral : public Spiral
+{
+public:
+	virtual void draw(float (*proj)[4]);
+};
+
+/**
+ * Program we use to draw a test pattern into the color buffer.
+ *
+ * This program draws a sequence of lines with varied width. This ensures
+ * antialiasing works well with all line widths.
+ */
+class Lines : public TestPattern
+{
+public:
+	virtual void compile();
+	virtual void draw(float (*proj)[4]);
+
+private:
+	GLint prog;
+	GLuint vao;
+	GLint proj_loc;
+	GLint line_num_loc;
+	GLuint vertex_buf;
+	int num_lines;
+};
+
+/**
+ * Program we use to draw a test pattern into the depth and stencil
+ * buffers.
+ *
+ * This program draws a "star" pattern consisting of 7 overlapping
+ * lines, each at a different angle.  This ensures that we'll thoroughly
+ * exercise antialiasing.
+ *
+ * This program is further specialized into depth and stencil variants.
+ */
+class Star : public TestPattern
+{
+public:
+	virtual void compile();
+
+protected:
+	GLint prog;
+	GLint rotation_loc;
+	GLint depth_loc;
+	GLint proj_loc;
+	GLuint vao;
+	int num_lines;
+
+private:
+	GLuint vertex_buf;
+};
+
+/**
+ * Program we use to draw a test pattern into the stencil buffer.
+ *
+ * The lines in this star are drawn back-to-front, using no
+ * depth testing.  Each line is drawn using a different stencil
+ * value.
+ */
+class StencilStar : public Star
+{
+public:
+	virtual void draw(float (*proj)[4]);
+};
+
+/**
+ * Program we use to draw a test pattern into the depth buffer.
+ *
+ * The lines in this star are drawn at a series of different
+ * depth values, with depth testing enabled.  They are drawn in an
+ * arbitrary non-consecutive order, to verify that depth testing
+ * properly sorts the lines into front-to-back order.
+ */
+class DepthStar : public Star
+{
+public:
+	virtual void draw(float (*proj)[4]);
 };
 
 /**
