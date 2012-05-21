@@ -5,7 +5,7 @@
 #include <stdarg.h>
 
 #include <png.h>
-#include <GL/gl.h>
+#include "piglit-util.h"
 
 static void abortf(const char * s, ...)
 {

@@ -4,7 +4,7 @@
 #define READTEX_H
 
 
-#include <GL/gl.h>
+#include "piglit-util.h"
 
 
 extern GLboolean
