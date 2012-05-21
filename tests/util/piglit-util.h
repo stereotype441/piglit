@@ -30,30 +30,7 @@ extern "C" {
 #endif
 
 #include "config.h"
-
-#if defined(_WIN32)
-#include <windows.h>
-#endif
-
-#if defined(_MSC_VER)
-typedef signed char int8_t;
-typedef __int16 int16_t;
-typedef __int32 int32_t;
-typedef __int64 int64_t;
-typedef unsigned __int8 uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
-typedef unsigned __int64 uint64_t;
-#ifndef __cplusplus
-#define bool BOOL
-#define true 1
-#define false 0
-#endif
-#define log2(x) (log(x) / log(2))
-#else
-#include <stdint.h>
-#include <stdbool.h>
-#endif
+#include "piglit-util-core.h"
 
 #include <assert.h>
 #include <string.h>
@@ -107,13 +84,6 @@ int asprintf(char **strp, const char *fmt, ...)
 #endif
 
 #define piglit_get_proc_address(x) piglit_dispatch_resolve_function(x)
-
-enum piglit_result {
-	PIGLIT_PASS,
-	PIGLIT_FAIL,
-	PIGLIT_SKIP,
-	PIGLIT_WARN
-};
 
 #include "piglit-framework.h"
 #include "piglit-shader.h"
@@ -203,7 +173,6 @@ void piglit_reset_gl_error(void);
 
 int FindLine(const char *program, int position);
 void piglit_merge_result(enum piglit_result *all, enum piglit_result subtest);
-void piglit_report_result(enum piglit_result result);
 void piglit_require_gl_version(int required_version_times_10);
 void piglit_require_extension(const char *name);
 void piglit_require_not_extension(const char *name);

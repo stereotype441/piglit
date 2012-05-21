@@ -56,34 +56,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "piglit-util-core.h"
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef _WIN32
-
-/* APIENTRY and GLAPIENTRY are not used on Linux or Mac. */
-#ifndef APIENTRY
-#define APIENTRY
-#endif
-#ifndef GLAPIENTRY
-#define GLAPIENTRY
-#endif
-
-#else
-
-#ifndef APIENTRY
-#define APIENTRY __stdcall
-#endif
-
-#ifndef GLAPIENTRY
-#define GLAPIENTRY APIENTRY
-#endif
-
-#ifndef GLAPI
-#define GLAPI extern
-#endif
-
 #endif
 
 typedef unsigned int GLenum;
@@ -130,27 +106,6 @@ typedef void (APIENTRY *GLDEBUGPROCARB)(GLenum source,GLenum type,GLuint id,GLen
 typedef void (APIENTRY *GLDEBUGPROCAMD)(GLuint id,GLenum category,GLenum severity,GLsizei length,const GLchar *message,GLvoid *userParam);
 
 typedef void (APIENTRY *piglit_dispatch_function_ptr)(void);
-
-typedef piglit_dispatch_function_ptr (*piglit_get_core_proc_address_function_ptr)(const char *, int);
-
-typedef piglit_dispatch_function_ptr (*piglit_get_ext_proc_address_function_ptr)(const char *);
-
-typedef piglit_dispatch_function_ptr (*piglit_dispatch_resolver_ptr)();
-
-typedef void (*piglit_error_function_ptr)(const char *);
-
-typedef enum {
-	PIGLIT_DISPATCH_GL,
-	PIGLIT_DISPATCH_GL_FWD,
-	PIGLIT_DISPATCH_ES1,
-	PIGLIT_DISPATCH_ES2
-} piglit_dispatch_api;
-
-void piglit_dispatch_init(piglit_dispatch_api api,
-			  piglit_get_core_proc_address_function_ptr get_core_proc,
-			  piglit_get_ext_proc_address_function_ptr get_ext_proc,
-			  piglit_error_function_ptr unsupported_proc,
-			  piglit_error_function_ptr failure_proc);
 
 piglit_dispatch_function_ptr
 piglit_dispatch_resolve_function(const char *name);

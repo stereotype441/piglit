@@ -22,7 +22,9 @@
 
 #define _GNU_SOURCE
 #include <dlfcn.h>
-#include "piglit-util.h"
+#include "piglit-util-core.h"
+#include <stdio.h>
+#include <string.h>
 
 #if defined(_WIN32)
 
