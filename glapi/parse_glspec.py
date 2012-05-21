@@ -130,6 +130,15 @@ GLSPEC_EXT_VERSION_REGEXP = re.compile(r'^passthru:\s+/\*\sOpenGL\s+([0-9.]+)\s+
 GLSPEC_EXT_REGEXP = re.compile(r'^passthru:\s+/\*\s+(\w+)')
 GL_VERSION_REGEXP = re.compile('^VERSION_([0-9])_([0-9])(_DEPRECATED)?$')
 ENUM_REGEXP = re.compile(r'^\s+(\w+)\s+=\s+(\w+)$')
+H_VERSION_REGEXP = re.compile(r'^#define\s+(EGL|GL_ES|GL)_VERSION_E?S?_?C?[ML]?_?(\d+)_(\d)')
+H_ENUM_REGEXP = re.compile(r'^#define\s+(\w+)\s+([^\s]+)$')
+H_EXT_START_REGEXP = re.compile(r'^#ifndef\s+(E?GL_\w+)$')
+H_EXT_END_REGEXP = re.compile(r'^#endif$')
+H_DETECT_EGL_REGEXP = re.compile(r'^#ifndef\s+__egl\w*_h_$')
+H_FUNC_REGEXP = re.compile(r'^E?GL_?APIC?A?L?L?\s+(.+[\w*])\s+E?GL_?APIENTRY\s+(e?gl\w+)\s*\(([^)]*)(\)?;?)$')
+H_FUNC_PARAM_REGEXP = re.compile(r'^\s+([^)]*)(\)?;?)$')
+H_GET_PROC_ADDRESS_START_REGEXP = re.compile(r'^EGLAPI\s+(\w+)\s+\w+$')
+H_GET_PROC_ADDRESS_END_REGEXP = re.compile(r'^\s*(\w+)\((.+)\);$')
 
 
 # Convert a type into a canonical form that is consistent about its
@@ -179,6 +188,28 @@ def filter_comments(f):
         if line != '':
             yield line.rstrip()
 
+# Iterate through a file discarding all C comments and empty lines
+# XXX: Support for C99 comments
+# XXX: A new comment after multi-line comment isn't parsed correctly
+def filter_comments_c(f):
+    incomment = False
+    for line in f:
+	while not incomment and '/*' in line:
+	    end = ''
+	    if '*/' in line:
+		end = line[line.find('*/')+2:]
+	    else:
+		incomment = True
+	    line = line[:line.find('/*')]
+	if incomment:
+	    if '*/' in line:
+		line = line[line.find('*/')+2:]
+		incomment = False
+	    else:
+		line = ''
+	line = line.rstrip()
+	if line != '':
+	    yield line
 
 # Convert a category name from the form used in the gl.spec file to
 # the form we want to output in JSON.  E.g.:
@@ -464,9 +495,9 @@ class Api(object):
     #                             'value_str': "0xFFFFFFFF" }
     def parse_enum(self, m):
 	name, value = m.groups()
-	if not name.startswith('GL_'):
+	if not name.startswith('GL_') and not name.startswith('EGL_'):
 	    name = 'GL_' + name
-	if value.startswith('GL_'):
+	if value.startswith('GL_') or value.startswith('EGL_'):
 	    value_rhs = value
 	    value_int = self.enums[value_rhs]['value_int']
 	else:
@@ -481,6 +512,158 @@ class Api(object):
             m = ENUM_REGEXP.match(line)
 	    if m:
 		self.parse_enum(m)
+
+    # Parse parameter string to type and name lists
+    def parse_params(self, params):
+        params = params.strip()
+        if params == 'void':
+            return [], []
+        split = normalize_type(params).split(', ')
+        i = 0
+        types = []
+        names = []
+        for p in split:
+            t = ''
+            # Default name if not in header
+            n = 'param' + str(i)
+            i = i + 1
+            # figure out if we have variable name
+            words = p.split()
+            last = words.pop()
+            index = last.rfind('*')
+            if index != -1:
+                words.append(last[:index + 1])
+                last = last[index + 1:]
+            if last != '' and last not in self.type_translation.values():
+                n = last
+            elif last != '':
+                words.append(last)
+            t = ' '.join(words)
+
+            types.append(t)
+            names.append(n)
+
+        return types, names
+
+    # Insert es and egl function to functions and alias dictionaries
+    def insert_es_function(self, ret, name, params, category):
+        if name.startswith('gl'):
+            name = name[2:]
+        param_types, param_names = self.parse_params(params)
+	ret = normalize_type(ret)
+        if name not in self.functions:
+            self.functions[name] = {
+                    'return_type': ret,
+                    'param_types': param_types,
+                    'param_names': param_names,
+                    'category': [category],
+                    }
+            core_name = re.sub(r'[A-Z]*$','', name)
+            # XXX: Do we need manual list of aliases? */
+            if core_name != name and core_name in self.functions and \
+                    cmp(param_types, self.functions[core_name]['param_types']) == 0 and \
+                    ret == self.functions[core_name]['return_type']:
+                self.synonyms.add_alias(core_name, name)
+            else:
+                self.synonyms.add_singleton(name)
+        else:
+            if self.functions[name]['return_type'] != ret or \
+                    cmp(self.functions[name]['param_types'], param_types) != 0:
+                print "Function "+ name +" type doesn't match"
+                print "ES: " + str(ret) + " " + str(param_types)
+                print "GL: " + str(self.functions[name]['return_type']) + \
+                        " " + str(self.functions[name]['param_types'])
+            self.functions[name]['category'].append(category)
+
+    def read_header(self, f):
+        major = 0
+        minor = 0
+        category = None
+        # GLES1 defines required extensions in core header
+        es_version = None
+        kind_suffix = 'ES'
+        func_name = None
+        func_return = None
+        func_params = None
+        for line in filter_comments_c(f):
+            m = H_DETECT_EGL_REGEXP.match(line)
+            if m:
+                kind_suffix = 'EGL'
+                continue
+            m = H_VERSION_REGEXP.match(line)
+            if m:
+                kind, major_new, minor_new = m.groups()
+                if kind in ['GL', 'GL_ES']:
+                    kind = 'ES'
+                category_new = kind + major_new + '.' + minor_new
+                self.categories[category_new] = {
+                        'kind': kind,
+                        'gl_10x_version': int(major_new+minor_new)
+                        }
+                if major > major_new and minor > minor_new:
+                    continue
+                major = major_new
+                minor = minor_new
+                category = category_new
+                es_version = category_new
+                continue
+            m = H_EXT_START_REGEXP.match(line)
+            if m:
+                category = m.group(1)
+                if category in self.categories:
+                    continue
+                self.categories[category] = {
+                        'kind': 'extension_' + kind_suffix,
+                        'extension_name': category
+                        }
+                continue
+            m = H_EXT_END_REGEXP.match(line)
+            if m:
+                category = es_version
+                continue
+            m = H_ENUM_REGEXP.match(line)
+            if m and m.group(1) not in self.categories:
+                self.parse_enum(m)
+                continue
+            if func_name != None:
+                m = H_FUNC_PARAM_REGEXP.match(line)
+                if m:
+                    func_params = func_params + m.group(1)
+                    if m.group(2) != ');':
+                        func_params = func_params + ' '
+                        continue
+                    self.insert_es_function(func_return, func_name, func_params, category)
+                    func_return = None
+                    func_name = None
+                    func_params = None
+                    continue
+
+            m = H_FUNC_REGEXP.match(line)
+            if m:
+                func_return, func_name, func_params, end = m.groups()
+                if end != ');':
+                    func_params = func_params + ' '
+                    continue
+                self.insert_es_function(func_return, func_name, func_params, category)
+                func_return = None
+                func_name = None
+                func_params = None
+                continue
+
+            if func_return != None:
+                m = H_GET_PROC_ADDRESS_END_REGEXP.match(line)
+                if m:
+                    func_name, func_params = m.groups()
+                    self.insert_es_function(func_return, func_name, func_params, category)
+                    func_return = None
+                    func_name = None
+                    func_params = None
+                    continue
+
+            m = H_GET_PROC_ADDRESS_START_REGEXP.match(line)
+            if m:
+                func_return = m.group(1)
+                continue
 
     # Convert the stored API into JSON.  To make diffing easier, all
     # dictionaries are sorted by key, and all sets are sorted by set
@@ -509,6 +692,9 @@ if __name__ == '__main__':
 	elif name.endswith('enumext.spec'):
 	    with open(name) as f:
 		api.read_enumext_spec(f)
+	elif name.endswith('.h'):
+	    with open(name) as f:
+		api.read_header(f)
 	elif name.endswith('.json'):
 	    with open(name, 'w') as f:
 		f.write(api.to_json())

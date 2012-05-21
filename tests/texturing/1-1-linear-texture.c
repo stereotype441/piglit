@@ -31,8 +31,8 @@
 
 #include "piglit-util.h"
 
-int piglit_width = 100;
-int piglit_height = 100;
+int piglit_width = 128;
+int piglit_height = 128;
 int piglit_window_mode = GLUT_RGB | GLUT_DOUBLE;
 
 #define DATA_SIZE	(piglit_width * piglit_height * 4)
@@ -135,5 +135,10 @@ piglit_display(void)
 void
 piglit_init(int argc, char **argv)
 {
-	piglit_require_extension("GL_ARB_texture_rectangle");
+	if (!piglit_is_gles())
+		piglit_require_extension("GL_ARB_texture_rectangle");
+	else if (piglit_get_gl_version() >= 20) {
+		fprintf(stderr, "This test requires GLES version 1.1\n");
+		piglit_report_result(PIGLIT_SKIP);
+	}
 }
