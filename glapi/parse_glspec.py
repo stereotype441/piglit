@@ -461,8 +461,10 @@ class Api(object):
     #                             'value_str': "0xFFFFFFFF" }
     def parse_enum(self, m):
 	name, value = m.groups()
+	if not name.startswith('GL_'):
+	    name = 'GL_' + name
 	if value.startswith('GL_'):
-	    value_rhs = value[3:]
+	    value_rhs = value
 	    value_int = self.enums[value_rhs]['value_int']
 	else:
 	    value_int = decode_enum_value(value)

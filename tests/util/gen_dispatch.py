@@ -620,7 +620,7 @@ def generate_code(api):
 
     # Emit enum #defines
     for name, value in api.compute_unique_enums():
-	h_contents.append('#define GL_{0} {1}\n'.format(name, value))
+	h_contents.append('#define {0} {1}\n'.format(name, value))
 
     # Emit extension #defines
     h_contents.append('\n')
