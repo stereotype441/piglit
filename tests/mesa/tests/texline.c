@@ -12,7 +12,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <GL/glut.h>
+#include "piglit-util.h"
+#include <piglit/glut_wrap.h>
 #include "../util/readtex.h"
 #include "../util/writeimg.h"
 
