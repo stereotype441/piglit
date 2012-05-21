@@ -27,6 +27,9 @@
 
 #include "piglit-util.h"
 #include "piglit-glx-util.h"
+#ifdef USE_WAFFLE
+#include <waffle/waffle.h>
+#endif
 
 #ifndef GLXBadProfileARB
 #define GLXBadProfileARB 13
@@ -142,12 +145,24 @@ piglit_is_glx_extension_supported(Display *dpy, const char *name)
 	const char *const glx_extension_list =
 		glXQueryExtensionsString(dpy, screen);
 
+#ifdef USE_WAFFLE
+	if (glutGetPlatform() != WAFFLE_PLATFORM_GLX)
+		return false;
+#endif
+
 	return piglit_is_extension_in_string(glx_extension_list, name);
 }
 
 void
 piglit_require_glx_extension(Display *dpy, const char *name)
 {
+#ifdef USE_WAFFLE
+	if (glutGetPlatform() != WAFFLE_PLATFORM_GLX) {
+		fprintf(stderr, "GLX test running in platform without GLX\n");
+		piglit_report_result(PIGLIT_SKIP);
+	}
+#endif
+
 	if (!piglit_is_glx_extension_supported(dpy, name)) {
 		fprintf(stderr, "Test requires %s\n", name);
 		piglit_report_result(PIGLIT_SKIP);
@@ -160,6 +175,13 @@ piglit_require_glx_version(Display *dpy, int major, int minor)
 {
 	int glxMajor;
 	int glxMinor;
+
+#ifdef USE_WAFFLE
+	if (glutGetPlatform() != WAFFLE_PLATFORM_GLX) {
+		fprintf(stderr, "GLX test running in platform without GLX\n");
+		piglit_report_result(PIGLIT_SKIP);
+	}
+#endif
 
 	if (! glXQueryVersion(dpy, & glxMajor, & glxMinor)) {
 		fprintf(stderr, "Could not query GLX version!\n");
