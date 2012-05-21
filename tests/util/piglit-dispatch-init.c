@@ -59,8 +59,8 @@
  * piglit test from the burden of having to pre-check whether the
  * implementation supports the functionality being tested.
  */
-static void
-default_unsupported(const char *name)
+void
+unsupported(const char *name)
 {
 	printf("Function \"%s\" not supported on this implementation\n", name);
 	piglit_report_result(PIGLIT_SKIP);
@@ -74,8 +74,8 @@ default_unsupported(const char *name)
  * GetProcAddress() for functions that the implementation claims to
  * support.  So if it does happen we terminate the test with a FAIL.
  */
-static void
-default_get_proc_address_failure(const char *function_name)
+void
+get_proc_address_failure(const char *function_name)
 {
 	printf("GetProcAddress failed for \"%s\"\n", function_name);
 	piglit_report_result(PIGLIT_FAIL);
@@ -88,7 +88,7 @@ default_get_proc_address_failure(const char *function_name)
  * functions, and core GL functions for GL versions above 1.3, on
  * Windows.
  */
-static piglit_dispatch_function_ptr
+piglit_dispatch_function_ptr
 get_ext_proc_address(const char *function_name)
 {
 #ifdef USE_WAFFLE
@@ -104,7 +104,7 @@ get_ext_proc_address(const char *function_name)
  * This function is used to retrieve the address of core GL functions
  * on windows.
  */
-static piglit_dispatch_function_ptr
+piglit_dispatch_function_ptr
 get_core_proc_address(const char *function_name, int gl_10x_version)
 {
 	/* Try first to resolve egl core functions with dlsym */
@@ -135,7 +135,7 @@ get_core_proc_address(const char *function_name, int gl_10x_version)
  * This function is used to retrieve the address of all GL functions
  * on Apple.
  */
-static piglit_dispatch_function_ptr
+piglit_dispatch_function_ptr
 get_ext_proc_address(const char *function_name)
 {
 	static const char *opengl_path =
@@ -157,7 +157,7 @@ get_ext_proc_address(const char *function_name)
  * This function is used to retrieve the address of core GL functions
  * on Apple.
  */
-static piglit_dispatch_function_ptr
+piglit_dispatch_function_ptr
 get_core_proc_address(const char *function_name, int gl_10x_version)
 {
 	/* We don't need to worry about the GL version, since on Apple
@@ -174,7 +174,7 @@ get_core_proc_address(const char *function_name, int gl_10x_version)
  * This function is used to retrieve the address of all GL functions
  * on Linux.
  */
-static piglit_dispatch_function_ptr
+piglit_dispatch_function_ptr
 get_ext_proc_address(const char *function_name)
 {
 #ifdef USE_WAFFLE
@@ -190,7 +190,7 @@ get_ext_proc_address(const char *function_name)
  * This function is used to retrieve the address of core GL functions
  * on Linux.
  */
-static piglit_dispatch_function_ptr
+piglit_dispatch_function_ptr
 get_core_proc_address(const char *function_name, int gl_10x_version)
 {
 	/* We don't need to worry about the GL version, since on Apple
@@ -233,11 +233,7 @@ piglit_dispatch_default_init()
 	if (already_initialized)
 		return;
 
-	piglit_dispatch_init(PIGLIT_DISPATCH_GL,
-			     get_core_proc_address,
-			     get_ext_proc_address,
-			     default_unsupported,
-			     default_get_proc_address_failure);
+	piglit_dispatch_init();
 
 	already_initialized = true;
 }

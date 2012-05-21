@@ -110,6 +110,12 @@ typedef void (APIENTRY *piglit_dispatch_function_ptr)(void);
 piglit_dispatch_function_ptr
 piglit_dispatch_resolve_function(const char *name);
 
+void unsupported(const char *name);
+void get_proc_address_failure(const char *function_name);
+piglit_dispatch_function_ptr get_core_proc_address(const char *function_name,
+						   int gl_10x_version);
+piglit_dispatch_function_ptr get_ext_proc_address(const char *function_name);
+
 #include "generated_dispatch.h"
 
 void piglit_dispatch_default_init();

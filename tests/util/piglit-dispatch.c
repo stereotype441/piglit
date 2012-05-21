@@ -28,30 +28,6 @@
 #endif
 
 /* Global state maintained by the Piglit dispatch mechanism: */
-
-/**
- * Which function to call to get the address of a core function.
- */
-static piglit_get_core_proc_address_function_ptr get_core_proc_address = NULL;
-
-/**
- * Which function to call to get the address of a function defined in
- * an extension.
- */
-static piglit_get_ext_proc_address_function_ptr get_ext_proc_address = NULL;
-
-/**
- * Which function to call if the test attempts to call a function that
- * is not supported by the implementation.
- */
-static piglit_error_function_ptr unsupported = NULL;
-
-/**
- * Which function to call if get_core_proc_address or
- * get_ext_proc_address returns NULL.
- */
-static piglit_error_function_ptr get_proc_address_failure = NULL;
-
 /**
  * The GL version extracted from glGetString(GL_VERSION), times 10.
  * For example, if the GL version is 2.1, the value 21 is stored here.
@@ -167,19 +143,8 @@ check_extension(const char *name)
  * get_core_proc() or get_ext_proc().
  */
 void
-piglit_dispatch_init(piglit_dispatch_api api,
-		     piglit_get_core_proc_address_function_ptr get_core_proc,
-		     piglit_get_ext_proc_address_function_ptr get_ext_proc,
-		     piglit_error_function_ptr unsupported_proc,
-		     piglit_error_function_ptr failure_proc)
+piglit_dispatch_init(void)
 {
-	(void) api; /* Not yet implemented--assume GL. */
-
-	get_core_proc_address = get_core_proc;
-	get_ext_proc_address = get_ext_proc;
-	unsupported = unsupported_proc;
-	get_proc_address_failure = failure_proc;
-
 	/* No need to reset the dispatch pointers the first time */
 	if (is_initialized) {
 		reset_dispatch_pointers();

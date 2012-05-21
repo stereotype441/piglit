@@ -64,28 +64,11 @@ void piglit_report_result(enum piglit_result result);
 
 #endif
 
-typedef enum {
-	PIGLIT_DISPATCH_GL,
-	PIGLIT_DISPATCH_GL_FWD,
-	PIGLIT_DISPATCH_ES1,
-	PIGLIT_DISPATCH_ES2
-} piglit_dispatch_api;
-
 typedef void (APIENTRY *piglit_dispatch_function_ptr)(void);
-
-typedef piglit_dispatch_function_ptr (*piglit_get_core_proc_address_function_ptr)(const char *, int);
-
-typedef piglit_dispatch_function_ptr (*piglit_get_ext_proc_address_function_ptr)(const char *);
 
 typedef piglit_dispatch_function_ptr (*piglit_dispatch_resolver_ptr)();
 
-typedef void (*piglit_error_function_ptr)(const char *);
-
-void piglit_dispatch_init(piglit_dispatch_api api,
-			  piglit_get_core_proc_address_function_ptr get_core_proc,
-			  piglit_get_ext_proc_address_function_ptr get_ext_proc,
-			  piglit_error_function_ptr unsupported_proc,
-			  piglit_error_function_ptr failure_proc);
+void piglit_dispatch_init(void);
 
 #ifdef __cplusplus
 }
