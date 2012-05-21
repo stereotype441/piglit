@@ -20,6 +20,8 @@
  * IN THE SOFTWARE.
  */
 
+#define _GNU_SOURCE
+#include <dlfcn.h>
 #include "piglit-util.h"
 
 #if defined(_WIN32)
@@ -33,8 +35,18 @@
 
 #else /* Linux */
 
-#include "glxew.h"
+#ifdef USE_WAFFLE
+#include <waffle/waffle_gl_misc.h>
+#endif
 
+#endif
+
+#ifdef USE_EGL
+#include <EGL/egl.h>
+#endif
+
+#ifdef USE_GLX
+#include <GL/glx.h>
 #endif
 
 /**
@@ -77,7 +89,13 @@ default_get_proc_address_failure(const char *function_name)
 static piglit_dispatch_function_ptr
 get_ext_proc_address(const char *function_name)
 {
+#ifdef USE_WAFFLE
+	return waffle_get_proc_address(function_name);
+#elif defined(USE_EGLUT)
+	return eglGetProcAddress(function_name);
+#else
 	return (piglit_dispatch_function_ptr) wglGetProcAddress(function_name);
+#endif
 }
 
 /**
@@ -87,6 +105,20 @@ get_ext_proc_address(const char *function_name)
 static piglit_dispatch_function_ptr
 get_core_proc_address(const char *function_name, int gl_10x_version)
 {
+	/* Try first to resolve egl core functions with dlsym */
+	if (strncmp("egl", function_name, 3) == 0) {
+		piglit_dispatch_function_ptr r = NULL;
+		r = (piglit_dispatch_function_ptr)
+			GetProcAddress(LoadLibraryA("EGL"), function_name);
+		r = dlsym(RTLD_DEFAULT, function_name);
+#ifdef USE_EGL
+		if (!r)
+			r = eglGetProcAddress(function_name);
+#endif
+		if (r)
+			return r;
+	}
+
 	if (gl_10x_version > 11) {
 		return get_ext_proc_address(function_name);
 	} else {
@@ -143,7 +175,13 @@ get_core_proc_address(const char *function_name, int gl_10x_version)
 static piglit_dispatch_function_ptr
 get_ext_proc_address(const char *function_name)
 {
+#ifdef USE_WAFFLE
+	return waffle_get_proc_address(function_name);
+#elif defined(USE_EGLUT)
+	return eglGetProcAddress(function_name);
+#else
 	return glXGetProcAddressARB((const GLubyte *) function_name);
+#endif
 }
 
 /**
@@ -157,6 +195,18 @@ get_core_proc_address(const char *function_name, int gl_10x_version)
 	 * we retrieve all proc addresses in the same way.
 	 */
 	(void) gl_10x_version;
+	/* Try first to resolve egl core functions with dlsym */
+	if (strncmp("egl", function_name, 3) == 0) {
+		piglit_dispatch_function_ptr r = NULL;
+		r = dlsym(RTLD_DEFAULT, function_name);
+#ifdef USE_EGL
+		if (!r)
+			r = (piglit_dispatch_function_ptr)
+				eglGetProcAddress(function_name);
+#endif
+		if (r)
+			return r;
+	}
 
 	return get_ext_proc_address(function_name);
 }
