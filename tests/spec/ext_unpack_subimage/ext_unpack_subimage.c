@@ -28,8 +28,6 @@
  * Test GL_EXT_unpack_subimage.
  */
 
-#include <EGL/egl.h>
-
 #include "piglit-util.h"
 
 int piglit_width = 100, piglit_height = 100;
