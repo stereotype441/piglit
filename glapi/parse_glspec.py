@@ -104,7 +104,7 @@
 #   },
 #   "functions": {
 #     <function name, without "gl" prefix>: {
-#       "category": <category in which this function appears>,
+#       "categories": <list of categories in which this function appears>,
 #       "param_names": <list of param names>,
 #       "param_types": <list of param types>,
 #       "return_type": <type, or "void" if no return>
@@ -260,7 +260,7 @@ class Api(object):
 	# glAreTexturesResident is:
 	#
 	# 'AreTexturesResident': {
-	#    'category': '1.1',
+	#    'categories': ['1.1'],
 	#    'param_names': ['n', 'textures', 'residences'],
 	#    'param_types': ['GLsizei', 'const GLuint *', 'GLboolean *'],
 	#    'return_type': ['GLboolean'] }
@@ -413,7 +413,7 @@ class Api(object):
                 'return_type': self.type_translation[attributes['return'][0]],
                 'param_names': param_names,
                 'param_types': param_types,
-		'category': category,
+		'categories': [category],
                 }
             self.synonyms.add_singleton(name)
             for alias in attributes['alias']:

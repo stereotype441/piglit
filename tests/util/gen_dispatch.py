@@ -219,7 +219,7 @@ class Function(object):
 	    fixup_param_name(x) for x in json_data['param_names']]
 	self.param_types = json_data['param_types']
 	self.return_type = json_data['return_type']
-	self.category = json_data['category']
+	self.categories = json_data['categories']
 
     # Name of the function, with the 'gl' prefix.
     @property
@@ -287,9 +287,9 @@ class DispatchSet(object):
 	self.cat_fn_pairs = []
 	for function_name in synonym_set:
 	    function = all_functions[function_name]
-	    category_name = function.category
-	    category = all_categories[category_name]
-	    self.cat_fn_pairs.append((category, function))
+	    for category_name in function.categories:
+		category = all_categories[category_name]
+		self.cat_fn_pairs.append((category, function))
 	# Sort by category, with GL categories preceding extensions.
 	self.cat_fn_pairs.sort(key = self.__sort_key)
 
