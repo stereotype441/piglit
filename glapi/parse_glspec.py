@@ -459,11 +459,18 @@ class Api(object):
 
 if __name__ == '__main__':
     api = Api()
-    with open(sys.argv[1]) as f:
-        api.read_gl_tm(f)
-    with open(sys.argv[2]) as f:
-        api.read_gl_spec(f)
-    with open(sys.argv[3]) as f:
-        api.read_enumext_spec(f)
-    with open(sys.argv[4], 'w') as f:
-	f.write(api.to_json())
+    for name in sys.argv:
+	if name.endswith('.py'):
+	    continue
+	elif name.endswith('gl.tm'):
+	    with open(name) as f:
+		api.read_gl_tm(f)
+	elif name.endswith('gl.spec'):
+	    with open(name) as f:
+		api.read_gl_spec(f)
+	elif name.endswith('enumext.spec'):
+	    with open(name) as f:
+		api.read_enumext_spec(f)
+	elif name.endswith('.json'):
+	    with open(name, 'w') as f:
+		f.write(api.to_json())
