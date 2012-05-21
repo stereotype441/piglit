@@ -459,20 +459,23 @@ class Api(object):
     #
     # 'CLIENT_ALL_ATTRIB_BITS': { 'value_int': 4294967295,
     #                             'value_str': "0xFFFFFFFF" }
+    def parse_enum(self, m):
+	name, value = m.groups()
+	if value.startswith('GL_'):
+	    value_rhs = value[3:]
+	    value_int = self.enums[value_rhs]['value_int']
+	else:
+	    value_int = decode_enum_value(value)
+	self.enums[name] = {
+		'value_str': value,
+		'value_int': value_int
+		}
+
     def read_enumext_spec(self, f):
         for line in filter_comments(f):
             m = ENUM_REGEXP.match(line)
-            if m:
-                name, value = m.groups()
-                if value.startswith('GL_'):
-                    value_rhs = value[3:]
-                    value_int = self.enums[value_rhs]['value_int']
-                else:
-                    value_int = decode_enum_value(value)
-                self.enums[name] = {
-                    'value_str': value,
-                    'value_int': value_int
-                    }
+	    if m:
+		self.parse_enum(m)
 
     # Convert the stored API into JSON.  To make diffing easier, all
     # dictionaries are sorted by key, and all sets are sorted by set
