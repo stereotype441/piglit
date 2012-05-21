@@ -23,6 +23,8 @@
 #include "piglit-dispatch.h"
 #include "piglit-util.h"
 
+#include "piglit-util-egl.h"
+
 #ifdef _WIN32
 #define inline __inline
 #endif
@@ -38,6 +40,10 @@
  */
 static int gl_version = 0;
 
+/**
+ * To check if we have ES GL.
+ */
+bool gles;
 /**
  * The GL extension string returned by glGetString(GL_EXTENSIONS).
  *
@@ -100,7 +106,32 @@ get_ext_proc(const char *name)
 static inline bool
 check_version(int required_version)
 {
+	if (gles)
+		return false;
 	return gl_version >= required_version;
+}
+
+/**
+ * Generated code calls this function to determine whether a given ES
+ * version is supported.
+ */
+static inline bool
+es_check_version(int required_version)
+{
+	if (!gles)
+		return false;
+	return gl_version/10 == required_version/10 &&
+		gl_version%10 >= required_version%10;
+}
+
+static inline bool
+egl_check_version(int required_version)
+{
+	/* Assume that everything is support if no current context */
+	if (eglGetCurrentDisplay() == EGL_NO_DISPLAY)
+		return true;
+	return piglit_check_egl_version(required_version / 10,
+			required_version % 10);
 }
 
 /**
@@ -110,7 +141,26 @@ check_version(int required_version)
 static inline bool
 check_extension(const char *name)
 {
+	if (gles)
+		return false;
 	return piglit_is_extension_in_string(gl_extensions, name);
+}
+
+static inline bool
+es_check_extension(const char *name)
+{
+	if (!gles)
+		return false;
+	return piglit_is_extension_in_string(gl_extensions, name);
+}
+
+static inline bool
+egl_check_extension(const char *name)
+{
+	/* Assume that everything is support if no current context */
+	if (eglGetCurrentDisplay() == EGL_NO_DISPLAY)
+		return true;
+	return piglit_is_egl_extension_supported(name);
 }
 
 #include "generated_dispatch.c"
@@ -159,6 +209,7 @@ piglit_dispatch_init(void)
 	 * glGetString does not need to call check_version() or
 	 * check_extension().
 	 */
+	gles = piglit_is_gles();
 	gl_version = piglit_get_gl_version();
 	gl_extensions = (const char *) glGetString(GL_EXTENSIONS);
 }
