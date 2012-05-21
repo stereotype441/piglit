@@ -26,6 +26,10 @@
 #include <EGL/egl.h>
 #include <stdio.h>
 
+#ifdef USE_WAFFLE
+#include <waffle/waffle.h>
+#endif
+
 const char* piglit_get_egl_error_name(EGLint error) {
 #define CASE(x) case x: return #x;
     switch (error) {
@@ -94,6 +98,14 @@ piglit_is_egl_extension_supported(const char *name)
 void
 piglit_require_egl_extension(const char *name)
 {
+#ifdef USE_WAFFLE
+	if (glutGetPlatform() != WAFFLE_PLATFORM_X11_EGL &&
+		glutGetPlatform() != WAFFLE_PLATFORM_ANDROID) {
+		fprintf(stderr, "EGL test running in platform without EGL\n");
+		piglit_report_result(PIGLIT_SKIP);
+	}
+#endif
+
 	if (!piglit_is_egl_extension_supported(name)) {
 		fprintf(stderr, "Test requires %s\n", name);
 		piglit_report_result(PIGLIT_SKIP);
@@ -108,6 +120,14 @@ piglit_check_egl_version(int major, int minor)
 	int eglMinor;
 	const char *egl_version;
 	EGLDisplay dpy;
+
+#ifdef USE_WAFFLE
+	if (glutGetPlatform() != WAFFLE_PLATFORM_X11_EGL &&
+		glutGetPlatform() != WAFFLE_PLATFORM_ANDROID) {
+		fprintf(stderr, "EGL test running in platform without EGL\n");
+		piglit_report_result(PIGLIT_SKIP);
+	}
+#endif
 
 	dpy = eglGetCurrentDisplay();
 	egl_version = eglQueryString(dpy, EGL_VERSION);
