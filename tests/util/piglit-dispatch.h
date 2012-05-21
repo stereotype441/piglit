@@ -63,8 +63,12 @@ extern "C" {
 #ifndef _WIN32
 
 /* APIENTRY and GLAPIENTRY are not used on Linux or Mac. */
+#ifndef APIENTRY
 #define APIENTRY
+#endif
+#ifndef GLAPIENTRY
 #define GLAPIENTRY
+#endif
 
 #else
 
