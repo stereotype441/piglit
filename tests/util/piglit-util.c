@@ -109,10 +109,22 @@ void piglit_glutInit(int argc, char **argv)
 #	endif
 }
 
+static const char * const gl_prefix[] = {
+	"OpenGL ES-CM ",
+	"OpenGL ES-CL ",
+	"OpenGL ES ",
+	NULL,
+};
+
 bool piglit_is_gles()
 {
 	const char *version_string = (const char *) glGetString(GL_VERSION);
-	return strncmp("OpenGL ES ", version_string, 10) == 0;
+	int i;
+	for (i = 0; gl_prefix[i] != NULL; i++) {
+		if (strncmp(gl_prefix[i], version_string, strlen(gl_prefix[i])) == 0)
+			return true;
+	}
+	return false;
 }
 
 int piglit_get_gl_version()
@@ -122,12 +134,17 @@ int piglit_get_gl_version()
 	int scanf_count;
 	int major;
 	int minor;
+	int i;
 
 	/* skip to version number */
-	if (strncmp("OpenGL ES ", version_string, 10) == 0)
-		version_number_string = version_string + 10;
-	else
-		version_number_string = version_string;
+	version_number_string = version_string;
+	for (i = 0; gl_prefix[i] != NULL; i++) {
+		const int string_len = strlen(gl_prefix[i]);
+		if (strncmp(gl_prefix[i], version_string, string_len) == 0) {
+			version_number_string = version_string + string_len;
+			break;
+		}
+	}
 
 	/* Interpret version number */
 	scanf_count = sscanf(version_number_string, "%i.%i", &major, &minor);
