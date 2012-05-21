@@ -23,6 +23,9 @@
 
 #include "piglit-util-egl.h"
 
+#include <EGL/egl.h>
+#include <stdio.h>
+
 const char* piglit_get_egl_error_name(EGLint error) {
 #define CASE(x) case x: return #x;
     switch (error) {
@@ -73,4 +76,58 @@ void piglit_expect_egl_error(EGLint expected_error, enum piglit_result result)
         }
 
 	piglit_report_result(result);
+}
+
+bool
+piglit_is_egl_extension_supported(const char *name)
+{
+	const char * egl_extension_list;
+	EGLDisplay dpy;
+
+	dpy = eglGetCurrentDisplay();
+
+	egl_extension_list = eglQueryString(dpy, EGL_EXTENSIONS);
+
+	return piglit_is_extension_in_string(egl_extension_list, name);
+}
+
+void
+piglit_require_egl_extension(const char *name)
+{
+	if (!piglit_is_egl_extension_supported(name)) {
+		fprintf(stderr, "Test requires %s\n", name);
+		piglit_report_result(PIGLIT_SKIP);
+	}
+}
+
+
+bool
+piglit_check_egl_version(int major, int minor)
+{
+	int eglMajor;
+	int eglMinor;
+	const char *egl_version;
+	EGLDisplay dpy;
+
+	dpy = eglGetCurrentDisplay();
+	egl_version = eglQueryString(dpy, EGL_VERSION);
+
+	if (sscanf(egl_version, "%d.%d", &eglMajor, &eglMinor) != 2) {
+		fprintf(stderr, "Failed to parse EGL version\n");
+		piglit_report_result(PIGLIT_FAIL);
+	}
+
+	if (eglMajor != major || eglMinor < minor) {
+		fprintf(stderr, "Test requires EGL %d.%d.  Got %d.%d.\n",
+			major, minor, eglMajor, eglMinor);
+		return false;
+	}
+	return true;
+}
+
+void
+piglit_require_egl_version(int major, int minor)
+{
+	if (!piglit_check_egl_version(major, minor))
+		piglit_report_result(PIGLIT_SKIP);
 }
