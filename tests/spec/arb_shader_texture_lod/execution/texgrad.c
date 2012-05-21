@@ -30,6 +30,7 @@
  */
 
 #include "piglit-util.h"
+#include <GL/glu.h>
 
 int piglit_window_mode = GLUT_RGB | GLUT_DOUBLE;
 int piglit_width = 512;
