@@ -213,10 +213,10 @@ class Category(object):
     # Generate a human-readable representation of the category (for
     # use in generated comments).
     def __str__(self):
-	if self.kind == 'GL':
-	    return 'GL {0}.{1}'.format(
+	if self.kind in ['GL', 'ES', 'EGL']:
+	    return self.kind + ' {0}.{1}'.format(
 		self.gl_10x_version // 10, self.gl_10x_version % 10)
-	elif self.kind == 'extension':
+	elif self.kind in ['extension', 'extension_ES', 'extension_EGL']:
 	    return self.extension_name
 	else:
 	    raise Exception(
@@ -251,7 +251,10 @@ class Function(object):
     # Name of the function, with the 'gl' prefix.
     @property
     def gl_name(self):
-	return 'gl' + self.name
+	prefix = 'gl'
+	if self.name.startswith('egl'):
+	    prefix = ''
+	return prefix + self.name
 
     # Name of the function signature typedef corresponding to this
     # function.  E.g. for the glGetString function, this is
@@ -347,9 +350,9 @@ class DispatchSet(object):
 
     @staticmethod
     def __sort_key(cat_fn_pair):
-	if cat_fn_pair[0].kind == 'GL':
+	if cat_fn_pair[0].kind in ['GL', 'ES', 'EGL']:
 	    return 0, cat_fn_pair[0].gl_10x_version
-	elif cat_fn_pair[0].kind == 'extension':
+	elif cat_fn_pair[0].kind in ['extension', 'extension_ES', 'extension_EGL']:
 	    return 1, cat_fn_pair[0].extension_name
 	else:
 	    raise Exception(
@@ -439,7 +442,12 @@ def generate_resolve_function(ds):
     # execute in each case.
     condition_code_pairs = []
     for category, f in ds.cat_fn_pairs:
-	if category.kind == 'GL':
+	prefix = ''
+	if 'EGL' in category.kind:
+		prefix = 'egl_'
+	elif 'ES' in category.kind:
+		prefix = 'es_'
+	if category.kind in ['GL', 'EGL', 'ES']:
 	    getter = 'get_core_proc("{0}", {1})'.format(
 		f.gl_name, category.gl_10x_version)
 	    if category.gl_10x_version == 10:
@@ -447,11 +455,11 @@ def generate_resolve_function(ds):
 		# a condition.
 		condition = 'true'
 	    else:
-		condition = 'check_version({0})'.format(
+		condition = prefix + 'check_version({0})'.format(
 		    category.gl_10x_version)
-	elif category.kind == 'extension':
+	elif category.kind in ['extension', 'extension_ES', 'extension_EGL']:
 	    getter = 'get_ext_proc("{0}")'.format(f.gl_name)
-	    condition = 'check_extension("{0}")'.format(
+	    condition = prefix + 'check_extension("{0}")'.format(
 		category.extension_name)
 	else:
 	    raise Exception(
