@@ -451,7 +451,8 @@ def generate_resolve_function(ds):
 	if category.kind in ['GL', 'EGL', 'ES']:
 	    getter = 'get_core_proc("{0}", {1})'.format(
 		f.gl_name, category.gl_10x_version)
-	    if category.gl_10x_version == 10:
+	    if f.name in ['GetString', 'eglQueryString', \
+			'eglGetCurrentDisplay', 'eglGetError']:
 		# Function has always been available--no need to check
 		# a condition.
 		condition = 'true'
