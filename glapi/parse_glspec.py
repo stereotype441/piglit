@@ -153,7 +153,10 @@ def decode_enum_value(value_str):
         if value_str.endswith(suffix):
             value_str = value_str[:-len(suffix)]
             break
-    return int(value_str, 0)
+    try:
+	return int(value_str, 0)
+    except:
+	return 0
 
 
 # Convert an object to a form that can be serialized to JSON.  Python
