@@ -126,6 +126,8 @@ import sys
 
 GLSPEC_HEADER_REGEXP = re.compile(r'^(\w+)\((.*)\)$')
 GLSPEC_ATTRIBUTE_REGEXP = re.compile(r'^\s+(\w+)\s+(.*)$')
+GLSPEC_EXT_VERSION_REGEXP = re.compile(r'^passthru:\s+/\*\sOpenGL\s+([0-9.]+)\s+.*reuses')
+GLSPEC_EXT_REGEXP = re.compile(r'^passthru:\s+/\*\s+(\w+)')
 GL_VERSION_REGEXP = re.compile('^VERSION_([0-9])_([0-9])(_DEPRECATED)?$')
 ENUM_REGEXP = re.compile(r'^\s+(\w+)\s+=\s+(\w+)$')
 
@@ -284,6 +286,10 @@ class Api(object):
 	#                  'extension_name': 'GL_ARB_sync' }
 	self.categories = {}
 
+	# Api.core_exts is a dict to map backport extension to GL version
+	# 'GL_ARB_sync': ['3.3']
+	self.core_exts = {}
+
     # Convert each line in the gl.tm file into a key/value pair in
     # self.type_translation, mapping an abstract type name to a C
     # type.
@@ -311,13 +317,29 @@ class Api(object):
     # ('Foo', ['bar', 'baz'],
     #  {'x': ['value1'], 'y': ['value2 other_info', 'value3 more_info']})
     @staticmethod
-    def group_gl_spec_functions(f):
+    def group_gl_spec_functions(self, f):
         function_name = None
         param_names = None
         attributes = None
+	version = None
         for line in filter_comments(f):
+	    m = GLSPEC_EXT_VERSION_REGEXP.match(line)
+	    if m:
+		version = m.group(1)
+		continue
+	    if version != None:
+		m = GLSPEC_EXT_REGEXP.match(line)
+		if m:
+		    ext = m.group(1)
+		    ext = 'GL_' + ext
+		    if ext in self.core_exts:
+			self.core_exts[ext].append(version)
+		    else:
+			self.core_exts[ext] = [version]
+		    continue
             m = GLSPEC_HEADER_REGEXP.match(line)
             if m:
+		version = None
                 if function_name:
                     yield function_name, param_names, attributes
                 function_name = m.group(1)
@@ -339,7 +361,7 @@ class Api(object):
     # Process the data in gl.spec, and populate self.functions,
     # self.synonyms, and self.categories based on it.
     def read_gl_spec(self, f):
-        for name, param_names, attributes in self.group_gl_spec_functions(f):
+        for name, param_names, attributes in self.group_gl_spec_functions(self, f):
             if name in self.functions:
                 raise Exception(
                     'Function {0!r} appears more than once'.format(name))
@@ -415,6 +437,14 @@ class Api(object):
                 'param_types': param_types,
 		'category': [category],
                 }
+	    if category in self.core_exts:
+		for ver in self.core_exts[category]:
+		    self.functions[name]['category'].append(ver)
+		    if ver not in self.categories:
+			self.categories[ver] = {
+				'kind': 'GL',
+				'gl_10x_version': int(ver.replace('.',''))
+				}
             self.synonyms.add_singleton(name)
             for alias in attributes['alias']:
                 self.synonyms.add_alias(name, alias)
