@@ -526,7 +526,9 @@ def generate_stub_function(ds):
     stub_fn = 'static {0}\n'.format(
 	f0.c_form('APIENTRY ' + ds.stub_name, anonymous_args = False))
     stub_fn += '{\n'
-    stub_fn += '\tcheck_initialized();\n'
+    # EGL functions can be called before initialization
+    if not f0.gl_name.startswith('egl'):
+	    stub_fn += '\tcheck_initialized();\n'
     stub_fn += '\t{0}();\n'.format(ds.resolve_name)
 
     # Output the call to the dispatch function.
