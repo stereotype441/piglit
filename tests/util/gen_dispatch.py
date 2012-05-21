@@ -146,6 +146,7 @@ import collections
 import json
 import os.path
 import sys
+import re
 
 
 # Generate a top-of-file comment cautioning that the file is
@@ -531,7 +532,7 @@ def generate_stub_function(ds):
     # Output the call to the dispatch function.
     stub_fn += '\t{0}{1}({2});\n'.format(
 	'return ' if f0.return_type != 'void' else '',
-	ds.dispatch_name, ', '.join(f0.param_names))
+	ds.dispatch_name, re.sub(r'\[\d+\]', '', ', '.join(f0.param_names)))
     stub_fn += '}\n'
     return stub_fn
 
@@ -583,7 +584,7 @@ def generate_code(api):
 	h_contents.append(
 	    'typedef {0};\n'.format(
 		f.c_form('(APIENTRY *{0})'.format(f.typedef_name),
-			 anonymous_args = True)))
+			 anonymous_args = False)))
 
     dispatch_sets = api.compute_dispatch_sets()
 
