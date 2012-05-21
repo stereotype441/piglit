@@ -314,9 +314,9 @@ class DispatchSet(object):
 	self.cat_fn_pairs = []
 	for function_name in synonym_set:
 	    function = all_functions[function_name]
-	    category_name = function.category
-	    category = all_categories[category_name]
-	    self.cat_fn_pairs.append((category, function))
+	    for category_name in function.category:
+		category = all_categories[category_name]
+		self.cat_fn_pairs.append((category, function))
 	# Sort by category, with GL categories preceding extensions.
 	self.cat_fn_pairs.sort(key = self.__sort_key)
 

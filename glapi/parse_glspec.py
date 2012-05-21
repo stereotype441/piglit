@@ -413,7 +413,7 @@ class Api(object):
                 'return_type': self.type_translation[attributes['return'][0]],
                 'param_names': param_names,
                 'param_types': param_types,
-		'category': category,
+		'category': [category],
                 }
             self.synonyms.add_singleton(name)
             for alias in attributes['alias']:
