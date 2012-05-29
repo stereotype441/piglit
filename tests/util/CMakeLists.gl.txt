@@ -40,11 +40,13 @@ IF(BUILD_GLX_TESTS)
 		${UTIL_SOURCES}
 		piglit-glx-util.c
 	)
+	target_link_libraries(piglitglxutil dl ${OPENGL_egl_LIBRARY})
 ENDIF(BUILD_GLX_TESTS)
 
 piglit_add_library (piglitutil
 	${UTIL_SOURCES}
 )
+target_link_libraries(piglitutil dl ${OPENGL_egl_LIBRARY})
 
 if(UNIX)
 	target_link_libraries(piglitutil m)
