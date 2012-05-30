@@ -30,6 +30,11 @@
 /* Global state maintained by the Piglit dispatch mechanism: */
 
 /**
+ * Which API is currently being dispatched to.
+ */
+static piglit_dispatch_api dispatch_api = PIGLIT_DISPATCH_GL;
+
+/**
  * Which function to call to get the address of a core function.
  */
 static piglit_get_core_proc_address_function_ptr get_core_proc_address = NULL;
@@ -118,6 +123,16 @@ get_ext_proc(const char *name)
 }
 
 /**
+ * Generated code calls this function to determine whether a given API
+ * is in use.
+ */
+static inline bool
+check_api(piglit_dispatch_api api)
+{
+	return dispatch_api == api;
+}
+
+/**
  * Generated code calls this function to determine whether a given GL
  * version is supported.
  */
@@ -173,8 +188,7 @@ piglit_dispatch_init(piglit_dispatch_api api,
 		     piglit_error_function_ptr unsupported_proc,
 		     piglit_error_function_ptr failure_proc)
 {
-	(void) api; /* Not yet implemented--assume GL. */
-
+	dispatch_api = api;
 	get_core_proc_address = get_core_proc;
 	get_ext_proc_address = get_ext_proc;
 	unsupported = unsupported_proc;
