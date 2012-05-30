@@ -236,6 +236,8 @@ passthru:
 ###############################################################################
 
 CullFace(mode)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		mode		CullFaceMode in value
 	category	VERSION_1_0		   # old: drawing-control
@@ -244,6 +246,8 @@ CullFace(mode)
 	offset		152
 
 FrontFace(mode)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		mode		FrontFaceDirection in value
 	category	VERSION_1_0		   # old: drawing-control
@@ -252,6 +256,8 @@ FrontFace(mode)
 	offset		157
 
 Hint(target, mode)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		HintTarget in value
 	param		mode		HintMode in value
@@ -261,6 +267,8 @@ Hint(target, mode)
 	offset		158
 
 LineWidth(width)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		width		CheckedFloat32 in value
 	category	VERSION_1_0		   # old: drawing-control
@@ -269,6 +277,7 @@ LineWidth(width)
 	offset		168
 
 PointSize(size)
+	gles_version	1.0
 	return		void
 	param		size		CheckedFloat32 in value
 	category	VERSION_1_0		   # old: drawing-control
@@ -286,6 +295,8 @@ PolygonMode(face, mode)
 	offset		174
 
 Scissor(x, y, width, height)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		x		WinCoord in value
 	param		y		WinCoord in value
@@ -297,6 +308,8 @@ Scissor(x, y, width, height)
 	offset		176
 
 TexParameterf(target, pname, param)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		pname		TextureParameterName in value
@@ -308,6 +321,8 @@ TexParameterf(target, pname, param)
 	offset		178
 
 TexParameterfv(target, pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		pname		TextureParameterName in value
@@ -319,6 +334,8 @@ TexParameterfv(target, pname, params)
 	offset		179
 
 TexParameteri(target, pname, param)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		pname		TextureParameterName in value
@@ -330,6 +347,8 @@ TexParameteri(target, pname, param)
 	offset		180
 
 TexParameteriv(target, pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		pname		TextureParameterName in value
@@ -359,6 +378,8 @@ TexImage1D(target, level, internalformat, width, border, format, type, pixels)
 	offset		182
 
 TexImage2D(target, level, internalformat, width, height, border, format, type, pixels)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		level		CheckedInt32 in value
@@ -392,6 +413,8 @@ DrawBuffer(mode)
 	offset		202
 
 Clear(mask)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		mask		ClearBufferMask in value
 	category	VERSION_1_0		   # old: framebuf
@@ -400,6 +423,8 @@ Clear(mask)
 	offset		203
 
 ClearColor(red, green, blue, alpha)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		red		ClampedColorF in value
 	param		green		ClampedColorF in value
@@ -411,6 +436,8 @@ ClearColor(red, green, blue, alpha)
 	offset		206
 
 ClearStencil(s)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		s		StencilValue in value
 	category	VERSION_1_0		   # old: framebuf
@@ -427,6 +454,8 @@ ClearDepth(depth)
 	offset		208
 
 StencilMask(mask)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		mask		MaskedStencilValue in value
 	category	VERSION_1_0		   # old: framebuf
@@ -435,6 +464,8 @@ StencilMask(mask)
 	offset		209
 
 ColorMask(red, green, blue, alpha)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		red		Boolean in value
 	param		green		Boolean in value
@@ -446,6 +477,8 @@ ColorMask(red, green, blue, alpha)
 	offset		210
 
 DepthMask(flag)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		flag		Boolean in value
 	category	VERSION_1_0		   # old: framebuf
@@ -460,6 +493,8 @@ DepthMask(flag)
 ###############################################################################
 
 Disable(cap)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		cap		EnableCap in value
 	category	VERSION_1_0		   # old: misc
@@ -470,6 +505,8 @@ Disable(cap)
 	offset		214
 
 Enable(cap)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		cap		EnableCap in value
 	category	VERSION_1_0		   # old: misc
@@ -480,6 +517,8 @@ Enable(cap)
 	offset		215
 
 Finish()
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	dlflags		notlistable
 	glxflags	client-handcode server-handcode
@@ -489,6 +528,8 @@ Finish()
 	offset		216
 
 Flush()
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	dlflags		notlistable
 	glxflags	client-handcode client-intercept server-handcode
@@ -504,6 +545,8 @@ Flush()
 ###############################################################################
 
 BlendFunc(sfactor, dfactor)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		sfactor		BlendingFactorSrc in value
 	param		dfactor		BlendingFactorDest in value
@@ -513,6 +556,7 @@ BlendFunc(sfactor, dfactor)
 	offset		241
 
 LogicOp(opcode)
+	gles_version	1.0
 	return		void
 	param		opcode		LogicOp in value
 	category	VERSION_1_0		   # old: pixel-op
@@ -521,6 +565,8 @@ LogicOp(opcode)
 	offset		242
 
 StencilFunc(func, ref, mask)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		func		StencilFunction in value
 	param		ref		ClampedStencilValue in value
@@ -531,6 +577,8 @@ StencilFunc(func, ref, mask)
 	offset		243
 
 StencilOp(fail, zfail, zpass)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		fail		StencilOp in value
 	param		zfail		StencilOp in value
@@ -541,6 +589,8 @@ StencilOp(fail, zfail, zpass)
 	offset		244
 
 DepthFunc(func)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		func		DepthFunction in value
 	category	VERSION_1_0		   # old: pixel-op
@@ -567,6 +617,8 @@ PixelStoref(pname, param)
 	offset		249
 
 PixelStorei(pname, param)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		pname		PixelStoreParameter in value
 	param		param		CheckedInt32 in value
@@ -587,6 +639,8 @@ ReadBuffer(mode)
 	offset		254
 
 ReadPixels(x, y, width, height, format, type, pixels)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		x		WinCoord in value
 	param		y		WinCoord in value
@@ -610,6 +664,8 @@ ReadPixels(x, y, width, height, format, type, pixels)
 ###############################################################################
 
 GetBooleanv(pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		pname		GetPName in value
 	param		params		Boolean out array [COMPSIZE(pname)]
@@ -634,6 +690,8 @@ GetDoublev(pname, params)
 	offset		260
 
 GetError()
+	gles_version	1.0
+	gles_version	2.0
 	return		ErrorCode
 	category	VERSION_1_0		   # old: state-req
 	dlflags		notlistable
@@ -643,6 +701,8 @@ GetError()
 	offset		261
 
 GetFloatv(pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		pname		GetPName in value
 	param		params		Float32 out array [COMPSIZE(pname)]
@@ -655,6 +715,8 @@ GetFloatv(pname, params)
 	offset		262
 
 GetIntegerv(pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		pname		GetPName in value
 	param		params		Int32 out array [COMPSIZE(pname)]
@@ -667,6 +729,8 @@ GetIntegerv(pname, params)
 	offset		263
 
 GetString(name)
+	gles_version	1.0
+	gles_version	2.0
 	return		String
 	param		name		StringName in value
 	category	VERSION_1_0		   # old: state-req
@@ -693,6 +757,8 @@ GetTexImage(target, level, format, type, pixels)
 	offset		281
 
 GetTexParameterfv(target, pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		pname		GetTextureParameter in value
@@ -705,6 +771,8 @@ GetTexParameterfv(target, pname, params)
 	offset		282
 
 GetTexParameteriv(target, pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		pname		GetTextureParameter in value
@@ -743,6 +811,8 @@ GetTexLevelParameteriv(target, level, pname, params)
 	offset		285
 
 IsEnabled(cap)
+	gles_version	1.0
+	gles_version	2.0
 	return		Boolean
 	param		cap		EnableCap in value
 	category	VERSION_1_0		   # old: state-req
@@ -768,6 +838,8 @@ DepthRange(near, far)
 	offset		288
 
 Viewport(x, y, width, height)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		x		WinCoord in value
 	param		y		WinCoord in value
@@ -1094,6 +1166,7 @@ Color4dv(v)
 	offset		28
 
 Color4f(red, green, blue, alpha)
+	gles_version	1.0
 	return		void
 	param		red		ColorF in value
 	param		green		ColorF in value
@@ -1157,6 +1230,7 @@ Color4sv(v)
 	offset		34
 
 Color4ub(red, green, blue, alpha)
+	gles_version	1.0
 	return		void
 	param		red		ColorUB in value
 	param		green		ColorUB in value
@@ -1358,6 +1432,7 @@ Normal3dv(v)
 	offset		55
 
 Normal3f(nx, ny, nz)
+	gles_version	1.0
 	return		void
 	param		nx		CoordF in value
 	param		ny		CoordF in value
@@ -2318,6 +2393,7 @@ ColorMaterial(face, mode)
 	offset		151
 
 Fogf(pname, param)
+	gles_version	1.0
 	return		void
 	param		pname		FogParameter in value
 	param		param		CheckedFloat32 in value
@@ -2329,6 +2405,7 @@ Fogf(pname, param)
 	offset		153
 
 Fogfv(pname, params)
+	gles_version	1.0
 	return		void
 	param		pname		FogParameter in value
 	param		params		CheckedFloat32 in array [COMPSIZE(pname)]
@@ -2362,6 +2439,7 @@ Fogiv(pname, params)
 	offset		156
 
 Lightf(light, pname, param)
+	gles_version	1.0
 	return		void
 	param		light		LightName in value
 	param		pname		LightParameter in value
@@ -2374,6 +2452,7 @@ Lightf(light, pname, param)
 	offset		159
 
 Lightfv(light, pname, params)
+	gles_version	1.0
 	return		void
 	param		light		LightName in value
 	param		pname		LightParameter in value
@@ -2410,6 +2489,7 @@ Lightiv(light, pname, params)
 	offset		162
 
 LightModelf(pname, param)
+	gles_version	1.0
 	return		void
 	param		pname		LightModelParameter in value
 	param		param		Float32 in value
@@ -2421,6 +2501,7 @@ LightModelf(pname, param)
 	offset		163
 
 LightModelfv(pname, params)
+	gles_version	1.0
 	return		void
 	param		pname		LightModelParameter in value
 	param		params		Float32 in array [COMPSIZE(pname)]
@@ -2464,6 +2545,7 @@ LineStipple(factor, pattern)
 	offset		167
 
 Materialf(face, pname, param)
+	gles_version	1.0
 	return		void
 	param		face		MaterialFace in value
 	param		pname		MaterialParameter in value
@@ -2476,6 +2558,7 @@ Materialf(face, pname, param)
 	offset		169
 
 Materialfv(face, pname, params)
+	gles_version	1.0
 	return		void
 	param		face		MaterialFace in value
 	param		pname		MaterialParameter in value
@@ -2524,6 +2607,7 @@ PolygonStipple(mask)
 	offset		175
 
 ShadeModel(mode)
+	gles_version	1.0
 	return		void
 	param		mode		ShadingModel in value
 	category	VERSION_1_0_DEPRECATED	   # old: drawing-control
@@ -2533,6 +2617,7 @@ ShadeModel(mode)
 	offset		177
 
 TexEnvf(target, pname, param)
+	gles_version	1.0
 	return		void
 	param		target		TextureEnvTarget in value
 	param		pname		TextureEnvParameter in value
@@ -2545,6 +2630,7 @@ TexEnvf(target, pname, param)
 	offset		184
 
 TexEnvfv(target, pname, params)
+	gles_version	1.0
 	return		void
 	param		target		TextureEnvTarget in value
 	param		pname		TextureEnvParameter in value
@@ -2557,6 +2643,7 @@ TexEnvfv(target, pname, params)
 	offset		185
 
 TexEnvi(target, pname, param)
+	gles_version	1.0
 	return		void
 	param		target		TextureEnvTarget in value
 	param		pname		TextureEnvParameter in value
@@ -2569,6 +2656,7 @@ TexEnvi(target, pname, param)
 	offset		186
 
 TexEnviv(target, pname, params)
+	gles_version	1.0
 	return		void
 	param		target		TextureEnvTarget in value
 	param		pname		TextureEnvParameter in value
@@ -3039,6 +3127,7 @@ EvalPoint2(i, j)
 	offset		239
 
 AlphaFunc(func, ref)
+	gles_version	1.0
 	return		void
 	param		func		AlphaFunction in value
 	param		ref		ClampedFloat32 in value
@@ -3156,6 +3245,7 @@ GetClipPlane(plane, equation)
 	offset		259
 
 GetLightfv(light, pname, params)
+	gles_version	1.0
 	return		void
 	param		light		LightName in value
 	param		pname		LightParameter in value
@@ -3218,6 +3308,7 @@ GetMapiv(target, query, v)
 	offset		268
 
 GetMaterialfv(face, pname, params)
+	gles_version	1.0
 	return		void
 	param		face		MaterialFace in value
 	param		pname		MaterialParameter in value
@@ -3289,6 +3380,7 @@ GetPolygonStipple(mask)
 	offset		274
 
 GetTexEnvfv(target, pname, params)
+	gles_version	1.0
 	return		void
 	param		target		TextureEnvTarget in value
 	param		pname		TextureEnvParameter in value
@@ -3302,6 +3394,7 @@ GetTexEnvfv(target, pname, params)
 	offset		276
 
 GetTexEnviv(target, pname, params)
+	gles_version	1.0
 	return		void
 	param		target		TextureEnvTarget in value
 	param		pname		TextureEnvParameter in value
@@ -3378,6 +3471,7 @@ Frustum(left, right, bottom, top, zNear, zFar)
 	offset		289
 
 LoadIdentity()
+	gles_version	1.0
 	return		void
 	category	VERSION_1_0_DEPRECATED	   # old: xform
 	version		1.0
@@ -3386,6 +3480,7 @@ LoadIdentity()
 	offset		290
 
 LoadMatrixf(m)
+	gles_version	1.0
 	return		void
 	param		m		Float32 in array [16]
 	category	VERSION_1_0_DEPRECATED	   # old: xform
@@ -3404,6 +3499,7 @@ LoadMatrixd(m)
 	offset		292
 
 MatrixMode(mode)
+	gles_version	1.0
 	return		void
 	param		mode		MatrixMode in value
 	category	VERSION_1_0_DEPRECATED	   # old: xform
@@ -3413,6 +3509,7 @@ MatrixMode(mode)
 	offset		293
 
 MultMatrixf(m)
+	gles_version	1.0
 	return		void
 	param		m		Float32 in array [16]
 	category	VERSION_1_0_DEPRECATED	   # old: xform
@@ -3445,6 +3542,7 @@ Ortho(left, right, bottom, top, zNear, zFar)
 	offset		296
 
 PopMatrix()
+	gles_version	1.0
 	return		void
 	category	VERSION_1_0_DEPRECATED	   # old: xform
 	version		1.0
@@ -3453,6 +3551,7 @@ PopMatrix()
 	offset		297
 
 PushMatrix()
+	gles_version	1.0
 	return		void
 	category	VERSION_1_0_DEPRECATED	   # old: xform
 	version		1.0
@@ -3473,6 +3572,7 @@ Rotated(angle, x, y, z)
 	offset		299
 
 Rotatef(angle, x, y, z)
+	gles_version	1.0
 	return		void
 	param		angle		Float32 in value
 	param		x		Float32 in value
@@ -3496,6 +3596,7 @@ Scaled(x, y, z)
 	offset		301
 
 Scalef(x, y, z)
+	gles_version	1.0
 	return		void
 	param		x		Float32 in value
 	param		y		Float32 in value
@@ -3518,6 +3619,7 @@ Translated(x, y, z)
 	offset		303
 
 Translatef(x, y, z)
+	gles_version	1.0
 	return		void
 	param		x		Float32 in value
 	param		y		Float32 in value
@@ -3537,6 +3639,8 @@ Translatef(x, y, z)
 ###############################################################################
 
 DrawArrays(mode, first, count)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		mode		BeginMode in value
 	param		first		Int32 in value
@@ -3549,6 +3653,8 @@ DrawArrays(mode, first, count)
 	offset		310
 
 DrawElements(mode, count, type, indices)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		mode		BeginMode in value
 	param		count		SizeI in value
@@ -3561,6 +3667,7 @@ DrawElements(mode, count, type, indices)
 	offset		311
 
 GetPointerv(pname, params)
+	gles_version	1.0
 	return		void
 	param		pname		GetPointervPName in value
 	param		params		VoidPointer out array [1]
@@ -3571,6 +3678,8 @@ GetPointerv(pname, params)
 	offset		329
 
 PolygonOffset(factor, units)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		factor		Float32 in value
 	param		units		Float32 in value
@@ -3597,6 +3706,8 @@ CopyTexImage1D(target, level, internalformat, x, y, width, border)
 
 # Arguably TexelInternalFormat, not PixelInternalFormat
 CopyTexImage2D(target, level, internalformat, x, y, width, height, border)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		level		CheckedInt32 in value
@@ -3627,6 +3738,8 @@ CopyTexSubImage1D(target, level, xoffset, x, y, width)
 	offset		325
 
 CopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		level		CheckedInt32 in value
@@ -3659,6 +3772,8 @@ TexSubImage1D(target, level, xoffset, width, format, type, pixels)
 	offset		332
 
 TexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		level		CheckedInt32 in value
@@ -3677,6 +3792,8 @@ TexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixe
 	offset		333
 
 BindTexture(target, texture)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		texture		Texture in value
@@ -3687,6 +3804,8 @@ BindTexture(target, texture)
 	offset		307
 
 DeleteTextures(n, textures)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		textures	Texture in array [n]
@@ -3697,6 +3816,8 @@ DeleteTextures(n, textures)
 	offset		327
 
 GenTextures(n, textures)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		textures	Texture out array [n]
@@ -3707,6 +3828,8 @@ GenTextures(n, textures)
 	offset		328
 
 IsTexture(texture)
+	gles_version	1.0
+	gles_version	2.0
 	return		Boolean
 	param		texture		Texture in value
 	category	VERSION_1_1
@@ -3734,6 +3857,7 @@ ArrayElement(i)
 	offset		306
 
 ColorPointer(size, type, stride, pointer)
+	gles_version	1.0
 	return		void
 	param		size		Int32 in value
 	param		type		ColorPointerType in value
@@ -3747,6 +3871,7 @@ ColorPointer(size, type, stride, pointer)
 	offset		308
 
 DisableClientState(array)
+	gles_version	1.0
 	return		void
 	param		array		EnableCap in value
 	category	VERSION_1_1_DEPRECATED
@@ -3768,6 +3893,7 @@ EdgeFlagPointer(stride, pointer)
 	offset		312
 
 EnableClientState(array)
+	gles_version	1.0
 	return		void
 	param		array		EnableCap in value
 	category	VERSION_1_1_DEPRECATED
@@ -3802,6 +3928,7 @@ InterleavedArrays(format, stride, pointer)
 	offset		317
 
 NormalPointer(type, stride, pointer)
+	gles_version	1.0
 	return		void
 	param		type		NormalPointerType in value
 	param		stride		SizeI in value
@@ -3814,6 +3941,7 @@ NormalPointer(type, stride, pointer)
 	offset		318
 
 TexCoordPointer(size, type, stride, pointer)
+	gles_version	1.0
 	return		void
 	param		size		Int32 in value
 	param		type		TexCoordPointerType in value
@@ -3827,6 +3955,7 @@ TexCoordPointer(size, type, stride, pointer)
 	offset		320
 
 VertexPointer(size, type, stride, pointer)
+	gles_version	1.0
 	return		void
 	param		size		Int32 in value
 	param		type		VertexPointerType in value
@@ -3907,6 +4036,7 @@ PushClientAttrib(mask)
 ###############################################################################
 
 BlendColor(red, green, blue, alpha)
+	gles_version	2.0
 	return		void
 	param		red		ClampedColorF in value
 	param		green		ClampedColorF in value
@@ -3919,6 +4049,7 @@ BlendColor(red, green, blue, alpha)
 	offset		336
 
 BlendEquation(mode)
+	gles_version	2.0
 	return		void
 	param		mode		BlendEquationMode in value
 	category	VERSION_1_2
@@ -4457,6 +4588,8 @@ ResetMinmax(target)
 # OpenGL 1.3 (ARB_multitexture) commands
 
 ActiveTexture(texture)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		texture		TextureUnit in value
 	category	VERSION_1_3
@@ -4468,6 +4601,8 @@ ActiveTexture(texture)
 # OpenGL 1.3 (ARB_multisample) commands
 
 SampleCoverage(value, invert)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		value		ClampedFloat32 in value
 	param		invert		Boolean in value
@@ -4501,6 +4636,8 @@ CompressedTexImage3D(target, level, internalformat, width, height, depth, border
 
 # Arguably TexelInternalFormat, not PixelInternalFormat
 CompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		level		CheckedInt32 in value
@@ -4558,6 +4695,8 @@ CompressedTexSubImage3D(target, level, xoffset, yoffset, zoffset, width, height,
 	offset		557
 
 CompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		TextureTarget in value
 	param		level		CheckedInt32 in value
@@ -4615,6 +4754,7 @@ GetCompressedTexImage(target, level, img)
 ###############################################################################
 
 ClientActiveTexture(texture)
+	gles_version	1.0
 	return		void
 	param		texture		TextureUnit in value
 	category	VERSION_1_3_DEPRECATED
@@ -4926,6 +5066,7 @@ MultiTexCoord4dv(target, v)
 	offset		401
 
 MultiTexCoord4f(target, s, t, r, q)
+	gles_version	1.0
 	return		void
 	param		target		TextureUnit in value
 	param		s		CoordF in value
@@ -5049,6 +5190,7 @@ MultTransposeMatrixd(m)
 # OpenGL 1.4 (EXT_blend_func_separate) commands
 
 BlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha)
+	gles_version	2.0
 	return		void
 	param		sfactorRGB	BlendFuncSeparateParameterEXT in value
 	param		dfactorRGB	BlendFuncSeparateParameterEXT in value
@@ -5089,6 +5231,7 @@ MultiDrawElements(mode, count, type, indices, primcount)
 # OpenGL 1.4 (ARB_point_parameters, NV_point_sprite) commands
 
 PointParameterf(pname, param)
+	gles_version	1.0
 	return		void
 	param		pname		PointParameterNameARB in value
 	param		param		CheckedFloat32 in value
@@ -5099,6 +5242,7 @@ PointParameterf(pname, param)
 	offset		458
 
 PointParameterfv(pname, params)
+	gles_version	1.0
 	return		void
 	param		pname		PointParameterNameARB in value
 	param		params		CheckedFloat32 in array [COMPSIZE(pname)]
@@ -5634,6 +5778,8 @@ GetQueryObjectuiv(id, pname, params)
 # OpenGL 1.5 (ARB_vertex_buffer_object) commands
 
 BindBuffer(target, buffer)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		BufferTargetARB in value
 	param		buffer		UInt32 in value
@@ -5645,6 +5791,8 @@ BindBuffer(target, buffer)
 	offset		688
 
 DeleteBuffers(n, buffers)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		buffers		ConstUInt32 in array [n]
@@ -5656,6 +5804,8 @@ DeleteBuffers(n, buffers)
 	offset		691
 
 GenBuffers(n, buffers)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		buffers		UInt32 out array [n]
@@ -5667,6 +5817,8 @@ GenBuffers(n, buffers)
 	offset		692
 
 IsBuffer(buffer)
+	gles_version	1.0
+	gles_version	2.0
 	return		Boolean
 	param		buffer		UInt32 in value
 	category	VERSION_1_5
@@ -5677,6 +5829,8 @@ IsBuffer(buffer)
 	offset		696
 
 BufferData(target, size, data, usage)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		BufferTargetARB in value
 	param		size		BufferSize in value
@@ -5690,6 +5844,8 @@ BufferData(target, size, data, usage)
 	offset		689
 
 BufferSubData(target, offset, size, data)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		BufferTargetARB in value
 	param		offset		BufferOffset in value
@@ -5738,6 +5894,8 @@ UnmapBuffer(target)
 	offset		698
 
 GetBufferParameteriv(target, pname, params)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		target		BufferTargetARB in value
 	param		pname		BufferPNameARB in value
@@ -5777,6 +5935,7 @@ GetBufferPointerv(target, pname, params)
 # OpenGL 2.0 (EXT_blend_equation_separate) commands
 
 BlendEquationSeparate(modeRGB, modeAlpha)
+	gles_version	2.0
 	return		void
 	param		modeRGB		BlendEquationModeEXT in value
 	param		modeAlpha	BlendEquationModeEXT in value
@@ -5801,6 +5960,7 @@ DrawBuffers(n, bufs)
 # OpenGL 2.0 (ARB_stencil_two_side) commands
 
 StencilOpSeparate(face, sfail, dpfail, dppass)
+	gles_version	2.0
 	return		void
 	param		face		StencilFaceDirection in value
 	param		sfail		StencilOp in value
@@ -5814,6 +5974,7 @@ StencilOpSeparate(face, sfail, dpfail, dppass)
 	offset		?
 
 StencilFuncSeparate(face, func, ref, mask)
+	gles_version	2.0
 	return		void
 	param		face		StencilFaceDirection in value
 	param		func		StencilFunction in value
@@ -5827,6 +5988,7 @@ StencilFuncSeparate(face, func, ref, mask)
 	offset		?
 
 StencilMaskSeparate(face, mask)
+	gles_version	2.0
 	return		void
 	param		face		StencilFaceDirection in value
 	param		mask		MaskedStencilValue in value
@@ -5840,6 +6002,7 @@ StencilMaskSeparate(face, mask)
 # OpenGL 2.0 (ARB_shader_objects / ARB_vertex_shader / ARB_fragment_shader) commands
 
 AttachShader(program, shader)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		shader		UInt32 in value
@@ -5851,6 +6014,7 @@ AttachShader(program, shader)
 	offset		?
 
 BindAttribLocation(program, index, name)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		index		UInt32 in value
@@ -5863,6 +6027,7 @@ BindAttribLocation(program, index, name)
 	offset		?
 
 CompileShader(shader)
+	gles_version	2.0
 	return		void
 	param		shader		UInt32 in value
 	category	VERSION_2_0
@@ -5873,6 +6038,7 @@ CompileShader(shader)
 	offset		?
 
 CreateProgram()
+	gles_version	2.0
 	return		UInt32
 	category	VERSION_2_0
 	version		2.0
@@ -5882,6 +6048,7 @@ CreateProgram()
 	offset		?
 
 CreateShader(type)
+	gles_version	2.0
 	return		UInt32
 	param		type		GLenum in value
 	category	VERSION_2_0
@@ -5892,6 +6059,7 @@ CreateShader(type)
 	offset		?
 
 DeleteProgram(program)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	category	VERSION_2_0
@@ -5902,6 +6070,7 @@ DeleteProgram(program)
 	offset		?
 
 DeleteShader(shader)
+	gles_version	2.0
 	return		void
 	param		shader		UInt32 in value
 	category	VERSION_2_0
@@ -5912,6 +6081,7 @@ DeleteShader(shader)
 	offset		?
 
 DetachShader(program, shader)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		shader		UInt32 in value
@@ -5923,6 +6093,7 @@ DetachShader(program, shader)
 	offset		?
 
 DisableVertexAttribArray(index)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	dlflags		notlistable
@@ -5933,6 +6104,7 @@ DisableVertexAttribArray(index)
 	offset		666
 
 EnableVertexAttribArray(index)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	dlflags		notlistable
@@ -5943,6 +6115,7 @@ EnableVertexAttribArray(index)
 	offset		665
 
 GetActiveAttrib(program, index, bufSize, length, size, type, name)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		index		UInt32 in value
@@ -5960,6 +6133,7 @@ GetActiveAttrib(program, index, bufSize, length, size, type, name)
 	offset		?
 
 GetActiveUniform(program, index, bufSize, length, size, type, name)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		index		UInt32 in value
@@ -5977,6 +6151,7 @@ GetActiveUniform(program, index, bufSize, length, size, type, name)
 	offset		?
 
 GetAttachedShaders(program, maxCount, count, obj)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		maxCount	SizeI in value
@@ -5991,6 +6166,7 @@ GetAttachedShaders(program, maxCount, count, obj)
 	offset		?
 
 GetAttribLocation(program, name)
+	gles_version	2.0
 	return		Int32
 	param		program		UInt32 in value
 	param		name		Char in array []
@@ -6003,6 +6179,7 @@ GetAttribLocation(program, name)
 	offset		?
 
 GetProgramiv(program, pname, params)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		pname		GLenum in value
@@ -6016,6 +6193,7 @@ GetProgramiv(program, pname, params)
 	offset		?
 
 GetProgramInfoLog(program, bufSize, length, infoLog)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		bufSize		SizeI in value
@@ -6030,6 +6208,7 @@ GetProgramInfoLog(program, bufSize, length, infoLog)
 	offset		?
 
 GetShaderiv(shader, pname, params)
+	gles_version	2.0
 	return		void
 	param		shader		UInt32 in value
 	param		pname		GLenum in value
@@ -6043,6 +6222,7 @@ GetShaderiv(shader, pname, params)
 	offset		?
 
 GetShaderInfoLog(shader, bufSize, length, infoLog)
+	gles_version	2.0
 	return		void
 	param		shader		UInt32 in value
 	param		bufSize		SizeI in value
@@ -6057,6 +6237,7 @@ GetShaderInfoLog(shader, bufSize, length, infoLog)
 	offset		?
 
 GetShaderSource(shader, bufSize, length, source)
+	gles_version	2.0
 	return		void
 	param		shader		UInt32 in value
 	param		bufSize		SizeI in value
@@ -6071,6 +6252,7 @@ GetShaderSource(shader, bufSize, length, source)
 	offset		?
 
 GetUniformLocation(program, name)
+	gles_version	2.0
 	return		Int32
 	param		program		UInt32 in value
 	param		name		Char in array []
@@ -6083,6 +6265,7 @@ GetUniformLocation(program, name)
 	offset		?
 
 GetUniformfv(program, location, params)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		location	Int32 in value
@@ -6096,6 +6279,7 @@ GetUniformfv(program, location, params)
 	offset		?
 
 GetUniformiv(program, location, params)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	param		location	Int32 in value
@@ -6121,6 +6305,7 @@ GetVertexAttribdv(index, pname, params)
 	offset		588
 
 GetVertexAttribfv(index, pname, params)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		pname		VertexAttribPropertyARB in value
@@ -6133,6 +6318,7 @@ GetVertexAttribfv(index, pname, params)
 	offset		589
 
 GetVertexAttribiv(index, pname, params)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		pname		VertexAttribPropertyARB in value
@@ -6145,6 +6331,7 @@ GetVertexAttribiv(index, pname, params)
 	offset		590
 
 GetVertexAttribPointerv(index, pname, pointer)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		pname		VertexAttribPointerPropertyARB in value
@@ -6157,6 +6344,7 @@ GetVertexAttribPointerv(index, pname, pointer)
 	offset		591
 
 IsProgram(program)
+	gles_version	2.0
 	return		Boolean
 	param		program		UInt32 in value
 	dlflags		notlistable
@@ -6167,6 +6355,7 @@ IsProgram(program)
 	offset		592
 
 IsShader(shader)
+	gles_version	2.0
 	return		Boolean
 	param		shader		UInt32 in value
 	dlflags		notlistable
@@ -6177,6 +6366,7 @@ IsShader(shader)
 	offset		?
 
 LinkProgram(program)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	category	VERSION_2_0
@@ -6187,6 +6377,7 @@ LinkProgram(program)
 	offset		?
 
 ShaderSource(shader, count, string, length)
+	gles_version	2.0
 	return		void
 	param		shader		UInt32 in value
 	param		count		SizeI in value
@@ -6200,6 +6391,7 @@ ShaderSource(shader, count, string, length)
 	offset		?
 
 UseProgram(program)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	category	VERSION_2_0
@@ -6210,6 +6402,7 @@ UseProgram(program)
 	offset		?
 
 Uniform1f(location, v0)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Float32 in value
@@ -6221,6 +6414,7 @@ Uniform1f(location, v0)
 	offset		?
 
 Uniform2f(location, v0, v1)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Float32 in value
@@ -6233,6 +6427,7 @@ Uniform2f(location, v0, v1)
 	offset		?
 
 Uniform3f(location, v0, v1, v2)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Float32 in value
@@ -6246,6 +6441,7 @@ Uniform3f(location, v0, v1, v2)
 	offset		?
 
 Uniform4f(location, v0, v1, v2, v3)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Float32 in value
@@ -6260,6 +6456,7 @@ Uniform4f(location, v0, v1, v2, v3)
 	offset		?
 
 Uniform1i(location, v0)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Int32 in value
@@ -6271,6 +6468,7 @@ Uniform1i(location, v0)
 	offset		?
 
 Uniform2i(location, v0, v1)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Int32 in value
@@ -6283,6 +6481,7 @@ Uniform2i(location, v0, v1)
 	offset		?
 
 Uniform3i(location, v0, v1, v2)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Int32 in value
@@ -6296,6 +6495,7 @@ Uniform3i(location, v0, v1, v2)
 	offset		?
 
 Uniform4i(location, v0, v1, v2, v3)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		v0		Int32 in value
@@ -6310,6 +6510,7 @@ Uniform4i(location, v0, v1, v2, v3)
 	offset		?
 
 Uniform1fv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6322,6 +6523,7 @@ Uniform1fv(location, count, value)
 	offset		?
 
 Uniform2fv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6334,6 +6536,7 @@ Uniform2fv(location, count, value)
 	offset		?
 
 Uniform3fv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6346,6 +6549,7 @@ Uniform3fv(location, count, value)
 	offset		?
 
 Uniform4fv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6358,6 +6562,7 @@ Uniform4fv(location, count, value)
 	offset		?
 
 Uniform1iv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6370,6 +6575,7 @@ Uniform1iv(location, count, value)
 	offset		?
 
 Uniform2iv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6382,6 +6588,7 @@ Uniform2iv(location, count, value)
 	offset		?
 
 Uniform3iv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6394,6 +6601,7 @@ Uniform3iv(location, count, value)
 	offset		?
 
 Uniform4iv(location, count, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6406,6 +6614,7 @@ Uniform4iv(location, count, value)
 	offset		?
 
 UniformMatrix2fv(location, count, transpose, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6419,6 +6628,7 @@ UniformMatrix2fv(location, count, transpose, value)
 	offset		?
 
 UniformMatrix3fv(location, count, transpose, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6432,6 +6642,7 @@ UniformMatrix3fv(location, count, transpose, value)
 	offset		?
 
 UniformMatrix4fv(location, count, transpose, value)
+	gles_version	2.0
 	return		void
 	param		location	Int32 in value
 	param		count		SizeI in value
@@ -6445,6 +6656,7 @@ UniformMatrix4fv(location, count, transpose, value)
 	offset		?
 
 ValidateProgram(program)
+	gles_version	2.0
 	return		void
 	param		program		UInt32 in value
 	category	VERSION_2_0
@@ -6478,6 +6690,7 @@ VertexAttrib1dv(index, v)
 	offset		604
 
 VertexAttrib1f(index, x)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		x		Float32 in value
@@ -6490,6 +6703,7 @@ VertexAttrib1f(index, x)
 	offset		605
 
 VertexAttrib1fv(index, v)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		v		Float32 in array [1]
@@ -6548,6 +6762,7 @@ VertexAttrib2dv(index, v)
 	offset		610
 
 VertexAttrib2f(index, x, y)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		x		Float32 in value
@@ -6561,6 +6776,7 @@ VertexAttrib2f(index, x, y)
 	offset		611
 
 VertexAttrib2fv(index, v)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		v		Float32 in array [2]
@@ -6621,6 +6837,7 @@ VertexAttrib3dv(index, v)
 	offset		616
 
 VertexAttrib3f(index, x, y, z)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		x		Float32 in value
@@ -6635,6 +6852,7 @@ VertexAttrib3f(index, x, y, z)
 	offset		617
 
 VertexAttrib3fv(index, v)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		v		Float32 in array [3]
@@ -6789,6 +7007,7 @@ VertexAttrib4dv(index, v)
 	offset		622
 
 VertexAttrib4f(index, x, y, z, w)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		x		Float32 in value
@@ -6804,6 +7023,7 @@ VertexAttrib4f(index, x, y, z, w)
 	offset		623
 
 VertexAttrib4fv(index, v)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		v		Float32 in array [4]
@@ -6886,6 +7106,7 @@ VertexAttrib4usv(index, v)
 	offset		657
 
 VertexAttribPointer(index, size, type, normalized, stride, pointer)
+	gles_version	2.0
 	return		void
 	param		index		UInt32 in value
 	param		size		Int32 in value
@@ -10696,6 +10917,7 @@ DrawElementsInstancedARB(mode, count, type, indices, primcount)
 
 # Promoted from EXT_framebuffer_object
 IsRenderbuffer(renderbuffer)
+	gles_version	2.0
 	return		Boolean
 	param		renderbuffer	UInt32 in value
 	category	ARB_framebuffer_object
@@ -10708,6 +10930,7 @@ IsRenderbuffer(renderbuffer)
 # GLX opcode changed so it can be differentiated from BindRenderbufferEXT
 # (see ARB_framebuffer_object extension spec revision 23)
 BindRenderbuffer(target, renderbuffer)
+	gles_version	2.0
 	return		void
 	param		target		RenderbufferTarget in value
 	param		renderbuffer	UInt32 in value
@@ -10719,6 +10942,7 @@ BindRenderbuffer(target, renderbuffer)
 	offset		?
 
 DeleteRenderbuffers(n, renderbuffers)
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		renderbuffers	UInt32 in array [n]
@@ -10730,6 +10954,7 @@ DeleteRenderbuffers(n, renderbuffers)
 	offset		?
 
 GenRenderbuffers(n, renderbuffers)
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		renderbuffers	UInt32 out array [n]
@@ -10741,6 +10966,7 @@ GenRenderbuffers(n, renderbuffers)
 	offset		?
 
 RenderbufferStorage(target, internalformat, width, height)
+	gles_version	2.0
 	return		void
 	param		target		RenderbufferTarget in value
 	param		internalformat	GLenum in value
@@ -10754,6 +10980,7 @@ RenderbufferStorage(target, internalformat, width, height)
 	offset		?
 
 GetRenderbufferParameteriv(target, pname, params)
+	gles_version	2.0
 	return		void
 	param		target		RenderbufferTarget in value
 	param		pname		GLenum in value
@@ -10767,6 +10994,7 @@ GetRenderbufferParameteriv(target, pname, params)
 	offset		?
 
 IsFramebuffer(framebuffer)
+	gles_version	2.0
 	return		Boolean
 	param		framebuffer	UInt32 in value
 	category	ARB_framebuffer_object
@@ -10779,6 +11007,7 @@ IsFramebuffer(framebuffer)
 # GLX opcode changed so it can be differentiated from BindFramebufferEXT
 # (see ARB_framebuffer_object extension spec revision 23)
 BindFramebuffer(target, framebuffer)
+	gles_version	2.0
 	return		void
 	param		target		FramebufferTarget in value
 	param		framebuffer	UInt32 in value
@@ -10790,6 +11019,7 @@ BindFramebuffer(target, framebuffer)
 	offset		?
 
 DeleteFramebuffers(n, framebuffers)
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		framebuffers	UInt32 in array [n]
@@ -10801,6 +11031,7 @@ DeleteFramebuffers(n, framebuffers)
 	offset		?
 
 GenFramebuffers(n, framebuffers)
+	gles_version	2.0
 	return		void
 	param		n		SizeI in value
 	param		framebuffers	UInt32 out array [n]
@@ -10812,6 +11043,7 @@ GenFramebuffers(n, framebuffers)
 	offset		?
 
 CheckFramebufferStatus(target)
+	gles_version	2.0
 	return		GLenum
 	param		target		FramebufferTarget in value
 	category	ARB_framebuffer_object
@@ -10836,6 +11068,7 @@ FramebufferTexture1D(target, attachment, textarget, texture, level)
 	offset		?
 
 FramebufferTexture2D(target, attachment, textarget, texture, level)
+	gles_version	2.0
 	return		void
 	param		target		FramebufferTarget in value
 	param		attachment	FramebufferAttachment in value
@@ -10865,6 +11098,7 @@ FramebufferTexture3D(target, attachment, textarget, texture, level, zoffset)
 	offset		?
 
 FramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer)
+	gles_version	2.0
 	return		void
 	param		target		FramebufferTarget in value
 	param		attachment	FramebufferAttachment in value
@@ -10878,6 +11112,7 @@ FramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer)
 	offset		?
 
 GetFramebufferAttachmentParameteriv(target, attachment, pname, params)
+	gles_version	2.0
 	return		void
 	param		target		FramebufferTarget in value
 	param		attachment	FramebufferAttachment in value
@@ -10892,6 +11127,7 @@ GetFramebufferAttachmentParameteriv(target, attachment, pname, params)
 	offset		?
 
 GenerateMipmap(target)
+	gles_version	2.0
 	return		void
 	param		target		GLenum in value
 	category	ARB_framebuffer_object
@@ -13131,6 +13367,7 @@ GetQueryIndexediv(target, index, pname, params)
 ###############################################################################
 
 ReleaseShaderCompiler()
+	gles_version	2.0
 	return		void
 	category	ARB_ES2_compatibility
 	version		4.1
@@ -13140,6 +13377,7 @@ ReleaseShaderCompiler()
 	offset		?
 
 ShaderBinary(count, shaders, binaryformat, binary, length)
+	gles_version	2.0
 	return		void
 	param		count		SizeI in value
 	param		shaders		UInt32 in array [count]
@@ -13154,6 +13392,7 @@ ShaderBinary(count, shaders, binaryformat, binary, length)
 	offset		?
 
 GetShaderPrecisionFormat(shadertype, precisiontype, range, precision)
+	gles_version	2.0
 	return		void
 	param		shadertype	GLenum in value
 	param		precisiontype	GLenum in value
@@ -13168,6 +13407,8 @@ GetShaderPrecisionFormat(shadertype, precisiontype, range, precision)
 	offset		?
 
 DepthRangef(n, f)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		n		ClampedFloat32 in value
 	param		f		ClampedFloat32 in value
@@ -13179,6 +13420,8 @@ DepthRangef(n, f)
 	offset		?
 
 ClearDepthf(d)
+	gles_version	1.0
+	gles_version	2.0
 	return		void
 	param		d		ClampedFloat32 in value
 	category	ARB_ES2_compatibility
