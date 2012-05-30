@@ -134,6 +134,7 @@ import sys
 GLSPEC_HEADER_REGEXP = re.compile(r'^(\w+)\((.*)\)$')
 GLSPEC_ATTRIBUTE_REGEXP = re.compile(r'^\s+(\w+)\s+(.*)$')
 GL_VERSION_REGEXP = re.compile('^VERSION_([0-9])_([0-9])(_DEPRECATED)?$')
+SHORT_VERSION_REGEXP = re.compile('^([0-9])\\.([0-9])$')
 ENUM_REGEXP = re.compile(r'^\s+(\w+)\s+=\s+(\w+)$')
 
 
@@ -206,6 +207,23 @@ def translate_category(category_name):
             'kind': 'extension',
             'extension_name': extension_name
             }
+
+
+# Convert a GLES version number (represented as a string, e.g. "1.0")
+# to the category info we want to output in JSON.  E.g.:
+#
+# - "1.0" is converted into { 'kind': 'GLES_1.0' }
+#
+# Two values are returned: the category name to be output in the JSON
+# file, and the detailed category data to be output in the JSON file.
+def translate_gles_version(gles_version_str):
+    if gles_version_str == '1.0':
+	return 'GLES_1.0', { 'kind': 'GLES_1.0' }
+    elif gles_version_str == '2.0':
+	return 'GLES_2.0', { 'kind': 'GLES_2.0' }
+    else:
+	raise Exception(
+	    'Unrecognized GLES version {0!r}'.format(gles_version_str))
 
 
 # Data structure keeping track of which function names are known, and
@@ -346,6 +364,14 @@ class Api(object):
         if function_name:
             yield function_name, param_names, attributes
 
+    # Add the given category_name to the categories array, and update
+    # self.categories if necessary to contain detailed information
+    # about the category.
+    def add_category(self, categories, category_name, category_data):
+	categories.add(category_name)
+	if category_name not in self.categories:
+	    self.categories[category_name] = category_data
+
     # Process the data in gl.spec, and populate self.functions,
     # self.synonyms, and self.categories based on it.
     def read_gl_spec(self, f):
@@ -415,15 +441,17 @@ class Api(object):
                 raise Exception(
                     'Function {0!r} contains {1} category attributes'.format(
                         name, len(attributes['category'])))
-            category, additional_data = translate_category(
-                attributes['category'][0])
-            if category not in self.categories:
-                self.categories[category] = additional_data
+	    categories = set()
+	    self.add_category(categories,
+			      *translate_category(attributes['category'][0]))
+	    for gles_version_str in attributes['gles_version']:
+		self.add_category(categories,
+				  *translate_gles_version(gles_version_str))
             self.functions[name] = {
                 'return_type': self.type_translation[attributes['return'][0]],
                 'param_names': param_names,
                 'param_types': param_types,
-		'categories': [category],
+		'categories': categories,
                 }
             self.synonyms.add_singleton(name)
             for alias in attributes['alias']:
