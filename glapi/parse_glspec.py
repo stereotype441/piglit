@@ -91,7 +91,10 @@
 # {
 #   "categories": {
 #     <category name>: {
-#       "kind": <"GL" for a GL version, "extension" for an extension>,
+#       "kind": <"GL" for a GL version,
+#                "extension" for an extension,
+#                "GLES_1.0" for GLES 1.0,
+#                "GLES_2.0" for GLES 2.0>,
 #       "gl_10x_version": <For a GL version, version number times 10>,
 #       "extension_name" <For an extension, name of the extension>
 #     }, ...
@@ -114,6 +117,10 @@
 #     <list of synonymous function names>, ...
 #   },
 # }
+#
+# Note: "GLES_1.0" and "GLES_2.0" are treated as separate category
+# "kinds" because they are treated by EGL as two separate APIs, not
+# two versions of the same API.
 
 
 
