@@ -27,34 +27,7 @@
 # filename, the C output filename, and the header outpit filename.
 #
 #
-# The input looks like this:
-#
-# {
-#   "categories": {
-#     <category name>: {
-#       "kind": <"GL" for a GL version, "extension" for an extension>,
-#       "gl_10x_version": <For a GL version, version number times 10>,
-#       "extension_name" <For an extension, name of the extension>
-#     }, ...
-#   },
-#   "enums": {
-#     <enum name, without "GL_" prefix>: {
-#       "value_int": <value integer>
-#       "value_str": <value string>
-#     }, ...
-#   },
-#   "functions": {
-#     <function name, without "gl" prefix>: {
-#       "category": <category in which this function appears>,
-#       "param_names": <list of param names>,
-#       "param_types": <list of param types>,
-#       "return_type": <type, or "void" if no return>
-#     }, ...
-#   },
-#   "function_alias_sets": {
-#     <list of synonymous function names>, ...
-#   },
-# }
+# The input is of the same form output by ../../glapi/parse_glspec.py.
 #
 #
 # The generated header consists of the following:
