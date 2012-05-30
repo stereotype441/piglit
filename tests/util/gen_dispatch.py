@@ -79,7 +79,7 @@
 #   /* glMapbufferARB (GL_ARB_vertex_buffer_object) */
 #   static piglit_dispatch_function_ptr resolve_glMapBuffer()
 #   {
-#     if (check_gl_version(15))
+#     if (check_api(PIGLIT_DISPATCH_GL) && check_gl_version(15))
 #       piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERPROC) get_core_proc("glMapBuffer", 15);
 #     else if (check_extension("GL_ARB_vertex_buffer_object"))
 #       piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERARBPROC) get_ext_proc("glMapBufferARB");
@@ -191,6 +191,8 @@ class Category(object):
 		self.gl_10x_version // 10, self.gl_10x_version % 10)
 	elif self.kind == 'extension':
 	    return self.extension_name
+	elif self.kind.startswith('GLES_'):
+	    return 'GLES {0}'.format(self.kind[5:])
 	else:
 	    raise Exception(
 		'Unexpected category kind {0!r}'.format(self.kind))
@@ -322,8 +324,10 @@ class DispatchSet(object):
     def __sort_key(cat_fn_pair):
 	if cat_fn_pair[0].kind == 'GL':
 	    return 0, cat_fn_pair[0].gl_10x_version
+	elif cat_fn_pair[0].kind.startswith('GLES_'):
+	    return 1, cat_fn_pair[0].kind
 	elif cat_fn_pair[0].kind == 'extension':
-	    return 1, cat_fn_pair[0].extension_name
+	    return 2, cat_fn_pair[0].extension_name
 	else:
 	    raise Exception(
 		'Unexpected category kind {0!r}'.format(cat_fn_pair[0].kind))
@@ -420,10 +424,17 @@ def generate_resolve_function(ds):
 		# every GL implementation, because GetString is the
 		# only way to query what the current GL/GLES version
 		# is and to check for the presence of extensions.
-		condition = 'true'
+		condition = 'check_api(PIGLIT_DISPATCH_GL)'
 	    else:
-		condition = 'check_gl_version({0})'.format(
+		condition = ('check_api(PIGLIT_DISPATCH_GL) '
+			     '&& check_gl_version({0})').format(
 		    category.gl_10x_version)
+	elif category.kind == 'GLES_1.0':
+	    getter = 'get_core_proc("{0}", 10)'.format(f.gl_name)
+	    condition = 'check_api(PIGLIT_DISPATCH_ES1)'
+	elif category.kind == 'GLES_2.0':
+	    getter = 'get_core_proc("{0}", 20)'.format(f.gl_name)
+	    condition = 'check_api(PIGLIT_DISPATCH_ES2)'
 	elif category.kind == 'extension':
 	    getter = 'get_ext_proc("{0}")'.format(f.gl_name)
 	    condition = 'check_extension("{0}")'.format(
