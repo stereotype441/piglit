@@ -415,9 +415,11 @@ def generate_resolve_function(ds):
 	if category.kind == 'GL':
 	    getter = 'get_core_proc("{0}", {1})'.format(
 		f.gl_name, category.gl_10x_version)
-	    if category.gl_10x_version == 10:
-		# Function has always been available--no need to check
-		# a condition.
+	    if f.name == 'GetString':
+		# We have to assume that GetString is available in
+		# every GL implementation, because GetString is the
+		# only way to query what the current GL/GLES version
+		# is and to check for the presence of extensions.
 		condition = 'true'
 	    else:
 		condition = 'check_version({0})'.format(
