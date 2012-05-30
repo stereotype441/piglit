@@ -122,7 +122,7 @@ get_ext_proc(const char *name)
  * version is supported.
  */
 static inline bool
-check_version(int required_version)
+check_gl_version(int required_version)
 {
 	return gl_version >= required_version;
 }
@@ -188,10 +188,10 @@ piglit_dispatch_init(piglit_dispatch_api api,
 	is_initialized = true;
 
 	/* Store the GL version and extension string for use by
-	 * check_version() and check_extension().  Note: the
+	 * check_gl_version() and check_extension().  Note: the
 	 * following two calls are safe because the only GL function
 	 * they call is glGetString(), and the stub function for
-	 * glGetString does not need to call check_version() or
+	 * glGetString does not need to call check_gl_version() or
 	 * check_extension().
 	 */
 	gl_version = piglit_get_gl_version();

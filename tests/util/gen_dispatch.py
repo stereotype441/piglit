@@ -79,7 +79,7 @@
 #   /* glMapbufferARB (GL_ARB_vertex_buffer_object) */
 #   static piglit_dispatch_function_ptr resolve_glMapBuffer()
 #   {
-#     if (check_version(15))
+#     if (check_gl_version(15))
 #       piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERPROC) get_core_proc("glMapBuffer", 15);
 #     else if (check_extension("GL_ARB_vertex_buffer_object"))
 #       piglit_dispatch_glMapBuffer = (PFNGLMAPBUFFERARBPROC) get_ext_proc("glMapBufferARB");
@@ -422,7 +422,7 @@ def generate_resolve_function(ds):
 		# is and to check for the presence of extensions.
 		condition = 'true'
 	    else:
-		condition = 'check_version({0})'.format(
+		condition = 'check_gl_version({0})'.format(
 		    category.gl_10x_version)
 	elif category.kind == 'extension':
 	    getter = 'get_ext_proc("{0}")'.format(f.gl_name)
