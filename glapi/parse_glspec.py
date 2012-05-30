@@ -188,6 +188,9 @@ def filter_comments(f):
 # - "2.1" is converted into { 'kind': 'GL', 'gl_10x_version': 21 }
 #
 # - "FOO" is converted into { 'kind': 'extension', 'extension_name': 'GL_FOO' }
+#
+# Two values are returned: the category name to be output in the JSON
+# file, and the detailed category data to be output in the JSON file.
 def translate_category(category_name):
     m = GL_VERSION_REGEXP.match(category_name)
     if m:
