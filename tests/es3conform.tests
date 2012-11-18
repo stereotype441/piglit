@@ -24,19 +24,23 @@ import os
 import re
 import sys
 
+from os import path
 from glob import glob
-from framework.core import testBinDir
+from framework.core import *
+from framework.exectest import *
 
 #############################################################################
-##### GTFTest: Execute a sub-test of the Khronos ES 2.0 Conformance suite.
+##### GTFTest: Execute a sub-test of the Khronos ES 3.0 Conformance suite.
 #####
-##### To use this, create a 'GTF' symlink in piglit/bin which points to the
+##### To use this, create a 'GTF3' symlink in piglit/bin which points to the
 ##### Khronos 'GTF' executable.  Piglit will automatically add all .test
 ##### files into the 'gtf' category.
 #############################################################################
 
-if not os.path.exists(os.path.join(testBinDir, 'GTF3')):
+if not path.exists(path.join(testBinDir, 'GTF3')):
     sys.exit(0)
+
+profile = TestProfile()
 
 # Chase the piglit/bin/GTF symlink to find where the tests really live.
 gtfroot = path.dirname(path.realpath(path.join(testBinDir, 'GTF3')))
@@ -45,41 +49,31 @@ class GTFTest(ExecTest):
     pass_re = re.compile(r'Regression PASSED all 1 tests')
 
     def __init__(self, testpath):
-        ExecTest.__init__(self, [path.join(testBinDir, 'GTF3'), '-noimagefileio', '-width=113', '-height=47', '-seed=2', '-minfmt', '-run=' + testpath])
+        ExecTest.__init__(self, [path.join(testBinDir, 'GTF3'), '-id=77', '-width=113', '-height=47', '-run=' + testpath])
 
     def interpretResult(self, out, results):
-	if self.pass_re.search(out) is not None:
-		results['result'] = 'pass'
-	else:
-		results['result'] = 'fail'
-	return out
+        if self.pass_re.search(out) is not None:
+            results['result'] = 'pass'
+        else:
+            results['result'] = 'fail'
+        return out
 
-# Populate a group with tests in the given directory:
-#
-# - Add new subgroups for subdirectories and recurse.
-# - Add any .test files to the group.
-def populateTests(group, directory):
-    for entry in os.listdir(directory):
-        pathname = path.join(directory, entry)
+def populateTests(runfile):
+    "Read a .run file, adding any .test files to the profile"
+    with open(runfile, 'r') as f:
+        for line in f.readlines():
+            # Ignore comments and whitespace
+            line = line.strip()
+            if line.startswith('#') or line == '':
+                continue
 
-        if path.isdir(pathname):
-            # Recurse into the subdirectory...
-            subgroup = Group()
-            populateTests(subgroup, pathname)
-            group[entry] = subgroup
+            newpath = path.join(path.dirname(runfile), line)
+            if line.endswith('.run'):
+                populateTests(newpath)
+            else:
+                # Add the .test file
+                profile.test_list['es3conform/' + path.relpath(newpath, gtfroot)] = GTFTest(newpath)
 
-        elif entry[-5:] == '.test':
-            name = entry[:-5]
-            # Don't add example.test...it's not a real test.
-            if name != 'example':
-                group[name] = GTFTest(pathname)
-
-# Create a new top-level 'gtf' category for all Khronos ES 2.0 tests
-gtf = Group()
-profile.tests['gtf'] = gtf
 
 # Populate the group with all the .test files
-for directory in glob(gtfroot + '/GL*'):
-    category = path.basename(directory)
-    gtf[category] = Group()
-    populateTests(gtf[category], directory)
+populateTests(path.join(gtfroot, 'mustpass_es30.run'))
