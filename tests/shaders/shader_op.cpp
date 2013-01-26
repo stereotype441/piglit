@@ -184,30 +184,75 @@ struct options
 };
 
 
-struct type_info
+struct static_type_info
 {
-	const char *type;
-	const GLenum gl_type;
-} known_types[] = {
-	{ "float", GL_FLOAT },
-	{ "vec2", GL_FLOAT_VEC2 },
-	{ "vec3", GL_FLOAT_VEC3 },
-	{ "vec4", GL_FLOAT_VEC4 },
-	{ "int", GL_INT },
-	{ "ivec2", GL_INT_VEC2 },
-	{ "ivec3", GL_INT_VEC3 },
-	{ "ivec4", GL_INT_VEC4 },
-	{ "uint", GL_UNSIGNED_INT },
-	{ "uvec2", GL_UNSIGNED_INT_VEC2 },
-	{ "uvec3", GL_UNSIGNED_INT_VEC3 },
-	{ "uvec4", GL_UNSIGNED_INT_VEC4 },
-	{ "bool", GL_BOOL },
-	{ "bvec2", GL_BOOL_VEC2 },
-	{ "bvec3", GL_BOOL_VEC3 },
-	{ "bvec4", GL_BOOL_VEC4 },
-	/* TODO: matrix types */
-	{ NULL, 0 }
+	const char *name;
+	const GLenum gl_type; // TODO: needed?
+	bool is_floating;
 };
+
+
+static const static_type_info known_types[] = {
+	{ "float", GL_FLOAT,             true  },
+	{ "vec2",  GL_FLOAT_VEC2,        true  },
+	{ "vec3",  GL_FLOAT_VEC3,        true  },
+	{ "vec4",  GL_FLOAT_VEC4,        true  },
+	{ "int",   GL_INT,               false },
+	{ "ivec2", GL_INT_VEC2,          false },
+	{ "ivec3", GL_INT_VEC3,          false },
+	{ "ivec4", GL_INT_VEC4,          false },
+	{ "uint",  GL_UNSIGNED_INT,      false },
+	{ "uvec2", GL_UNSIGNED_INT_VEC2, false },
+	{ "uvec3", GL_UNSIGNED_INT_VEC3, false },
+	{ "uvec4", GL_UNSIGNED_INT_VEC4, false },
+	{ "bool",  GL_BOOL,              false },
+	{ "bvec2", GL_BOOL_VEC2,         false },
+	{ "bvec3", GL_BOOL_VEC3,         false },
+	{ "bvec4", GL_BOOL_VEC4,         false },
+	/* TODO: matrix types */
+};
+
+
+const static_type_info *
+find_type(const string &type_name)
+{
+	for (unsigned i = 0; i < ELEMENTS(known_types); i++) {
+		if (type_name == known_types[i].name)
+			return &known_types[i];
+	}
+	return NULL;
+}
+
+
+class type_desc
+{
+public:
+	type_desc(const static_type_info *static_info, unsigned array_size);
+	string str() const;
+
+	const static_type_info *static_info;
+	unsigned array_size;
+};
+
+
+type_desc::type_desc(const static_type_info *static_info, unsigned array_size)
+	: static_info(static_info),
+	  array_size(array_size)
+{
+}
+
+
+string
+type_desc::str() const
+{
+	if (this->array_size == 0) {
+		return this->static_info->name;
+	} else {
+		stringstream s;
+		s << this->static_info->name << "[" << this->array_size << "]";
+		return s.str();
+	}
+}
 
 
 enum variable_provenance_enum
@@ -226,22 +271,23 @@ enum variable_provenance_enum
 class variable_info
 {
 public:
-	variable_info(variable_provenance_enum provenance, const string &type,
-		      const string &name);
-	variable_info(variable_provenance_enum provenance, const string &type,
-		      const string &name, const string &hint);
+	variable_info(variable_provenance_enum provenance,
+		      const type_desc &type, const string &name);
+	variable_info(variable_provenance_enum provenance,
+		      const type_desc &type, const string &name,
+		      const string &hint);
 	bool is_floating() const;
 	variable_info make_array_var(unsigned size) const;
 
 	variable_provenance_enum provenance;
-	string type;
+	type_desc type;
 	string name;
 	string hint;
 };
 
 
 variable_info::variable_info(variable_provenance_enum provenance,
-			     const string &type, const string &name)
+			     const type_desc &type, const string &name)
 	: provenance(provenance),
 	  type(type),
 	  name(name),
@@ -251,7 +297,7 @@ variable_info::variable_info(variable_provenance_enum provenance,
 
 
 variable_info::variable_info(variable_provenance_enum provenance,
-			     const string &type, const string &name,
+			     const type_desc &type, const string &name,
 			     const string &hint)
 	: provenance(provenance),
 	  type(type),
@@ -264,11 +310,7 @@ variable_info::variable_info(variable_provenance_enum provenance,
 bool
 variable_info::is_floating() const
 {
-	if (strncmp(this->type.c_str(), "vec", 3) == 0)
-		return true;
-	if (strncmp(this->type.c_str(), "float", 5) == 0)
-		return true;
-	return false;
+	return this->type.static_info->is_floating;
 }
 
 
@@ -276,11 +318,11 @@ variable_info
 variable_info::make_array_var(unsigned size) const
 {
 	// Can't make a nested array
-	assert(strchr(this->type.c_str(), '[') == NULL);
+	assert(this->type.array_size == 0);
 
-	stringstream s;
-	s << this->type << "[" << size << "]";
-	return variable_info(this->provenance, s.str(), this->name,
+	type_desc new_type(this->type.static_info, size);
+
+	return variable_info(this->provenance, new_type, this->name,
 			     this->hint);
 }
 
@@ -311,7 +353,7 @@ variable_set::make_declarations(const char *qualifier, bool needs_flat) const
 			s << "flat ";
 		if (qualifier)
 			s << qualifier << " ";
-		s << v.type << " " << v.name << ";" << endl;
+		s << v.type.str() << " " << v.name << ";" << endl;
 	}
 	return s.str();
 }
@@ -386,7 +428,8 @@ public:
 	void copy_data(shader_stage_enum stage, const variable_set &inputs,
 		       const variable_set &outputs);
 	variable_info make_unique_var(variable_provenance_enum provenance,
-				      const string &type, const string &hint);
+				      const type_desc &type,
+				      const string &hint);
 	variable_set generate_parallel_vars(variable_set const &vars);
 	shader_stage_enum last_non_fs_stage() const;
 	GLuint compile() const;
@@ -408,16 +451,18 @@ pipeline_info::pipeline_info(unsigned version,
 			     const variable_set &inputs,
 			     const variable_set &outputs)
 	: version(version),
-	  gs_iterator(VARIABLE_PROVENANCE_UNUSED, "void", "unused")
+	  gs_iterator(VARIABLE_PROVENANCE_UNUSED,
+		      type_desc(find_type("int"), 0), "unused")
 {
 	mark_used_varnames(inputs);
 	mark_used_varnames(outputs);
 	for (unsigned i = 0; i < stages.size(); i++) {
 		this->stages[stages[i]] = stage_info();
 		if (stages[i] == SHADER_STAGE_GEOMETRY) {
+			type_desc int_type(find_type("int"), 0);
 			this->gs_iterator
 				= make_unique_var(VARIABLE_PROVENANCE_GS_ITER,
-						  "int", "i");
+						  int_type, "i");
 			this->stages[stages[i]].local_vars.push_back(
 				this->gs_iterator);
 		}
@@ -682,14 +727,17 @@ pipeline_info::add_comparison_logic(shader_stage_enum stage,
 {
 	static const char * const green = "vec4(0.0, 1.0, 0.0, 1.0)";
 	static const char * const red = "vec4(1.0, 0.0, 0.0, 1.0)";
+	type_desc float_type(find_type("float"), 0);
 	variable_info tolerance_var
-		= make_unique_var(VARIABLE_PROVENANCE_TOLERANCE, "float",
+		= make_unique_var(VARIABLE_PROVENANCE_TOLERANCE, float_type,
 				  "tolerance");
 	variable_set comparison_inputs;
 	// TODO: only add tolerance if needed
 	comparison_inputs.push_back(tolerance_var);
+	type_desc vec4_type(find_type("vec4"), 0);
 	variable_info result_var
-		= make_unique_var(VARIABLE_PROVENANCE_COLOR, "vec4", "color");
+		= make_unique_var(VARIABLE_PROVENANCE_COLOR, vec4_type,
+				  "color");
 	variable_set comparison_outputs;
 	comparison_outputs.push_back(result_var);
 	stringstream s;
@@ -748,7 +796,7 @@ pipeline_info::copy_data(shader_stage_enum stage, const variable_set &inputs,
 
 variable_info
 pipeline_info::make_unique_var(variable_provenance_enum provenance,
-			       const string &type, const string &hint)
+			       const type_desc &type, const string &hint)
 {
 	if (this->varnames_used.find(hint) == this->varnames_used.end()) {
 		this->varnames_used.insert(hint);
@@ -934,9 +982,10 @@ plan_shaders(unsigned version, const options &opts, const test_info &test)
 	// TODO: are there some circumstances where we don't need to set gl_Position?
 	if (true) {
 		shader_stage_enum stage = pipeline->last_non_fs_stage();
+		type_desc vec4_type(find_type("vec4"), 0);
 		variable_info position_var
 			= pipeline->make_unique_var(VARIABLE_PROVENANCE_POS,
-						    "vec4", "pos");
+						    vec4_type, "pos");
 		stringstream s;
 		s << "gl_Position = " << position_var.name << ";" << endl;
 		pipeline->add_snippet(stage, s.str());
@@ -1134,7 +1183,11 @@ test_script_processor::process_signature_line(const string &line)
 	token_end = get_token(token_start);
 	if (token_end == token_start)
 		return false;
-	string type(token_start, token_end);
+	string type_str(token_start, token_end);
+	const static_type_info *type_info = find_type(type_str);
+	if (type_info == NULL)
+		return false;
+	type_desc type(type_info, 0);
 	token_start = skip_whitespace(token_end);
 	token_end = get_token(token_start);
 	if (token_end == token_start)
