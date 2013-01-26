@@ -189,26 +189,28 @@ struct static_type_info
 	const char *name;
 	const GLenum gl_type; // TODO: needed?
 	bool is_floating;
+	const GLenum base_type;
+	unsigned components;
 };
 
 
 static const static_type_info known_types[] = {
-	{ "float", GL_FLOAT,             true  },
-	{ "vec2",  GL_FLOAT_VEC2,        true  },
-	{ "vec3",  GL_FLOAT_VEC3,        true  },
-	{ "vec4",  GL_FLOAT_VEC4,        true  },
-	{ "int",   GL_INT,               false },
-	{ "ivec2", GL_INT_VEC2,          false },
-	{ "ivec3", GL_INT_VEC3,          false },
-	{ "ivec4", GL_INT_VEC4,          false },
-	{ "uint",  GL_UNSIGNED_INT,      false },
-	{ "uvec2", GL_UNSIGNED_INT_VEC2, false },
-	{ "uvec3", GL_UNSIGNED_INT_VEC3, false },
-	{ "uvec4", GL_UNSIGNED_INT_VEC4, false },
-	{ "bool",  GL_BOOL,              false },
-	{ "bvec2", GL_BOOL_VEC2,         false },
-	{ "bvec3", GL_BOOL_VEC3,         false },
-	{ "bvec4", GL_BOOL_VEC4,         false },
+	{ "float", GL_FLOAT,             true,  GL_FLOAT,             1 },
+	{ "vec2",  GL_FLOAT_VEC2,        true,  GL_FLOAT,             2 },
+	{ "vec3",  GL_FLOAT_VEC3,        true,  GL_FLOAT,             3 },
+	{ "vec4",  GL_FLOAT_VEC4,        true,  GL_FLOAT,             4 },
+	{ "int",   GL_INT,               false, GL_INT,               1 },
+	{ "ivec2", GL_INT_VEC2,          false, GL_INT,               2 },
+	{ "ivec3", GL_INT_VEC3,          false, GL_INT,               3 },
+	{ "ivec4", GL_INT_VEC4,          false, GL_INT,               4 },
+	{ "uint",  GL_UNSIGNED_INT,      false, GL_UNSIGNED_INT,      1 },
+	{ "uvec2", GL_UNSIGNED_INT_VEC2, false, GL_UNSIGNED_INT,      2 },
+	{ "uvec3", GL_UNSIGNED_INT_VEC3, false, GL_UNSIGNED_INT,      3 },
+	{ "uvec4", GL_UNSIGNED_INT_VEC4, false, GL_UNSIGNED_INT,      4 },
+	{ "bool",  GL_BOOL,              false, GL_BOOL,              1 },
+	{ "bvec2", GL_BOOL_VEC2,         false, GL_BOOL,              2 },
+	{ "bvec3", GL_BOOL_VEC3,         false, GL_BOOL,              3 },
+	{ "bvec4", GL_BOOL_VEC4,         false, GL_BOOL,              4 },
 	/* TODO: matrix types */
 };
 
@@ -332,6 +334,7 @@ class variable_set : public vector<variable_info>
 public:
 	void append(const vector<variable_info> &vars);
 	string make_declarations(const char *qualifier, bool needs_flat) const;
+	const variable_info *find_name(const string &name);
 };
 
 
@@ -356,6 +359,17 @@ variable_set::make_declarations(const char *qualifier, bool needs_flat) const
 		s << v.type.str() << " " << v.name << ";" << endl;
 	}
 	return s.str();
+}
+
+
+const variable_info *
+variable_set::find_name(const string &name)
+{
+	for (unsigned i = 0; i < this->size(); i++) {
+		if ((*this)[i].name == name)
+			return &(*this)[i];
+	}
+	return NULL;
 }
 
 
@@ -1005,6 +1019,8 @@ public:
 
 	void process_line(const string &line);
 	void finish();
+	bool parse_value(const char *token_start, const variable_info &v,
+			 value_info *value_out);
 
 private:
 	enum section_enum
@@ -1020,7 +1036,7 @@ private:
 	void process_requirement_line(const string &line);
 	bool process_signature_line(const string &line);
 	void process_snippet_line(const string &line);
-	void process_test_line(const string &line);
+	bool process_test_line(const string &line);
 
 	section_enum section;
 	stringstream snippet_in_progress;
@@ -1080,7 +1096,7 @@ test_script_processor::process_line(const string &input_line)
 			process_snippet_line(line);
 			break;
 		case SECTION_TEST:
-			process_test_line(line);
+			ok = process_test_line(line);
 			break;
 		case SECTION_NONE:
 			if (line_begin != line_end) {
@@ -1118,7 +1134,7 @@ test_script_processor::enter_section(section_enum s)
 		break;
 	case SECTION_TEST:
 		if (this->pending_test_vector)
-			process_test_line("");
+			(void) process_test_line("");
 		break;
 	default:
 		break;
@@ -1129,10 +1145,14 @@ test_script_processor::enter_section(section_enum s)
 	switch (this->section) {
 	case SECTION_TEST:
 		this->current_test_vector = test_vector_info();
-		for (unsigned i = 0; i < the_test.inputs.size(); i++)
-			this->current_test_vector.inputs.push_back(value_info());
-		for (unsigned i = 0; i < the_test.outputs.size(); i++)
-			this->current_test_vector.inputs.push_back(value_info());
+		for (unsigned i = 0; i < the_test.inputs.size(); i++) {
+			this->current_test_vector.inputs.push_back(
+				value_info());
+		}
+		for (unsigned i = 0; i < the_test.outputs.size(); i++) {
+			this->current_test_vector.outputs.push_back(
+				value_info());
+		}
 		this->pending_test_vector = false;
 		break;
 	default:
@@ -1217,7 +1237,7 @@ test_script_processor::process_snippet_line(const string &line)
 }
 
 
-void
+bool
 test_script_processor::process_test_line(const string &line)
 {
 	if (line == "") {
@@ -1228,9 +1248,57 @@ test_script_processor::process_test_line(const string &line)
 			this->pending_test_vector = false;
 		}
 	} else {
-		// TODO
 		this->pending_test_vector = true;
+		// TODO: handle tolerance
+		const char *token_start = skip_whitespace(line.c_str());
+		const char *token_end = get_token(token_start);
+		string name(token_start, token_end);
+		const variable_info *v = the_test.inputs.find_name(name);
+		if (v == NULL)
+			v = the_test.outputs.find_name(name);
+		if (v == NULL)
+			return false;
+		value_info value;
+		if (!parse_value(skip_whitespace(token_end), *v, &value))
+			return false;
+		if (v->provenance < VARIABLE_PROVENANCE_OUTPUT) {
+			unsigned i = v->provenance - VARIABLE_PROVENANCE_INPUT;
+			this->current_test_vector.inputs[i] = value;
+		} else {
+			unsigned i = v->provenance
+				- VARIABLE_PROVENANCE_OUTPUT;
+			this->current_test_vector.outputs[i] = value;
+		}
 	}
+	return true;
+}
+
+
+bool
+test_script_processor::parse_value(const char *token_start,
+				     const variable_info &v,
+				     value_info *value_out)
+{
+	const char *token_end;
+	for (unsigned i = 0; i < v.type.static_info->components; i++) {
+		switch (v.type.static_info->base_type) {
+		case GL_FLOAT:
+			value_out->f[i]
+				= strtof(token_start, (char **) &token_end);
+			if (token_end == token_start)
+				return false;
+			break;
+		default:
+			// TODO
+			return false;
+		}
+		if (*token_end != '\0' && !isspace(*token_end))
+			return false;
+		token_start = skip_whitespace(token_end);
+	}
+	if (*token_end != '\0')
+		return false;
+	return true;
 }
 
 
