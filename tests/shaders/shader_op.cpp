@@ -184,6 +184,32 @@ struct options
 };
 
 
+struct type_info
+{
+	const char *type;
+	const GLenum gl_type;
+} known_types[] = {
+	{ "float", GL_FLOAT },
+	{ "vec2", GL_FLOAT_VEC2 },
+	{ "vec3", GL_FLOAT_VEC3 },
+	{ "vec4", GL_FLOAT_VEC4 },
+	{ "int", GL_INT },
+	{ "ivec2", GL_INT_VEC2 },
+	{ "ivec3", GL_INT_VEC3 },
+	{ "ivec4", GL_INT_VEC4 },
+	{ "uint", GL_UNSIGNED_INT },
+	{ "uvec2", GL_UNSIGNED_INT_VEC2 },
+	{ "uvec3", GL_UNSIGNED_INT_VEC3 },
+	{ "uvec4", GL_UNSIGNED_INT_VEC4 },
+	{ "bool", GL_BOOL },
+	{ "bvec2", GL_BOOL_VEC2 },
+	{ "bvec3", GL_BOOL_VEC3 },
+	{ "bvec4", GL_BOOL_VEC4 },
+	/* TODO: matrix types */
+	{ NULL, 0 }
+};
+
+
 /* contains the name of a variable and its provenance.
  */
 class variable_info
@@ -271,8 +297,12 @@ variable_set::make_declarations(const char *qualifier, bool needs_flat) const
 }
 
 
-struct value_info
+union value_info
 {
+	float f[16];
+	int i[16];
+	unsigned u[16];
+	bool b[16];
 };
 
 
