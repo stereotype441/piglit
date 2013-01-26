@@ -210,32 +210,51 @@ struct type_info
 };
 
 
+enum variable_provenance_enum
+{
+	VARIABLE_PROVENANCE_INPUT = 0,
+	VARIABLE_PROVENANCE_OUTPUT = 0x10000,
+	VARIABLE_PROVENANCE_UNUSED = 0x20000,
+	VARIABLE_PROVENANCE_GS_ITER,
+	VARIABLE_PROVENANCE_TOLERANCE,
+	VARIABLE_PROVENANCE_COLOR,
+	VARIABLE_PROVENANCE_POS,
+};
+
 /* contains the name of a variable and its provenance.
  */
 class variable_info
 {
 public:
-	variable_info(const string &type, const string &name);
-	variable_info(const string &type, const string &name, const string &hint);
+	variable_info(variable_provenance_enum provenance, const string &type,
+		      const string &name);
+	variable_info(variable_provenance_enum provenance, const string &type,
+		      const string &name, const string &hint);
 	bool is_floating() const;
 	variable_info make_array_var(unsigned size) const;
 
+	variable_provenance_enum provenance;
 	string type;
 	string name;
 	string hint;
 };
 
 
-variable_info::variable_info(const string &type, const string &name)
-	: type(type),
+variable_info::variable_info(variable_provenance_enum provenance,
+			     const string &type, const string &name)
+	: provenance(provenance),
+	  type(type),
 	  name(name),
 	  hint(name)
 {
 }
 
 
-variable_info::variable_info(const string &type, const string &name, const string &hint)
-	: type(type),
+variable_info::variable_info(variable_provenance_enum provenance,
+			     const string &type, const string &name,
+			     const string &hint)
+	: provenance(provenance),
+	  type(type),
 	  name(name),
 	  hint(hint)
 {
@@ -261,7 +280,8 @@ variable_info::make_array_var(unsigned size) const
 
 	stringstream s;
 	s << this->type << "[" << size << "]";
-	return variable_info(s.str(), this->name, this->hint);
+	return variable_info(this->provenance, s.str(), this->name,
+			     this->hint);
 }
 
 
@@ -365,7 +385,8 @@ public:
 				  const options &opts);
 	void copy_data(shader_stage_enum stage, const variable_set &inputs,
 		       const variable_set &outputs);
-	variable_info make_unique_var(const string &type, const string &hint);
+	variable_info make_unique_var(variable_provenance_enum provenance,
+				      const string &type, const string &hint);
 	variable_set generate_parallel_vars(variable_set const &vars);
 	shader_stage_enum last_non_fs_stage() const;
 	GLuint compile() const;
@@ -387,14 +408,16 @@ pipeline_info::pipeline_info(unsigned version,
 			     const variable_set &inputs,
 			     const variable_set &outputs)
 	: version(version),
-	  gs_iterator("void", "unused")
+	  gs_iterator(VARIABLE_PROVENANCE_UNUSED, "void", "unused")
 {
 	mark_used_varnames(inputs);
 	mark_used_varnames(outputs);
 	for (unsigned i = 0; i < stages.size(); i++) {
 		this->stages[stages[i]] = stage_info();
 		if (stages[i] == SHADER_STAGE_GEOMETRY) {
-			this->gs_iterator = make_unique_var("int", "i");
+			this->gs_iterator
+				= make_unique_var(VARIABLE_PROVENANCE_GS_ITER,
+						  "int", "i");
 			this->stages[stages[i]].local_vars.push_back(
 				this->gs_iterator);
 		}
@@ -439,7 +462,8 @@ pipeline_info::route_inputs(shader_stage_enum stage,
 		stringstream s;
 		for (unsigned i = 0; i < inputs.size(); i++) {
 			variable_info interstage_var
-				= make_unique_var(inputs[i].type,
+				= make_unique_var(inputs[i].provenance,
+						  inputs[i].type,
 						  inputs[i].hint);
 			interstage_vars.push_back(interstage_var);
 			variable_info array_var
@@ -658,11 +682,14 @@ pipeline_info::add_comparison_logic(shader_stage_enum stage,
 {
 	static const char * const green = "vec4(0.0, 1.0, 0.0, 1.0)";
 	static const char * const red = "vec4(1.0, 0.0, 0.0, 1.0)";
-	variable_info tolerance_var = make_unique_var("float", "tolerance");
+	variable_info tolerance_var
+		= make_unique_var(VARIABLE_PROVENANCE_TOLERANCE, "float",
+				  "tolerance");
 	variable_set comparison_inputs;
 	// TODO: only add tolerance if needed
 	comparison_inputs.push_back(tolerance_var);
-	variable_info result_var = make_unique_var("vec4", "color");
+	variable_info result_var
+		= make_unique_var(VARIABLE_PROVENANCE_COLOR, "vec4", "color");
 	variable_set comparison_outputs;
 	comparison_outputs.push_back(result_var);
 	stringstream s;
@@ -672,7 +699,7 @@ pipeline_info::add_comparison_logic(shader_stage_enum stage,
 		// TODO: non-floats
 		const variable_info &actual = outputs[i];
 		variable_info expected
-			= make_unique_var(actual.type,
+			= make_unique_var(actual.provenance, actual.type,
 					  string("expected_") + actual.name);
 		comparison_inputs.push_back(expected);
 		if (actual.is_floating()) {
@@ -720,11 +747,12 @@ pipeline_info::copy_data(shader_stage_enum stage, const variable_set &inputs,
 
 
 variable_info
-pipeline_info::make_unique_var(const string &type, const string &hint)
+pipeline_info::make_unique_var(variable_provenance_enum provenance,
+			       const string &type, const string &hint)
 {
 	if (this->varnames_used.find(hint) == this->varnames_used.end()) {
 		this->varnames_used.insert(hint);
-		return variable_info(type, hint);
+		return variable_info(provenance, type, hint);
 	}
 
 	for (unsigned i = 0; ; i++) {
@@ -734,7 +762,8 @@ pipeline_info::make_unique_var(const string &type, const string &hint)
 		if (this->varnames_used.find(candidate_name)
 		    == this->varnames_used.end()) {
 			this->varnames_used.insert(candidate_name);
-			return variable_info(type, candidate_name, hint);
+			return variable_info(provenance, type, candidate_name,
+					     hint);
 		}
 	}
 }
@@ -746,7 +775,8 @@ pipeline_info::generate_parallel_vars(const variable_set &vars)
 	variable_set new_vars;
 	for (unsigned i = 0; i < vars.size(); i++) {
 		variable_info info
-			= make_unique_var(vars[i].type, vars[i].hint);
+			= make_unique_var(vars[i].provenance, vars[i].type,
+					  vars[i].hint);
 		new_vars.push_back(info);
 	}
 	return new_vars;
@@ -905,7 +935,8 @@ plan_shaders(unsigned version, const options &opts, const test_info &test)
 	if (true) {
 		shader_stage_enum stage = pipeline->last_non_fs_stage();
 		variable_info position_var
-			= pipeline->make_unique_var("vec4", "pos");
+			= pipeline->make_unique_var(VARIABLE_PROVENANCE_POS,
+						    "vec4", "pos");
 		stringstream s;
 		s << "gl_Position = " << position_var.name << ";" << endl;
 		pipeline->add_snippet(stage, s.str());
@@ -1112,7 +1143,15 @@ test_script_processor::process_signature_line(const string &line)
 	token_start = skip_whitespace(token_end);
 	if (*token_start != '\0')
 		return false;
-	variable_info v(type, name);
+	unsigned provenance;
+	if (is_input) {
+		provenance = VARIABLE_PROVENANCE_INPUT
+			+ the_test.inputs.size();
+	} else {
+		provenance = VARIABLE_PROVENANCE_OUTPUT
+			+ the_test.outputs.size();
+	}
+	variable_info v((variable_provenance_enum) provenance, type, name);
 	(is_input ? the_test.inputs : the_test.outputs).push_back(v);
 	return true;
 }
@@ -1173,10 +1212,6 @@ piglit_init(int argc, char **argv)
 {
 	// TODO: choose file on command line
 	process_test_script("/home/pberry/tmp/shader_op.txt");
-	// Note: this example is intended to be similar to glsl-algebraic-add-add-1.shader_test.
-	// the_test.snippet = "FragColor = ((vec4(0.5, 0.0, 0.0, 0.0) + color) +\n             vec4(-1.0, 0.0, 0.0, 0.0));\n";
-	// the_test.inputs.push_back(variable_info("vec4", "color"));
-	// the_test.outputs.push_back(variable_info("vec4", "FragColor"));
 }
 
 
