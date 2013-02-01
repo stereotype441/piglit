@@ -10,7 +10,12 @@ INCLUDE (FindPkgConfig)
 
 project (piglit)
 
+find_package(PNG)
 find_package(X11)
+
+if (PNG_FOUND)
+	add_definitions(-DHAVE_PNG)
+endif()
 
 
 option(PIGLIT_BUILD_GL_TESTS "Build tests for OpenGL" ON)

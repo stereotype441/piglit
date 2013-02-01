@@ -6,10 +6,16 @@ set(UTIL_GL_SOURCES
 	piglit-shader-gl.c
 	piglit-util-gl-enum.c
 	piglit-util-gl.c
+	piglit-util-png.c
 	piglit-vbo.cpp
 	sized-internalformats.c
 	minmax-test.c
 	)
+
+if (PNG_FOUND)
+	include_directories(${PNG_INCLUDE_DIRS})
+	link_libraries(${PNG_LIBRARIES})
+endif (PNG_FOUND)
 
 include_directories(
 	${UTIL_GL_INCLUDES}
