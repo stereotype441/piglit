@@ -9,6 +9,7 @@ set(UTIL_GL_SOURCES
 	piglit-vbo.cpp
 	sized-internalformats.c
 	minmax-test.c
+	pipeline-builder.cpp
 	)
 
 include_directories(
@@ -37,6 +38,7 @@ IF(PIGLIT_BUILD_GLX_TESTS)
 		    piglit-glx-util.c
 		    piglit-dispatch.c
 		    piglit-dispatch-init.c
+		    pipeline-builder.cpp
 	)
 	target_link_libraries(piglitglxutil
 		piglitutil_${piglit_target_api}
