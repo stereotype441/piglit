@@ -1,0 +1,28 @@
+[require]
+GLSL >= 1.50
+
+[vertex shader]
+#version 150
+
+uniform block {
+	vec4 a; // a is vec3 in FS
+} inst_a;
+
+void main()
+{
+}
+
+[fragment shader]
+#version 150
+
+uniform block {
+	vec3 a; // a is vec4 in VS
+} inst_b;
+
+void main()
+{
+}
+
+[test]
+link error
+
