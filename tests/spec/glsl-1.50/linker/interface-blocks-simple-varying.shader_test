@@ -1,0 +1,32 @@
+[require]
+GLSL >= 1.50
+
+[vertex shader]
+#version 150
+
+out block {
+    vec4 a;
+} inst_a;
+
+void main()
+{
+    inst_a.a = vec4(0.0, 1.0, 0.0, 1.0);
+}
+
+[fragment shader]
+#version 150
+
+in block {
+    vec4 a;
+} inst_b;
+
+out vec4 color;
+
+void main()
+{
+    color = inst_b.a;
+}
+
+[test]
+link success
+
