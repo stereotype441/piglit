@@ -1655,11 +1655,10 @@ piglit_display(void)
 	const char *line;
 	bool pass = true;
 	GLbitfield clear_bits = 0;
+	bool link_error_expected = false;
 
 	if (test_start == NULL)
 		return PIGLIT_PASS;
-
-	program_must_be_in_use();
 
 	line = test_start;
 	while (line[0] != '\0') {
@@ -1685,11 +1684,13 @@ piglit_display(void)
 			}
 			glClipPlane(GL_CLIP_PLANE0 + x, d);
 		} else if (string_match("draw rect", line)) {
+			program_must_be_in_use();
 			get_floats(line + 9, c, 4);
 			piglit_draw_rect(c[0], c[1], c[2], c[3]);
 		} else if (string_match("draw instanced rect", line)) {
 			int primcount;
 
+			program_must_be_in_use();
 			sscanf(line + 19, "%d %f %f %f %f",
 			       &primcount,
 			       c + 0, c + 1, c + 2, c + 3);
@@ -1698,6 +1699,7 @@ piglit_display(void)
 			GLenum mode = decode_drawing_mode(s);
 			int first = x;
 			size_t count = (size_t) y;
+			program_must_be_in_use();
 			if (first < 0) {
 				printf("draw arrays 'first' must be >= 0\n");
 				piglit_report_result(PIGLIT_FAIL);
@@ -1892,9 +1894,18 @@ piglit_display(void)
 		} else if (string_match("texparameter ", line)) {
 			handle_texparameter(line + strlen("texparameter "));
 		} else if (string_match("uniform", line)) {
+			program_must_be_in_use();
 			set_uniform(line + 7);
 		} else if (string_match("parameter ", line)) {
 			set_parameter(line + strlen("parameter "));
+		} else if (string_match("link error", line)) {
+			link_error_expected = true;
+			if (link_ok) {
+				printf("shader link error expected, but it was sucessful!\n");
+				piglit_report_result(PIGLIT_FAIL);
+			}
+		} else if (string_match("link success", line)) {
+			program_must_be_in_use();
 		} else if ((line[0] != '\n') && (line[0] != '\0')
 			   && (line[0] != '#')) {
 			printf("unknown command \"%s\"", line);
@@ -1904,6 +1915,10 @@ piglit_display(void)
 		line = strchrnul(line, '\n');
 		if (line[0] != '\0')
 			line++;
+	}
+
+	if (!link_ok && !link_error_expected) {
+		program_must_be_in_use();
 	}
 
 	piglit_present_results();
