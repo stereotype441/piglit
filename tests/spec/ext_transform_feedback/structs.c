@@ -118,7 +118,6 @@ PIGLIT_GL_TEST_CONFIG_END
 #define MAX_VARYINGS 21
 #define NUM_VERTICES 6
 #define MAX_COMPONENTS 20
-#define VERTEX_ATTRIB_POS 0
 
 
 /**
@@ -853,7 +852,7 @@ link_shaders(bool use_fs)
 		glDeleteProgram(prog);
 		report_result(PIGLIT_FAIL);
 	}
-	glBindAttribLocation(prog, VERTEX_ATTRIB_POS, "pos");
+	glBindAttribLocation(prog, PIGLIT_ATTRIB_POS, "pos");
 	glLinkProgram(prog);
 	if (!piglit_link_check_status(prog)) {
 		glDeleteProgram(prog);
@@ -1165,68 +1164,6 @@ check_outputs(const void *readback)
 
 
 /**
- * Call glDrawArrays, passing the given vertex data using a VAO and a
- * VBO.
- */
-static void
-draw_arrays(const void *verts, unsigned verts_size)
-{
-	GLuint vao, vbo;
-	glGenVertexArrays(1, &vao);
-	glBindVertexArray(vao);
-	glGenBuffers(1, &vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);
-	glBufferData(GL_ARRAY_BUFFER, verts_size, verts, GL_STREAM_DRAW);
-
-	glVertexAttribPointer(VERTEX_ATTRIB_POS, 4, GL_FLOAT, GL_FALSE, 0,
-			      NULL);
-	glEnableVertexAttribArray(VERTEX_ATTRIB_POS);
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	glDisableVertexAttribArray(VERTEX_ATTRIB_POS);
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glDeleteBuffers(1, &vbo);
-	glBindVertexArray(0);
-	glDeleteVertexArrays(1, &vao);
-}
-
-
-/**
- * Draw a rectangle using the given coordinates.
- *
- * In an ideal world, instead of using this function we would do the
- * drawing using piglit_draw_rect(), however that function doesn't use
- * VBO's or VAO's, and hence isn't compatible with core contexts.
- */
-static void
-draw_rect(float x, float y, float w, float h)
-{
-	float verts[4][4];
-
-	verts[0][0] = x;
-	verts[0][1] = y;
-	verts[0][2] = 0.0;
-	verts[0][3] = 1.0;
-	verts[1][0] = x + w;
-	verts[1][1] = y;
-	verts[1][2] = 0.0;
-	verts[1][3] = 1.0;
-	verts[2][0] = x;
-	verts[2][1] = y + h;
-	verts[2][2] = 0.0;
-	verts[2][3] = 1.0;
-	verts[3][0] = x + w;
-	verts[3][1] = y + h;
-	verts[3][2] = 0.0;
-	verts[3][3] = 1.0;
-
-	draw_arrays(verts, sizeof(verts));
-}
-
-
-/**
  * Render using the program and verify that it outputs the proper data
  * to the transform feedback buffer.
  *
@@ -1262,7 +1199,7 @@ test_xfb(bool use_rasterizer_discard)
 	glBeginTransformFeedback(GL_TRIANGLES);
 	if (use_rasterizer_discard)
 		glEnable(GL_RASTERIZER_DISCARD);
-	draw_rect(-1, -1, 2, 2);
+	piglit_draw_rect_generic(-1, -1, 2, 2);
 	if (use_rasterizer_discard)
 		glDisable(GL_RASTERIZER_DISCARD);
 	glEndTransformFeedback();

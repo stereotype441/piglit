@@ -239,6 +239,17 @@ unsigned
 required_gl_version_from_glsl_version(unsigned glsl_version);
 
 
+void
+piglit_draw_rect_generic(float x, float y, float w, float h);
+void
+piglit_draw_rect_back_generic(float x, float y, float w, float h);
+void
+piglit_draw_rect_z_generic(float z, float x, float y, float w, float h);
+void
+piglit_draw_rect_tex_generic(float x, float y, float w, float h,
+			     float tx, float ty, float tw, float th);
+
+
 #ifdef __cplusplus
 } /* end extern "C" */
 #endif

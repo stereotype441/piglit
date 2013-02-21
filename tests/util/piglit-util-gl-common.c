@@ -586,3 +586,231 @@ required_gl_version_from_glsl_version(unsigned glsl_version)
 	default: return 0;
 	}
 }
+
+
+/**
+ * Call glDrawArrays to draw the given vertex data using generic
+ * vertex attributes, VBOs, and VAOs, if available.  This is useful
+ * when writing a test for core functionality or ES.  verts is
+ * expected to be
+ *
+ *   float verts[4][4];
+ *
+ * if not NULL; tex is expected to be
+ *
+ *   float tex[4][2];
+ *
+ * if not NULL.
+ */
+static void
+draw_arrays_generic(const GLvoid *verts, const GLvoid *tex)
+{
+	GLuint vao, vbo[2];
+#if defined(PIGLIT_USE_OPENGL_ES3)
+#define VAO_AVAILABLE
+	const bool use_vao = true;
+#elif defined(PIGLIT_USE_OPENGL)
+#define VAO_AVAILABLE
+	const bool use_vao = piglit_is_extension_supported("GL_ARB_vertex_array_object");
+#endif
+
+#ifdef VAO_AVAILABLE
+	if (use_vao) {
+		glGenVertexArrays(1, &vao);
+		glBindVertexArray(vao);
+	}
+#endif
+
+	glGenBuffers(2, vbo);
+
+	if (verts) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+		glBufferData(GL_ARRAY_BUFFER, 4*4*sizeof(GLfloat), verts,
+			     GL_DYNAMIC_DRAW);
+#ifdef PIGLIT_USE_OPENGL_ES1
+		glVertexPointer(4, GL_FLOAT, 0, verts);
+		glEnableClientState(GL_VERTEX_ARRAY);
+#else
+		glVertexAttribPointer(PIGLIT_ATTRIB_POS, 4, GL_FLOAT, GL_FALSE,
+				      0, NULL);
+		glEnableVertexAttribArray(PIGLIT_ATTRIB_POS);
+#endif
+	}
+
+	if (tex) {
+		glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+		glBufferData(GL_ARRAY_BUFFER, 2*4*sizeof(GLfloat), tex,
+			     GL_DYNAMIC_DRAW);
+#ifdef PIGLIT_USE_OPENGL_ES1
+		glTexCoordPointer(2, GL_FLOAT, 0, tex);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+#else
+		glVertexAttribPointer(PIGLIT_ATTRIB_TEX, 2, GL_FLOAT, GL_FALSE,
+				      0, NULL);
+		glEnableVertexAttribArray(PIGLIT_ATTRIB_TEX);
+#endif
+	}
+
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	if (verts) {
+#ifdef PIGLIT_USE_OPENGL_ES1
+		glDisableClientState(GL_VERTEX_ARRAY);
+#else
+		glDisableVertexAttribArray(PIGLIT_ATTRIB_POS);
+#endif
+	}
+	if (tex) {
+#ifdef PIGLIT_USE_OPENGL_ES1
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+#else
+		glDisableVertexAttribArray(PIGLIT_ATTRIB_TEX);
+#endif
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glDeleteBuffers(2, vbo);
+
+#ifdef VAO_AVAILABLE
+	if (use_vao) {
+		glBindVertexArray(0);
+		glDeleteVertexArrays(1, &vao);
+	}
+#endif
+
+#undef VAO_AVAILABLE
+}
+
+
+/**
+ * Convenience function to draw an axis-aligned rectangle using
+ * generic vertex attributes and VBOs.  This is useful when writing a
+ * test for core functionality or ES2/ES3.
+ */
+void
+piglit_draw_rect_generic(float x, float y, float w, float h)
+{
+	float verts[4][4];
+
+	verts[0][0] = x;
+	verts[0][1] = y;
+	verts[0][2] = 0.0;
+	verts[0][3] = 1.0;
+	verts[1][0] = x + w;
+	verts[1][1] = y;
+	verts[1][2] = 0.0;
+	verts[1][3] = 1.0;
+	verts[2][0] = x;
+	verts[2][1] = y + h;
+	verts[2][2] = 0.0;
+	verts[2][3] = 1.0;
+	verts[3][0] = x + w;
+	verts[3][1] = y + h;
+	verts[3][2] = 0.0;
+	verts[3][3] = 1.0;
+
+	draw_arrays_generic(verts, NULL);
+}
+
+
+/**
+ * Convenience function to draw an axis-aligned backfaced rectangle
+ * using generic vertex attributes and VBOs.  This is useful when
+ * writing a test for core functionality or ES2/ES3.
+ */
+void
+piglit_draw_rect_back_generic(float x, float y, float w, float h)
+{
+	float verts[4][4];
+
+	verts[0][0] = x + w;
+	verts[0][1] = y;
+	verts[0][2] = 0.0;
+	verts[0][3] = 1.0;
+	verts[1][0] = x;
+	verts[1][1] = y;
+	verts[1][2] = 0.0;
+	verts[1][3] = 1.0;
+	verts[2][0] = x + w;
+	verts[2][1] = y + h;
+	verts[2][2] = 0.0;
+	verts[2][3] = 1.0;
+	verts[3][0] = x;
+	verts[3][1] = y + h;
+	verts[3][2] = 0.0;
+	verts[3][3] = 1.0;
+
+	draw_arrays_generic(verts, NULL);
+}
+
+
+/**
+ * Convenience function to draw an axis-aligned rectangle using
+ * generic vertex attributes and VBOs.  This is useful when writing a
+ * test for core functionality or ES2/ES3.
+ */
+void
+piglit_draw_rect_z_generic(float z, float x, float y, float w, float h)
+{
+	float verts[4][4];
+
+	verts[0][0] = x;
+	verts[0][1] = y;
+	verts[0][2] = z;
+	verts[0][3] = 1.0;
+	verts[1][0] = x + w;
+	verts[1][1] = y;
+	verts[1][2] = z;
+	verts[1][3] = 1.0;
+	verts[2][0] = x;
+	verts[2][1] = y + h;
+	verts[2][2] = z;
+	verts[2][3] = 1.0;
+	verts[3][0] = x + w;
+	verts[3][1] = y + h;
+	verts[3][2] = z;
+	verts[3][3] = 1.0;
+
+	draw_arrays_generic(verts, NULL);
+}
+
+
+/**
+ * Convenience function to draw an axis-aligned rectangle with texture
+ * coordinates using generic vertex attributes and VBOs.  This is
+ * useful when writing a test for core functionality or ES2/ES3.
+ */
+void
+piglit_draw_rect_tex_generic(float x, float y, float w, float h,
+			     float tx, float ty, float tw, float th)
+{
+	float verts[4][4];
+	float tex[4][2];
+
+	verts[0][0] = x;
+	verts[0][1] = y;
+	verts[0][2] = 0.0;
+	verts[0][3] = 1.0;
+	tex[0][0] = tx;
+	tex[0][1] = ty;
+	verts[1][0] = x + w;
+	verts[1][1] = y;
+	verts[1][2] = 0.0;
+	verts[1][3] = 1.0;
+	tex[1][0] = tx + tw;
+	tex[1][1] = ty;
+	verts[2][0] = x;
+	verts[2][1] = y + h;
+	verts[2][2] = 0.0;
+	verts[2][3] = 1.0;
+	tex[2][0] = tx;
+	tex[2][1] = ty + th;
+	verts[3][0] = x + w;
+	verts[3][1] = y + h;
+	verts[3][2] = 0.0;
+	verts[3][3] = 1.0;
+	tex[3][0] = tx + tw;
+	tex[3][1] = ty + th;
+
+	draw_arrays_generic(verts, tex);
+}

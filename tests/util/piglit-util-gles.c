@@ -175,84 +175,12 @@ piglit_escape_exit_key(unsigned char key, int x, int y)
 }
 
 /**
- * Call glDrawArrays.  verts is expected to be
- *
- *   float verts[4][4];
- *
- * if not NULL; tex is expected to be
- *
- *   float tex[4][2];
- *
- * if not NULL.
- */
-static void
-draw_arrays(const GLvoid *verts, const GLvoid *tex)
-{
-#if defined(PIGLIT_USE_OPENGL_ES1)
-	if (verts) {
-		glVertexPointer(4, GL_FLOAT, 0, verts);
-		glEnableClientState(GL_VERTEX_ARRAY);
-	}
-
-	if (tex) {
-		glTexCoordPointer(2, GL_FLOAT, 0, tex);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	}
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	if (verts)
-		glDisableClientState(GL_VERTEX_ARRAY);
-	if (tex)
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#elif defined(PIGLIT_USE_OPENGL_ES2) ||defined(PIGLIT_USE_OPENGL_ES3)
-	if (verts) {
-		glVertexAttribPointer(PIGLIT_ATTRIB_POS, 4, GL_FLOAT, GL_FALSE, 0, verts);
-		glEnableVertexAttribArray(PIGLIT_ATTRIB_POS);
-	}
-
-	if (tex) {
-		glVertexAttribPointer(PIGLIT_ATTRIB_TEX, 2, GL_FLOAT, GL_FALSE, 0, tex);
-		glEnableVertexAttribArray(PIGLIT_ATTRIB_TEX);
-	}
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	if (verts)
-		glDisableVertexAttribArray(PIGLIT_ATTRIB_POS);
-	if (tex)
-		glDisableVertexAttribArray(PIGLIT_ATTRIB_TEX);
-#else
-#	error "don't know how to draw arrays"
-#endif
-}
-
-/**
  * Convenience function to draw an axis-aligned rectangle.
  */
 GLvoid
 piglit_draw_rect(float x, float y, float w, float h)
 {
-	float verts[4][4];
-
-	verts[0][0] = x;
-	verts[0][1] = y;
-	verts[0][2] = 0.0;
-	verts[0][3] = 1.0;
-	verts[1][0] = x + w;
-	verts[1][1] = y;
-	verts[1][2] = 0.0;
-	verts[1][3] = 1.0;
-	verts[2][0] = x;
-	verts[2][1] = y + h;
-	verts[2][2] = 0.0;
-	verts[2][3] = 1.0;
-	verts[3][0] = x + w;
-	verts[3][1] = y + h;
-	verts[3][2] = 0.0;
-	verts[3][3] = 1.0;
-
-	draw_arrays(verts, NULL);
+	piglit_draw_rect_generic(x, y, w, h);
 }
 
 
@@ -262,26 +190,7 @@ piglit_draw_rect(float x, float y, float w, float h)
 GLvoid
 piglit_draw_rect_back(float x, float y, float w, float h)
 {
-	float verts[4][4];
-
-	verts[0][0] = x + w;
-	verts[0][1] = y;
-	verts[0][2] = 0.0;
-	verts[0][3] = 1.0;
-	verts[1][0] = x;
-	verts[1][1] = y;
-	verts[1][2] = 0.0;
-	verts[1][3] = 1.0;
-	verts[2][0] = x + w;
-	verts[2][1] = y + h;
-	verts[2][2] = 0.0;
-	verts[2][3] = 1.0;
-	verts[3][0] = x;
-	verts[3][1] = y + h;
-	verts[3][2] = 0.0;
-	verts[3][3] = 1.0;
-
-	draw_arrays(verts, NULL);
+	piglit_draw_rect_back_generic(x, y, w, h);
 }
 
 
@@ -291,26 +200,7 @@ piglit_draw_rect_back(float x, float y, float w, float h)
 GLvoid
 piglit_draw_rect_z(float z, float x, float y, float w, float h)
 {
-	float verts[4][4];
-
-	verts[0][0] = x;
-	verts[0][1] = y;
-	verts[0][2] = z;
-	verts[0][3] = 1.0;
-	verts[1][0] = x + w;
-	verts[1][1] = y;
-	verts[1][2] = z;
-	verts[1][3] = 1.0;
-	verts[2][0] = x;
-	verts[2][1] = y + h;
-	verts[2][2] = z;
-	verts[2][3] = 1.0;
-	verts[3][0] = x + w;
-	verts[3][1] = y + h;
-	verts[3][2] = z;
-	verts[3][3] = 1.0;
-
-	draw_arrays(verts, NULL);
+	piglit_draw_rect_z_generic(z, x, y, w, h);
 }
 
 /**
@@ -321,35 +211,7 @@ GLvoid
 piglit_draw_rect_tex(float x, float y, float w, float h,
                      float tx, float ty, float tw, float th)
 {
-	float verts[4][4];
-	float tex[4][2];
-
-	verts[0][0] = x;
-	verts[0][1] = y;
-	verts[0][2] = 0.0;
-	verts[0][3] = 1.0;
-	tex[0][0] = tx;
-	tex[0][1] = ty;
-	verts[1][0] = x + w;
-	verts[1][1] = y;
-	verts[1][2] = 0.0;
-	verts[1][3] = 1.0;
-	tex[1][0] = tx + tw;
-	tex[1][1] = ty;
-	verts[2][0] = x;
-	verts[2][1] = y + h;
-	verts[2][2] = 0.0;
-	verts[2][3] = 1.0;
-	tex[2][0] = tx;
-	tex[2][1] = ty + th;
-	verts[3][0] = x + w;
-	verts[3][1] = y + h;
-	verts[3][2] = 0.0;
-	verts[3][3] = 1.0;
-	tex[3][0] = tx + tw;
-	tex[3][1] = ty + th;
-
-	draw_arrays(verts, tex);
+	piglit_draw_rect_tex_generic(x, y, w, h, tx, ty, tw, th);
 }
 
 /**
