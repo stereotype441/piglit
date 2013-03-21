@@ -44,6 +44,25 @@ _abortf(const char *s, ...)
 	abort();
 }
 
+static void
+fixup_alpha(GLenum base_format, GLubyte *row, int width)
+{
+	int x;
+
+	switch (base_format) {
+	case GL_RGBA:
+		for (x = 0; x < width; ++x)
+			row[4*x + 3] = 0xff;
+		break;
+	case GL_RGB:
+		/* Nothing to do */
+		break;
+	default:
+		abortf("unknown format %04x", base_format);
+		break;
+	}
+}
+
 /* Write a PNG file.
  *
  * \param filename    The filename to write (i.e. "foo.png")
@@ -117,11 +136,13 @@ piglit_write_png(const char *filename,
 		row = data + (height * width * bytes);
 		for (y = 0; y < height; ++y) {
 			row -= width * bytes;
+			fixup_alpha(base_format, row, width);
 			png_write_row(png, row);
 		}
 	} else {
 		row = data;
 		for (y = 0; y < height; ++y) {
+			fixup_alpha(base_format, row, width);
 			png_write_row(png, row);
 			row += width * bytes;
 		}
