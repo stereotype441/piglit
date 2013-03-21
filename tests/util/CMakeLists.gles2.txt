@@ -5,8 +5,14 @@ set(UTIL_GL_SOURCES
 	piglit-shader-gles2.c
 	piglit-util-gl-enum.c
 	piglit-util-gles.c
+	piglit-util-png.c
 	minmax-test.c
 	)
+
+if (PNG_FOUND)
+	include_directories(${PNG_INCLUDE_DIRS})
+	link_libraries(${PNG_LIBRARIES})
+endif (PNG_FOUND)
 
 include_directories(
 	${UTIL_GL_INCLUDES}

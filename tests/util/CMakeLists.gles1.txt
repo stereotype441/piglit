@@ -2,7 +2,13 @@ set(UTIL_GL_SOURCES
 	${UTIL_GL_SOURCES}
 	piglit-util-gl-enum.c
 	piglit-util-gles.c
+	piglit-util-png.c
 	)
+
+if (PNG_FOUND)
+	include_directories(${PNG_INCLUDE_DIRS})
+	link_libraries(${PNG_LIBRARIES})
+endif (PNG_FOUND)
 
 include_directories(
 	${UTIL_GL_INCLUDES}
