@@ -1,0 +1,107 @@
+# Test the EndPrimitive() function using a shader that outputs a large
+# number of vertices (100), and verify that (a) all expected
+# primitives are drawn, and (b) no unexpected primitives are drawn.
+#
+# This test uses a vertex shader to output point primitives, where
+# each point carries a parameter m.  Then it uses a geometry shader
+# transform the point primitives into horizontal triangle strips with
+# 100 vertices each.  In triangle strip m, after the jth call to
+# EmitVertex(), EndPrimitive() is called if m % 3 == n % 3.
+# Furthermore, triangles are flatshaded, and the color of vertex n is
+# set to green if m % 3 == n % 3, red otherwise.  (Due to the
+# placement of EndPrimitive() calls, the red triangles should never be
+# drawn).
+#
+# The output window is divided vertically into 3 bands.  In each band,
+# 3 overlapping triangle strips are drawn, with m taking on each of
+# the values 0, 1, and 2.  The triangle strips are drawn in a
+# different order in each band.
+#
+# Finally, we check that the entire window has been painted green.
+#
+# This ensures that:
+#
+# (a) no unexpected triangle is drawn (because if it were, it would be
+#     drawn in red, and in at least one of the 3 bands, it wouldn't be
+#     covered up by a green triangle).
+#
+# (b) all of the expected triangles are drawn (because if they weren't,
+#     then some part of the screen would not get colored green).
+
+[require]
+GL >= 2.0
+GLSL >= 1.30
+GL_ARB_geometry_shader4
+
+[vertex shader]
+#version 130
+
+attribute int m;
+
+flat out int m_to_gs;
+uniform int band;
+
+void main()
+{
+  gl_Position = vec4(0.0);
+  m_to_gs = (m + band) % 3;
+}
+
+[geometry shader]
+#version 130
+#extension GL_ARB_geometry_shader4: enable
+
+flat in int m_to_gs[];
+uniform int band;
+
+void main()
+{
+  int m = m_to_gs[0];
+  for (int i = 0; i < 50; i++) {
+    for (int j = 0; j < 2; j++) {
+      int n = 2 * i + j;
+      float x = (float(i) / 49.0) * 2.0 - 1.0;
+      float y = (float(2 - band + j) / 3.0) * 2.0 - 1.0;
+      gl_Position = vec4(x, y, 0.0, 1.0);
+      if (m % 3 == n % 3) {
+        gl_FrontColor = vec4(0.0, 1.0, 0.0, 1.0);
+        EmitVertex();
+        EndPrimitive();
+      } else {
+        gl_FrontColor = vec4(1.0, 0.0, 0.0, 1.0);
+        EmitVertex();
+      }
+    }
+  }
+}
+
+[geometry layout]
+input type GL_POINTS
+output type GL_TRIANGLE_STRIP
+vertices out 100
+
+[fragment shader]
+#version 130
+
+void main()
+{
+  gl_FragColor = gl_Color;
+}
+
+[vertex data]
+m/int/1
+0
+1
+2
+
+[test]
+shade model flat
+clear color 0.0 0.0 0.0 1.0
+clear
+uniform int band 0
+draw arrays GL_POINTS 0 3
+uniform int band 1
+draw arrays GL_POINTS 0 3
+uniform int band 2
+draw arrays GL_POINTS 0 3
+probe all rgb (0.0, 1.0, 0.0)
