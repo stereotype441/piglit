@@ -1475,9 +1475,14 @@ struct string_to_enum {
 GLenum
 decode_drawing_mode(const char *mode_str)
 {
+#ifdef PIGLIT_USE_OPENGL
+	const int max_drawing_mode = GL_TRIANGLE_STRIP_ADJACENCY;
+#else
+	const int max_drawing_mode = GL_POLYGON;
+#endif
 	int i;
 
-	for (i = GL_POINTS; i <= GL_POLYGON; ++i) {
+	for (i = GL_POINTS; i <= max_drawing_mode; ++i) {
 		const char *name = piglit_get_prim_name(i);
 		if (0 == strcmp(mode_str, name))
 			return i;
