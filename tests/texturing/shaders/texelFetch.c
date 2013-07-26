@@ -78,10 +78,20 @@
  */
 #include "common.h"
 
+void
+parse_args(int argc, char **argv);
+static enum shader_target test_stage = UNKNOWN;
+
 PIGLIT_GL_TEST_CONFIG_BEGIN
 
-	config.supports_gl_compat_version = 10;
-	config.supports_gl_core_version = 31;
+	parse_args(argc, argv);
+	if (test_stage == GS) {
+		config.supports_gl_compat_version = 32;
+		config.supports_gl_core_version = 32;
+	} else {
+		config.supports_gl_compat_version = 10;
+		config.supports_gl_core_version = 31;
+	}
 
 	config.window_width = 355;
 	config.window_height = 350;
@@ -636,9 +646,10 @@ generate_GLSL(enum shader_target test_stage)
 			 shader_version);
 		asprintf(&gs_code,
 			 "#version %d\n"
-			 "#extension GL_ARB_geometry_shader4: require\n"
 			 "%s\n"
 			 "#define ivec1 int\n"
+			 "layout(points) in;\n"
+			 "layout(points, max_vertices = 1) out;\n"
 			 "flat out %s color;\n"
 			 "flat in ivec4 texcoord_to_gs[1];\n"
 			 "uniform %s tex;\n"
@@ -726,12 +737,8 @@ generate_GLSL(enum shader_target test_stage)
 	}
 	prog = glCreateProgram();
 	glAttachShader(prog, vs);
-	if (gs_code) {
+	if (gs_code)
 		glAttachShader(prog, gs);
-		glProgramParameteri(prog, GL_GEOMETRY_INPUT_TYPE_ARB, GL_POINTS);
-		glProgramParameteri(prog, GL_GEOMETRY_OUTPUT_TYPE_ARB, GL_POINTS);
-		glProgramParameteri(prog, GL_GEOMETRY_VERTICES_OUT_ARB, 1);
-	}
 	glAttachShader(prog, fs);
 
 	glBindAttribLocation(prog, pos_loc, "pos");
@@ -783,14 +790,14 @@ fail_and_show_usage()
 	piglit_report_result(PIGLIT_FAIL);
 }
 
+
 void
-piglit_init(int argc, char **argv)
+parse_args(int argc, char **argv)
 {
-	int prog;
-	int tex_location;
 	int i;
-	enum shader_target test_stage = UNKNOWN;
 	bool sampler_found = false;
+
+	sample_count = 0;
 
 	for (i = 1; i < argc; i++) {
 		if (test_stage == UNKNOWN) {
@@ -821,20 +828,12 @@ piglit_init(int argc, char **argv)
 		if (!sampler_found && (sampler_found = select_sampler(argv[i])))
 			continue;
 
-        /* Maybe it's the sample count? */
-        if (sampler_found && has_samples() && !sample_count) {
-            if ((sample_count = atoi(argv[i]))) {
-                /* check it */
-                GLint max_samples;
-                glGetIntegerv(GL_MAX_SAMPLES, &max_samples);
-                if (sample_count > max_samples) {
-                    printf("Sample count of %d not supported, >MAX_SAMPLES\n",
-                            sample_count);
-                    piglit_report_result(PIGLIT_SKIP);
-                }
-            }
-            continue;
-        }
+		/* Maybe it's the sample count? */
+		if (sampler_found && has_samples() && !sample_count) {
+			sample_count = atoi(argv[i]);
+
+			continue;
+		}
 
 		if (!swizzling && (swizzling = parse_swizzle(argv[i])))
 			continue;
@@ -845,12 +844,34 @@ piglit_init(int argc, char **argv)
 	if (test_stage == UNKNOWN || !sampler_found)
 		fail_and_show_usage();
 
+	if (test_stage == GS && shader_version < 150)
+		shader_version = 150;
+}
+
+
+void
+piglit_init(int argc, char **argv)
+{
+	int prog;
+	int tex_location;
+
 	if (!supported_sampler()) {
 		printf("%s unsupported\n", sampler.name);
 		piglit_report_result(PIGLIT_FAIL);
 	}
 
 	require_GL_features(test_stage);
+
+	if (sample_count) {
+                /* check it */
+                GLint max_samples;
+                glGetIntegerv(GL_MAX_SAMPLES, &max_samples);
+                if (sample_count > max_samples) {
+			printf("Sample count of %d not supported, >MAX_SAMPLES\n",
+			       sample_count);
+			piglit_report_result(PIGLIT_SKIP);
+                }
+	}
 
 	prog = generate_GLSL(test_stage);
 
