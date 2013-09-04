@@ -39,6 +39,9 @@ GLint piglit_build_simple_program(const char *vs_source, const char *fs_source);
 GLuint piglit_build_simple_program_unlinked(const char *vs_source,
 					    const char *fs_source);
 
+extern GLboolean piglit_program_pipeline_check_status(GLuint pipeline);
+extern GLboolean piglit_program_pipeline_check_status_quiet(GLuint pipeline);
+
 #if defined(PIGLIT_USE_OPENGL_ES1)
 #define glAttachShader assert(!"glAttachShader does not exist in ES1")
 #define glBindAttribLocation assert(!"glBindAttribLocation does not exist in ES1")

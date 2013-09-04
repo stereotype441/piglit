@@ -26,3 +26,5 @@
 void piglit_require_GLSL(void) {}
 void piglit_require_vertex_shader(void) {}
 void piglit_require_fragment_shader(void) {}
+GLboolean piglit_program_pipeline_check_status(GLuint pipeline) {}
+GLboolean piglit_program_pipeline_check_status_quiet(GLuint pipeline) {}
