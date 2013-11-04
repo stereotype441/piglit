@@ -1807,6 +1807,7 @@ ext_framebuffer_multisample['renderbuffer-samples'] = concurrent_test('ext_frame
 ext_framebuffer_multisample['samples'] = concurrent_test('ext_framebuffer_multisample-samples')
 ext_framebuffer_multisample['alpha-blending'] = PlainExecTest('ext_framebuffer_multisample-alpha-blending -auto')
 ext_framebuffer_multisample['alpha-blending slow_cc'] = PlainExecTest('ext_framebuffer_multisample-alpha-blending slow_cc -auto')
+ext_framebuffer_multisample['alpha-blending-after-rendering'] = PlainExecTest('ext_framebuffer_multisample-alpha-blending-after-rendering -auto')
 
 for num_samples in MSAA_SAMPLE_COUNTS:
     for test_type in ('color', 'srgb', 'stencil_draw', 'stencil_resolve',
