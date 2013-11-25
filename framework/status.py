@@ -29,7 +29,6 @@ warn
 dmesg-fail
 fail
 crash
-timeout
 
 (NotRun, pass, skip) are considered equivalent for regression testing.
 
