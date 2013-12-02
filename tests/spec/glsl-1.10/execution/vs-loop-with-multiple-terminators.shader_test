@@ -1,0 +1,56 @@
+# Check that a loop with multiple terminating if-clauses is properly
+# handled.
+
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+attribute vec4 piglit_vertex;
+varying vec4 color;
+uniform int bound_1;
+uniform int bound_2;
+uniform int expected_total;
+
+void main()
+{
+  int total = 0;
+  for (int i = 1; i < 4; i++) {
+    if (i > bound_1)
+      break;
+    if (i > bound_2)
+      break;
+    total += i;
+  }
+  gl_Position = piglit_vertex;
+  if (total == expected_total)
+    color = vec4(0.0, 1.0, 0.0, 1.0);
+  else
+    color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform int bound_1 1
+uniform int bound_2 1
+uniform int expected_total 1
+draw rect -1 -1 1 1
+uniform int bound_1 1
+uniform int bound_2 2
+uniform int expected_total 1
+draw rect -1 0 1 1
+uniform int bound_1 2
+uniform int bound_2 1
+uniform int expected_total 1
+draw rect 0 -1 1 1
+uniform int bound_1 2
+uniform int bound_2 2
+uniform int expected_total 3
+draw rect 0 0 1 1
+probe all rgba 0 1 0 1

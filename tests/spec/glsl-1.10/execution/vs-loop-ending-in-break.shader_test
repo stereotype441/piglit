@@ -1,0 +1,35 @@
+# Check that a loop ending with a "break" statement is properly
+# handled by the compiler.
+
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+attribute vec4 piglit_vertex;
+varying vec4 color;
+
+void main()
+{
+  int total = 0;
+  for (int i = 1; i < 3; ) {
+    total += i++;
+    break;
+  }
+  gl_Position = piglit_vertex;
+  if (total == 1)
+    color = vec4(0.0, 1.0, 0.0, 1.0);
+  else
+    color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+draw rect -1 -1 2 2
+probe all rgba 0 1 0 1

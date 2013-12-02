@@ -1,0 +1,48 @@
+# Check that a loop containing a "break" statement in an "else" clause
+# is properly handled by the compiler.
+
+[require]
+GLSL >= 1.10
+
+[vertex shader]
+attribute vec4 piglit_vertex;
+varying vec4 color;
+uniform int bound;
+uniform ivec4 expected_totals;
+
+void main()
+{
+  ivec4 totals = ivec4(0);
+  int j = 0;
+  for (int i = 0; i < 2; ) {
+    i++;
+    j++;
+    totals.x += j;
+    if (j < bound) {
+      totals.y += j;
+    } else {
+      totals.z += j;
+      break;
+    }
+    totals.w += j;
+  }
+  gl_Position = piglit_vertex;
+  if (totals == expected_totals)
+    color = vec4(0.0, 1.0, 0.0, 1.0);
+  else
+    color = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
+[fragment shader]
+varying vec4 color;
+
+void main()
+{
+  gl_FragColor = color;
+}
+
+[test]
+uniform int bound 2
+uniform ivec4 expected_totals 3 1 2 1
+draw rect -1 -1 2 2
+probe all rgba 0 1 0 1
